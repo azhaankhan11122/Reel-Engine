@@ -1,0 +1,25 @@
+<div class="card">
+  <h2 style="margin-bottom:1rem;">Background Music <span class="badge-optional">Optional</span></h2>
+
+  <div class="field checkbox-row">
+    <input type="checkbox" id="add_music" name="add_music" value="true">
+    <label for="add_music">Add background music behind the voiceover</label>
+  </div>
+
+  <div id="musicOptions" class="music-options hidden">
+    <div class="file-upload music-upload" id="musicDropZone">
+      <input type="file" id="musicInput" name="music" accept="audio/mpeg,audio/wav,audio/mp4,audio/x-m4a,.mp3,.wav,.m4a,.aac,.ogg">
+      <p>🎵 Click or drag & drop your music track</p>
+      <p class="subtitle" style="font-size:0.8rem; margin-top:0.25rem;">MP3, WAV, M4A — loops automatically to match video length</p>
+      <p class="file-name" id="musicFileName"></p>
+    </div>
+
+    <div class="field" style="margin-top:1.25rem;">
+      <label for="music_volume">Music Volume (behind voice)</label>
+      <input type="range" id="music_volume" name="music_volume" min="0" max="50" value="15">
+      <div class="range-val">
+        <span id="musicVolumeVal">15</span>% — voice stays at full volume
+      </div>
+    </div>
+  </div>
+</div>

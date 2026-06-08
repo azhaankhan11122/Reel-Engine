@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}AI Mode — Make Shorts{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">← Back to Home</a>
+
+<header>
+  <div class="logo">🤖</div>
+  <div>
+    <h1>AI Mode</h1>
+    <p class="subtitle">Step-by-step viral Shorts builder</p>
+  </div>
+</header>
+
+<!-- Progress bar -->
+<nav class="wizard-steps" id="wizardSteps">
+  <div class="step active" data-step="1"><span>1</span> Prompt</div>
+  <div class="step" data-step="2"><span>2</span> Clips</div>
+  <div class="step" data-step="3"><span>3</span> Script</div>
+  <div class="step" data-step="4"><span>4</span> Style</div>
+  <div class="step" data-step="5"><span>5</span> Render</div>
+</nav>
+
+<div id="errors"></div>
+
+<!-- STEP 1: Prompt -->
+<section class="wizard-panel active" id="step1">
+  <div class="card">
+    <h2>What's your Short about?</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">AI will search for relevant gameplay clips matching your topic.</p>
+    <div class="field">
+      <label for="prompt">Topic / Prompt</label>
+      <input type="text" id="prompt" placeholder="e.g. mind-blowing psychology facts, gaming tips, fitness motivation..." autofocus>
+    </div>
+    <button class="btn btn-primary" id="searchClipsBtn" onclick="searchClips()">
+      Search Gameplay Clips →
+    </button>
+  </div>
+  <div class="status-panel" id="searchStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Searching clips...</p>
+  </div>
+</section>
+
+<!-- STEP 2: Clip selection -->
+<section class="wizard-panel" id="step2">
+  <div class="card">
+    <h2>Choose your background clips</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">AI found these gameplay videos relevant to your prompt. Select the ones you want.</p>
+    <div class="clip-actions">
+      <button type="button" class="btn-sm" onclick="selectAllClips(true)">Select All</button>
+      <button type="button" class="btn-sm" onclick="selectAllClips(false)">Deselect All</button>
+      <span class="clip-count" id="clipCount">0 selected</span>
+    </div>
+    <div class="clip-grid" id="clipGrid"></div>
+    <div class="wizard-nav">
+      <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
+      <button class="btn btn-primary" id="clipsNextBtn" onclick="goToScript()">Next: Generate Script →</button>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 3: Script editor -->
+<section class="wizard-panel" id="step3">
+  <div class="card">
+    <h2>Review & edit your script</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">AI wrote this voiceover. Edit anything before it gets recorded.</p>
+    <div class="field">
+      <label for="scriptText">Script</label>
+      <textarea id="scriptText" rows="8" placeholder="Generating script..."></textarea>
+    </div>
+    <div class="wizard-nav">
+      <button class="btn btn-ghost" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goToStep(4)">Next: Voice & Style →</button>
+    </div>
+  </div>
+  <div class="status-panel" id="scriptStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Writing script with AI...</p>
+  </div>
+</section>
+
+<!-- STEP 4: Voice, captions, music -->
+<section class="wizard-panel" id="step4">
+  <form id="assembleForm" enctype="multipart/form-data">
+    <input type="hidden" id="sessionId" name="session_id">
+    <input type="hidden" id="selectedClipsJson" name="selected_clips">
+
+    <div class="card">
+      <h2>Voiceover Voice</h2>
+      <div class="field">
+        <label for="voice">TTS Voice</label>
+        <select id="voice" name="voice">
+          {% for vid, label in voice_choices %}
+          <option value="{{ vid }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:1rem;">Caption Style</h2>
+      {% include "_caption_style.html" %}
+    </div>
+
+    {% include "_music_section.html" %}
+
+    <div class="wizard-nav">
+      <button type="button" class="btn btn-ghost" onclick="goToStep(3)">← Back</button>
+      <button type="submit" class="btn btn-primary" id="assembleBtn">🎬 Generate My Short</button>
+    </div>
+  </form>
+</section>
+
+<!-- STEP 5: Rendering & result -->
+<section class="wizard-panel" id="step5">
+  <div class="status-panel visible" id="renderStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Assembling your video...</p>
+    <p class="subtitle" style="margin-top:0.5rem; font-size:0.8rem;">
+      Voiceover → captions → gameplay cuts → final render
+    </p>
+  </div>
+  <div class="result-panel" id="resultPanel"></div>
+  <div class="wizard-nav" id="resultNav" style="display:none;">
+    <button class="btn btn-ghost" onclick="location.reload()">Create Another</button>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='ai_wizard.js') }}"></script>
+<script>
+setupFileUpload("musicDropZone", "musicInput", "musicFileName");
+setupRange("font_size", "fontSizeVal");
+setupRange("pill_opacity", "pillOpacityVal");
+setupRange("music_volume", "musicVolumeVal");
+setupMusicToggle("add_music", "musicOptions");
+setupColorPickers();
+initAIWizard();
+</script>
+{% endblock %}

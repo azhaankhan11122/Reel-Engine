@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Make Shorts — Home{% endblock %}
+
+{% block content %}
+<header>
+  <div class="logo">🎬</div>
+  <div>
+    <h1>Make Shorts</h1>
+    <p class="subtitle">Viral YouTube Shorts generator</p>
+  </div>
+</header>
+
+<p class="subtitle" style="text-align:center; margin-top:1rem;">
+  Choose how you want to create your video
+</p>
+
+<div class="mode-grid">
+  <a href="/ai" class="mode-card">
+    <div class="mode-icon">🤖</div>
+    <h2>AI Mode</h2>
+    <p>Enter a topic and let AI write the script, generate voiceover, download gameplay, and render captions automatically.</p>
+  </a>
+
+  <a href="/manual" class="mode-card manual">
+    <div class="mode-icon">✋</div>
+    <h2>Manual Mode</h2>
+    <p>Upload your own background video, write custom text, pick font style and colors — full creative control.</p>
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+<div class="field">
+  <label for="font_family">Font Style</label>
+  <select id="font_family" name="font_family">
+    <optgroup label="Viral / Bold">
+      {% for value, label in font_choices[:4] %}
+      <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Robotic / Sci-Fi / Tech">
+      {% for value, label in font_choices[4:] %}
+      <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+</div>
+
+<div class="field">
+  <label for="font_size">Font Size</label>
+  <input type="range" id="font_size" name="font_size" min="60" max="120" value="88">
+  <div class="range-val"><span id="fontSizeVal">88</span> px</div>
+</div>
+
+<div class="grid-2">
+  <div class="field">
+    <label>Text Color</label>
+    <div class="color-row">
+      <input type="text" id="text_color" name="text_color" value="#FFFFFF">
+      <input type="color" id="text_color_picker" value="#FFFFFF">
+    </div>
+  </div>
+  <div class="field">
+    <label>Highlight Color</label>
+    <div class="color-row">
+      <input type="text" id="highlight_color" name="highlight_color" value="#FFCC00">
+      <input type="color" id="highlight_color_picker" value="#FFCC00">
+    </div>
+  </div>
+  <div class="field">
+    <label>Accent Color</label>
+    <div class="color-row">
+      <input type="text" id="accent_color" name="accent_color" value="#00FF66">
+      <input type="color" id="accent_color_picker" value="#00FF66">
+    </div>
+  </div>
+  <div class="field">
+    <label>Pill Background</label>
+    <div class="color-row">
+      <input type="text" id="pill_color" name="pill_color" value="#000000">
+      <input type="color" id="pill_color_picker" value="#000000">
+    </div>
+  </div>
+</div>
+
+<div class="field">
+  <label for="pill_opacity">Pill Opacity</label>
+  <input type="range" id="pill_opacity" name="pill_opacity" min="0" max="255" value="140">
+  <div class="range-val"><span id="pillOpacityVal">140</span> / 255</div>
+</div>
+
+<div class="field checkbox-row">
+  <input type="checkbox" id="dynamic_highlights" name="dynamic_highlights" value="true" checked>
+  <label for="dynamic_highlights">Auto-highlight power words (yellow / green)</label>
+</div>

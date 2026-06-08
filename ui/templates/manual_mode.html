@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Manual Mode — Make Shorts{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">← Back to Home</a>
+
+<header>
+  <div class="logo">✋</div>
+  <div>
+    <h1>Manual Mode</h1>
+    <p class="subtitle">Your video, your text, your style</p>
+  </div>
+</header>
+
+<form id="manualForm" enctype="multipart/form-data">
+  <div class="card">
+    <h2 style="margin-bottom:1rem;">Background Video</h2>
+    <div class="file-upload" id="dropZone">
+      <input type="file" id="videoInput" name="video" accept="video/mp4,video/quicktime,video/webm,.mkv">
+      <p>📁 Click or drag & drop your gameplay video</p>
+      <p class="subtitle" style="font-size:0.8rem; margin-top:0.25rem;">MP4, MOV, WEBM — max 500 MB</p>
+      <p class="file-name" id="fileName"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-bottom:1rem;">Script Text</h2>
+    <div class="field">
+      <label for="text">What should the voiceover say?</label>
+      <textarea id="text" name="text" placeholder="Write your script here. Keep it punchy — 30 to 55 seconds when read aloud works best."></textarea>
+    </div>
+  </div>
+
+  {% include "_music_section.html" %}
+
+  <div class="card">
+    <h2 style="margin-bottom:1rem;">Caption Style</h2>
+    {% include "_caption_style.html" %}
+  </div>
+
+  <button type="submit" class="btn btn-manual" id="generateBtn">
+    Create My Short
+  </button>
+</form>
+
+<div id="errors"></div>
+
+<div class="status-panel" id="statusPanel">
+  <div class="spinner"></div>
+  <p class="status-msg">Starting...</p>
+  <p class="subtitle" style="margin-top:0.5rem; font-size:0.8rem;">
+    Generating voiceover, captions, and rendering your video...
+  </p>
+</div>
+
+<div class="result-panel" id="resultPanel"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+setupFileUpload("dropZone", "videoInput", "fileName");
+setupFileUpload("musicDropZone", "musicInput", "musicFileName");
+setupRange("font_size", "fontSizeVal");
+setupRange("pill_opacity", "pillOpacityVal");
+setupRange("music_volume", "musicVolumeVal");
+setupMusicToggle("add_music", "musicOptions");
+
+function linkColor(textId, pickerId) {
+  const text = document.getElementById(textId);
+  const picker = document.getElementById(pickerId);
+  picker.addEventListener("input", () => { text.value = picker.value; });
+  text.addEventListener("input", () => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(text.value)) picker.value = text.value;
+  });
+}
+linkColor("text_color", "text_color_picker");
+linkColor("highlight_color", "highlight_color_picker");
+linkColor("accent_color", "accent_color_picker");
+linkColor("pill_color", "pill_color_picker");
+
+document.getElementById("manualForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("generateBtn");
+  const errors = document.getElementById("errors");
+  errors.innerHTML = "";
+  hideResult("resultPanel");
+
+  const form = e.target;
+  const fd = new FormData(form);
+  if (!document.getElementById("dynamic_highlights").checked) {
+    fd.set("dynamic_highlights", "false");
+  }
+  if (!document.getElementById("add_music").checked) {
+    fd.delete("add_music");
+    fd.delete("music");
+  }
+
+  btn.disabled = true;
+  showStatus("statusPanel", "Uploading & processing...");
+
+  try {
+    const res = await fetch("/api/manual/generate", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) {
+      showError("errors", data.error || "Request failed.");
+      btn.disabled = false;
+      document.getElementById("statusPanel").classList.remove("visible");
+      return;
+    }
+
+    await pollJob(data.job_id, (job) => {
+      showStatus("statusPanel", job.message || job.status);
+      if (job.status === "done") {
+        document.getElementById("statusPanel").classList.remove("visible");
+        const r = job.result;
+        const panel = document.getElementById("resultPanel");
+        panel.classList.add("visible");
+        panel.innerHTML = `
+          <div class="card">
+            <h2>Your Short is ready!</h2>
+            <video class="preview" controls src="${r.video_url}"></video>
+            <a href="${r.video_url}" download class="btn btn-manual" style="margin-top:1rem; text-decoration:none;">
+              Download MP4
+            </a>
+          </div>`;
+        btn.disabled = false;
+      }
+      if (job.status === "error") {
+        document.getElementById("statusPanel").classList.remove("visible");
+        showError("errors", job.message || "Generation failed.");
+        btn.disabled = false;
+      }
+    });
+  } catch (err) {
+    showError("errors", err.message);
+    btn.disabled = false;
+    document.getElementById("statusPanel").classList.remove("visible");
+  }
+});
+</script>
+{% endblock %}
