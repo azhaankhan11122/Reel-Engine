@@ -32,6 +32,7 @@ from make_shorts import (
     run_ai_assemble,
     run_manual_pipeline,
     search_clips_for_prompt,
+    transcribe_audio,
 )
 
 UPLOAD_DIR = PROJECT_DIR / "uploads"
