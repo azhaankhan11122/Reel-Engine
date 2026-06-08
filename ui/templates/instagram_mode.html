@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Instagram Mode — Make Shorts{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">← Back to Home</a>
+
+<header>
+  <div class="logo">🎥</div>
+  <div>
+    <h1>Instagram Mode</h1>
+    <p class="subtitle">Use a Reel as your source, transcribe its audio, edit the text, and generate captions.</p>
+  </div>
+</header>
+
+<nav class="wizard-steps" id="instagramSteps">
+  <div class="step active" data-step="1"><span>1</span> Reel</div>
+  <div class="step" data-step="2"><span>2</span> Voice Source</div>
+  <div class="step" data-step="3"><span>3</span> Edit Text</div>
+  <div class="step" data-step="4"><span>4</span> Style</div>
+  <div class="step" data-step="5"><span>5</span> Render</div>
+</nav>
+
+<div id="errors"></div>
+
+<section class="wizard-panel active" id="step1">
+  <div class="card">
+    <h2>Instagram reel background</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">Paste a reel link and use that video as the background for your Short.</p>
+    <div class="field">
+      <label for="reelUrl">Reel URL</label>
+      <input type="url" id="reelUrl" placeholder="Paste Instagram Reel link here" autofocus>
+    </div>
+    <p class="subtitle warning">Use only videos with no text overlays for best caption results.</p>
+    <button class="btn btn-primary" id="fetchReelBtn" onclick="fetchReelBackground()">Fetch Reel →</button>
+    <div id="backgroundPreview" class="instagram-preview hidden" style="margin-top:1rem;"></div>
+    <button type="button" id="confirmBackgroundBtn" class="btn btn-ghost hidden" onclick="confirmBackground()">
+      Confirm background and continue →
+    </button>
+  </div>
+  <div class="status-panel" id="bgStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Fetching reel video...</p>
+  </div>
+</section>
+
+<section class="wizard-panel" id="step2">
+  <div class="card">
+    <h2>Use a voiceover reel</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">Paste a reel link that contains the voiceover you want to turn into captions.</p>
+    <div class="field">
+      <label for="voiceUrl">Voice Reel URL</label>
+      <input type="url" id="voiceUrl" placeholder="Paste Reel link for voiceover source">
+    </div>
+    <button class="btn btn-primary" id="fetchVoiceBtn" onclick="extractVoiceTranscript()">Extract Audio →</button>
+  </div>
+  <div class="status-panel" id="voiceStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Downloading and transcribing audio...</p>
+  </div>
+</section>
+
+<section class="wizard-panel" id="step3">
+  <div class="card">
+    <h2>Edit the transcript</h2>
+    <p class="subtitle" style="margin-bottom:1rem;">Edit the extracted audio text before generating the final voiceover and captions.</p>
+    <div class="field">
+      <label for="transcriptText">Transcript</label>
+      <textarea id="transcriptText" rows="8" placeholder="Transcribed text will appear here."></textarea>
+    </div>
+    <div class="wizard-nav">
+      <button class="btn btn-ghost" onclick="goToInstagramStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goToInstagramStep(4)">Next: Style →</button>
+    </div>
+  </div>
+</section>
+
+<section class="wizard-panel" id="step4">
+  <form id="instagramForm" enctype="multipart/form-data">
+    <input type="hidden" id="backgroundFile" name="background_file">
+
+    <div class="card">
+      <h2>Voiceover Voice</h2>
+      <div class="field">
+        <label for="voice">TTS Voice</label>
+        <select id="voice" name="voice">
+          {% for vid, label in voice_choices %}
+          <option value="{{ vid }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:1rem;">Caption Style</h2>
+      {% include "_caption_style.html" %}
+    </div>
+
+    {% include "_music_section.html" %}
+
+    <div class="wizard-nav">
+      <button type="button" class="btn btn-ghost" onclick="goToInstagramStep(3)">← Back</button>
+      <button type="submit" class="btn btn-primary" id="instagramAssembleBtn">🎬 Generate Instagram Short</button>
+    </div>
+  </form>
+</section>
+
+<section class="wizard-panel" id="step5">
+  <div class="status-panel visible" id="renderStatus">
+    <div class="spinner"></div>
+    <p class="status-msg">Assembling your Instagram Short...</p>
+    <p class="subtitle" style="margin-top:0.5rem; font-size:0.8rem;">TTS voiceover → captions → reel background video</p>
+  </div>
+  <div class="result-panel" id="resultPanel"></div>
+  <div class="wizard-nav" id="resultNav" style="display:none;">
+    <button class="btn btn-ghost" onclick="location.reload()">Create Another</button>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='instagram_mode.js') }}"></script>
+<script>
+setupRange("font_size", "fontSizeVal");
+setupRange("pill_opacity", "pillOpacityVal");
+setupRange("music_volume", "musicVolumeVal");
+setupMusicToggle("add_music", "musicOptions");
+setupColorPickers();
+initInstagramWizard();
+</script>
+{% endblock %}

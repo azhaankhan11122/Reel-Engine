@@ -6,116 +6,96 @@
 </p>
 
 <h1 align="center">🎬 Make Shorts</h1>
-<h3 align="center">Turn a single prompt into a viral-ready YouTube Short.<br/>No subscriptions. No tokens. No cloud bills.</h3>
+<h3 align="center">Local video automation for Shorts, Reels, and TikTok.<br/>No cloud fees, no paid tokens, no external API keys.</h3>
 
 <p align="center">
-  <strong>AI scriptwriting</strong> · <strong>Neural voiceover</strong> · <strong>Gameplay backgrounds</strong> · <strong>Word-synced captions</strong> · <strong>Beautiful web UI</strong>
+  <strong>AI Mode</strong> · <strong>Manual Mode</strong> · <strong>Instagram Mode</strong> · <strong>Voice transcription</strong> · <strong>Caption styling</strong>
 </p>
 
 <p align="center">
   <a href="#-launch-the-ui">Launch UI</a> ·
-  <a href="#-two-ways-to-create">Two Modes</a> ·
-  <a href="#-what-you-get">Features</a> ·
+  <a href="#-modes">Modes</a> ·
+  <a href="#-features">Features</a> ·
   <a href="#-quick-start">Quick Start</a> ·
-  <a href="#-fonts--styling">Fonts</a>
+  <a href="#-project-structure">Project Structure</a>
 </p>
 
 ---
 
 ## ⚡ What is this?
 
-**Make Shorts** is a local-first video automation engine built for **high-retention short-form content** — YouTube Shorts, TikTok, and Reels.
+**Make Shorts** is a locally-run editor and rendering pipeline for vertical short-form videos.
+Use the web UI to build shorts from:
+- an AI topic prompt,
+- your own video + custom text,
+- or an Instagram Reel as source material.
 
-Give it a topic (or your own script + video) and it outputs a **1080×1920 vertical MP4** with:
-
-| Layer | What happens |
-|-------|-------------|
-| 🧠 **Script** | Ollama writes a hook-first, 40–55s viral script |
-| 🎙️ **Voice** | Edge-TTS generates unlimited free voiceover |
-| 🎮 **Visuals** | Gameplay footage auto-downloaded & fast-cut every 3–5s |
-| 💬 **Captions** | Whisper syncs word-level timestamps → viral pill captions |
-| 🎵 **Music** | Optional background track with volume slider (UI) |
-| 📦 **Output** | Upload-ready `output/shorts_*.mp4` |
-
-> **Everything runs on your machine.** Script, transcription, and rendering are local. Only gameplay downloads and TTS need internet.
+The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
 
 ---
 
 ## 🖥 Launch the UI
-
-The fastest way to use Make Shorts:
 
 ```bash
 pip install -r requirements.txt
 python ui/app.py
 ```
 
-Open **http://127.0.0.1:5000**
-
-```
-┌─────────────────────────────────────┐
-│           🎬 Make Shorts            │
-│                                     │
-│   ┌───────────┐   ┌───────────┐    │
-│   │ 🤖 AI Mode │   │ ✋ Manual  │    │
-│   │  1-click   │   │  Full ctrl │    │
-│   └───────────┘   └───────────┘    │
-└─────────────────────────────────────┘
-```
+Open **http://127.0.0.1:5000** in your browser.
 
 ---
 
-## 🎯 Two Ways to Create
+## 🧩 Supported Modes
 
 ### 🤖 AI Mode
-1. Enter a topic — *"mind-blowing psychology facts"*
-2. *(Optional)* Upload background music + set volume slider
-3. Hit **Generate Short**
-4. Download your video
-
-The pipeline handles everything: script → voice → gameplay → captions → render.
+- Paste a topic prompt.
+- AI writes a hook-first script.
+- The app downloads free gameplay clips.
+- Voiceover is generated with Edge-TTS.
+- Captions are synced using Whisper.
+- Rendered video is ready to download.
 
 ### ✋ Manual Mode
-Full creative control:
+- Upload your own background video.
+- Enter custom voiceover/script text.
+- Pick caption font, colors, and highlight style.
+- Optionally upload background music.
+- The app generates captions and renders the final video.
 
-| Control | Options |
-|---------|---------|
-| **Background video** | Upload any MP4/MOV from your storage |
-| **Script** | Custom text box — your exact words |
-| **Font style** | 11 fonts including **robotic / sci-fi** options |
-| **Colors** | Text, highlight, accent, pill — color pickers |
-| **Background music** | Optional upload + volume dragger (0–50%) |
-| **Highlights** | Toggle auto power-word coloring |
+### 🎥 Instagram Mode
+- Paste an Instagram Reel link for the background source.
+- A preview of the downloaded reel appears in Step 1 for confirmation.
+- Paste a second reel link for the voiceover source.
+- The app downloads, extracts audio, and transcribes the voice.
+- Edit the extracted transcript before rendering.
+- Generate captions, voiceover, and final video from the confirmed reel.
+
+> Note: Use Reels with minimal on-screen text to get the best caption overlay results.
 
 ---
 
-## ✨ What You Get
+## ✨ Features
 
-### Viral Caption Engine
-- **1–3 word chunks** synced to Whisper timestamps (millisecond precision)
-- Thick black stroke + drop shadow for readability
-- Rounded semi-transparent pill background
-- Positioned at **62% vertical** — above platform UI overlays
-- Dynamic yellow/green highlights on power words
+### Automatic voice + captions
+- Edge-TTS creates voiceover audio.
+- Whisper transcription produces time-aligned captions.
+- Captions render in pill style with dynamic color highlights.
+- Text is positioned to avoid platform UI overlays.
 
-### Gameplay Background System
-- Auto-downloads free stock gameplay from Pexels
-- **Fast-cut rhythm** — new clip every 3–5 seconds (not 16s static slides)
-- Split-screen layout every 3rd cut for visual variety
-- Ken Burns zoom (1.0 → 1.15) + micro-shake on cuts
+### Background visuals
+- AI Mode uses gameplay footage downloaded from Pexels.
+- Manual Mode uses user-uploaded video directly.
+- Instagram Mode uses the confirmed reel video as background.
 
-### Background Music Mixer
-- Upload any MP3/WAV/M4A track in the UI
-- **Volume slider** controls how loud music plays *behind* the voice
-- Music auto-loops to match video length
-- Voice always stays at full volume
+### Styling controls
+- Choose from 11 caption fonts.
+- Customize text color, highlight color, accent color, pill color, and opacity.
+- Toggle automatic power-word highlighting.
+- Optional background music upload with volume control.
 
-### 11 Caption Fonts
-
-| Category | Fonts |
-|----------|-------|
-| **Viral / Bold** | Impact, Arial Black, Montserrat Black, Bold Sans |
-| **Robotic / Sci-Fi** | Orbitron, Audiowide, Share Tech Mono, Rajdhani, Exo 2, Roboto Mono, Press Start 2P |
+### Local-first pipeline
+- Runs on your machine with no paid cloud services.
+- Uses `ffmpeg`, `moviepy`, `edge-tts`, `faster-whisper`, and `yt-dlp`.
 
 ---
 
@@ -123,55 +103,31 @@ Full creative control:
 
 ### Prerequisites
 
-| Tool | Install | Required? |
-|------|---------|-----------|
-| **Python 3.9+** | [python.org](https://python.org) | ✅ |
-| **ffmpeg** | `brew install ffmpeg` (Mac) | ✅ |
-| **Ollama** | [ollama.com](https://ollama.com) | AI Mode only |
+| Tool | Required | Notes |
+|------|----------|-------|
+| Python 3.9+ | ✅ | Use system Python or a virtualenv |
+| ffmpeg | ✅ | `brew install ffmpeg` on macOS |
+| Ollama | Recommended for AI Mode | `ollama pull llama3.2` |
+
+### Install
 
 ```bash
-# Pull the script-writing model (one-time, ~2 GB)
-ollama pull llama3.2
-```
-
-### Install & Run
-
-```bash
-git clone <your-repo>
-cd make_shorts
+cd /Users/azhaankhan/Downloads/make_shorts
 pip install -r requirements.txt
-
-# Web UI (recommended)
-python ui/app.py
-
-# CLI (AI mode)
-python make_shorts.py "how to build confidence"
-
-# CLI (manual gameplay)
-python make_shorts.py --script my_script.txt --gameplay ./my_clips/
 ```
 
----
+### Run the UI
 
-## 🧠 Pipeline Architecture
+```bash
+python ui/app.py
+```
 
-```mermaid
-flowchart TD
-    A[Your Prompt or Script] --> B{Mode?}
-    B -->|AI| C[Ollama Local LLM]
-    B -->|Manual| D[Your Text]
-    C --> E[Edge-TTS Voiceover]
-    D --> E
-    E --> F{Background}
-    F -->|AI| G[Download Gameplay Clips]
-    F -->|Manual| H[Your Uploaded Video]
-    G --> I[faster-whisper Captions]
-    H --> I
-    I --> J[MoviePy Assembly]
-    J --> K{Music?}
-    K -->|Yes| L[Mix at Set Volume]
-    K -->|No| M[output/shorts.mp4]
-    L --> M
+### Run CLI modes
+
+```bash
+python make_shorts.py "your topic"
+python make_shorts.py --script my_script.txt --gameplay ./my_clips/
+python make_shorts.py --script my_script.txt --images ./my_photos/
 ```
 
 ---
@@ -180,84 +136,58 @@ flowchart TD
 
 ```
 make_shorts/
-├── make_shorts.py        # Core pipeline engine
+├── make_shorts.py        # Core render pipeline
+├── requirements.txt      # Python dependencies
 ├── ui/
-│   ├── app.py            # Flask web UI
-│   ├── templates/        # Home, AI Mode, Manual Mode pages
-│   └── static/           # CSS + JS
-├── fonts/                # Robotic & viral fonts (bundled)
-├── gameplay/             # Cached gameplay clips
-├── uploads/              # User-uploaded videos (manual mode)
-├── music/                # User-uploaded music tracks
-├── output/               # Finished MP4s
-└── temp/                 # Voiceover cache
+│   ├── app.py            # Flask UI server
+│   ├── templates/        # HTML templates for modes
+│   └── static/           # JS and CSS assets
+├── fonts/                # Bundled caption fonts
+├── gameplay/             # Downloaded gameplay clips
+├── uploads/              # Uploaded/reel videos
+├── music/                # Uploaded music files
+├── output/               # Rendered MP4 outputs
+└── temp/                 # Temporary audio/video assets
 ```
 
 ---
 
-## 🎨 Fonts & Styling
+## 🔧 Dependencies
 
-Bundled robotic fonts live in `fonts/`:
-
-```
-Orbitron-Bold.ttf        → Sci-fi robotic
-Audiowide-Regular.ttf    → Retro robot
-ShareTechMono-Regular.ttf → Tech monospace
-Rajdhani-Bold.ttf        → Futuristic
-Exo2-Bold.ttf            → Modern tech
-RobotoMono-Bold.ttf      → Code style
-PressStart2P-Regular.ttf → 8-bit pixel robot
-```
-
-In **Manual Mode**, pick any font from the dropdown and customize all colors live.
+The app uses:
+- `flask` for the web UI
+- `moviepy` for video composition
+- `edge-tts` for voice generation
+- `faster-whisper` for transcription
+- `requests` for HTTP downloads
+- `yt-dlp` for Instagram Reel downloads
 
 ---
 
-## 🛠 CLI Reference
+## 🛠 Notes
 
-```bash
-# Full AI pipeline
-python make_shorts.py "your topic"
-
-# Your own script
-python make_shorts.py --script script.txt
-
-# Your own gameplay folder
-python make_shorts.py "topic" --gameplay ./clips/
-
-# Your own images (Ken Burns mode)
-python make_shorts.py "topic" --images ./photos/
-```
-
-Output: `output/shorts_final.mp4`
-
----
-
-## ⚙️ Configuration
-
-Key constants in `make_shorts.py`:
-
-```python
-W, H = 1080, 1920          # 9:16 resolution
-CAPTION_Y_CENTER = 0.62      # Caption sweet spot
-IMAGE_CUT_MIN = 3.0          # Fast-cut min seconds
-IMAGE_CUT_MAX = 5.0          # Fast-cut max seconds
-TTS_VOICE = "en-US-GuyNeural"  # Change voice here
-```
-
-List all Edge-TTS voices:
-```bash
-edge-tts --list-voices
-```
+- AI Mode requires Ollama for prompt-to-script generation.
+- The web UI defaults to `http://127.0.0.1:5000`.
+- If port `5000` is occupied, use another available port.
 
 ---
 
 ## ⚠️ Troubleshooting
 
-<details>
-<summary><strong>Ollama connection refused</strong></summary>
+### `moviepy.editor` import issue
+If `python ui/app.py` fails with `No module named 'moviepy.editor'`, install the requirements and try again.
 
+```bash
+pip install -r requirements.txt
+```
+
+### Ollama issues
 Start Ollama before using AI Mode:
+
+```bash
+ollama pull llama3.2
+ollama serve
+```
 ```bash
 ollama serve
 # or open the Ollama desktop app

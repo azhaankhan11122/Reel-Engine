@@ -335,11 +335,15 @@ video.preview {
   margin-left: 0.35rem;
 }
 
-.music-options {
+..music-options {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
   transition: opacity 0.2s;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .music-options.hidden {

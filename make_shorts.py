@@ -1041,6 +1041,7 @@ async def run_manual_pipeline(
     caption_style: CaptionStyle,
     music_path: Path | None = None,
     music_volume: float = 0.15,
+    voice: str = TTS_VOICE,
 ):
     """Manual pipeline: user video + custom text + caption styling."""
     check_ffmpeg()
@@ -1053,7 +1054,7 @@ async def run_manual_pipeline(
         raise ValueError("Script text cannot be empty.")
 
     audio_path = temp_dir / "voiceover_manual.mp3"
-    await generate_audio(text.strip(), audio_path)
+    await generate_audio(text.strip(), audio_path, voice=voice)
     segments = transcribe_audio(audio_path)
     out_path = out_dir / "shorts_manual.mp4"
     assemble_video([video_path], audio_path, segments, out_path, caption_style=caption_style)

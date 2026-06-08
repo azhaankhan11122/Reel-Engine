@@ -3,14 +3,22 @@
 
 import asyncio
 import sys
+import subprocess
 import threading
 import traceback
 import uuid
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
+from moviepy import VideoFileClip
 from werkzeug.utils import secure_filename
+import requests
+try:
+    import yt_dlp
+except ImportError:
+    yt_dlp = None
 
 APP_DIR = Path(__file__).parent
 PROJECT_DIR = APP_DIR.parent
@@ -106,6 +114,80 @@ def _save_music_upload(file_storage, job_id: str):
     return music_path
 
 
+def _download_direct_video(url: str, out_path: Path):
+    parsed = urlparse(url)
+    ext = Path(parsed.path).suffix.lower() or ".mp4"
+    out_path = out_path.with_suffix(ext)
+    resp = requests.get(url, stream=True, timeout=90)
+    resp.raise_for_status()
+    content_type = resp.headers.get("content-type", "")
+    if "video" not in content_type and ext not in {".mp4", ".mov", ".webm", ".mkv", ".m4v"}:
+        raise ValueError("URL must point to a direct video file or a supported reel URL.")
+    with open(out_path, "wb") as f:
+        for chunk in resp.iter_content(chunk_size=1024 * 256):
+            if chunk:
+                f.write(chunk)
+    return out_path
+
+
+def _download_remote_video(url: str, job_id: str):
+    if yt_dlp is None:
+        raise RuntimeError(
+            "yt_dlp is not installed. Install yt-dlp or provide a direct video URL."
+        )
+    video_base = UPLOAD_DIR / f"instagram_{job_id}"
+    ydl_opts = {
+        "outtmpl": str(video_base.with_suffix(".%(ext)s")),
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "merge_output_format": "mp4",
+        "quiet": True,
+        "no_warnings": True,
+        "ignoreerrors": False,
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filepath = None
+            if info is None:
+                raise RuntimeError("Unable to download media from the provided URL.")
+            if info.get("requested_downloads"):
+                filepath = Path(info["requested_downloads"][0].get("filepath", ""))
+            if not filepath and info.get("filepath"):
+                filepath = Path(info["filepath"])
+            if not filepath:
+                filepath = Path(ydl.prepare_filename(info))
+            if not filepath.exists():
+                raise RuntimeError("Downloaded file was not found on disk.")
+            duration = info.get("duration")
+            return filepath, duration
+    except Exception as exc:
+        raise RuntimeError(f"Download failed: {exc}")
+
+
+def _extract_audio_from_video(video_path: Path, audio_path: Path):
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(video_path),
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                str(audio_path),
+            ],
+            check=True,
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(
+            f"Audio extraction failed: {exc.stderr.decode('utf-8', errors='ignore')}"
+        )
+
+
 def _caption_style_from_form(form) -> CaptionStyle:
     return CaptionStyle(
         font_family=form.get("font_family", "impact"),
@@ -132,6 +214,109 @@ def ai_mode():
 @app.route("/manual")
 def manual_mode():
     return render_template("manual_mode.html")
+
+
+@app.route("/instagram")
+def instagram_mode():
+    return render_template("instagram_mode.html")
+
+
+@app.route("/api/instagram/fetch", methods=["POST"])
+def api_instagram_fetch():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "Please enter the Instagram Reel link."}), 400
+
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        path, duration = _download_remote_video(url, job_id)
+        if duration is None:
+            with VideoFileClip(str(path)) as clip:
+                duration = clip.duration or 0
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "filename": path.name,
+        "duration": round(duration, 1),
+        "preview_url": f"/uploads/{path.name}",
+    })
+
+
+@app.route("/api/instagram/transcribe", methods=["POST"])
+def api_instagram_transcribe():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "Please enter the Reel link for voice extraction."}), 400
+
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        video_path, duration = _download_remote_video(url, job_id)
+        audio_path = TEMP_DIR / f"instagram_voice_{job_id}.mp3"
+        _extract_audio_from_video(video_path, audio_path)
+        segments = transcribe_audio(audio_path)
+        text = " ".join(seg.text.strip() for seg in segments if getattr(seg, "text", None))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "filename": video_path.name,
+        "duration": round(duration or 0, 1),
+        "transcript": text or "No spoken audio was detected.",
+    })
+
+
+@app.route("/api/instagram/assemble", methods=["POST"])
+def api_instagram_assemble():
+    background_file = (request.form.get("background_file") or "").strip()
+    text = (request.form.get("text") or "").strip()
+    voice = request.form.get("voice", "en-US-GuyNeural")
+
+    if not background_file:
+        return jsonify({"error": "Missing Instagram background video."}), 400
+    if not text:
+        return jsonify({"error": "Please provide the edited transcript text."}), 400
+
+    background_path = UPLOAD_DIR / secure_filename(background_file)
+    if not background_path.exists():
+        return jsonify({"error": "Background video not found. Fetch it again."}), 400
+
+    style = _caption_style_from_form(request.form)
+    add_music = request.form.get("add_music") == "true"
+    music_volume = _parse_music_volume(request.form.get("music_volume", 15))
+    job_id = str(uuid.uuid4())[:8]
+
+    try:
+        music_path = _save_music_upload(request.files.get("music"), job_id) if add_music else None
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    jobs[job_id] = {
+        "status": "queued",
+        "message": "Assembling Instagram Short...",
+        "mode": "instagram",
+        "created": datetime.now().isoformat(),
+    }
+
+    def task():
+        out_path = _run_async(
+            run_manual_pipeline(
+                background_path,
+                text,
+                OUTPUT_DIR,
+                TEMP_DIR,
+                style,
+                music_path=music_path,
+                music_volume=music_volume if music_path else 0,
+                voice=voice,
+            )
+        )
+        return {"video_url": f"/output/{out_path.name}"}
+
+    _start_job(job_id, task)
+    return jsonify({"job_id": job_id})
 
 
 @app.route("/api/ai/voices")
@@ -353,6 +538,11 @@ def serve_session_file(session_id, filename):
     if not session_dir.exists():
         return "Session not found", 404
     return send_from_directory(session_dir, filename)
+
+
+@app.route("/uploads/<path:filename>")
+def serve_upload(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
 
 
 @app.route("/output/<path:filename>")
