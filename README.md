@@ -188,6 +188,8 @@ The app uses:
 - `GET /api/status/<job_id>` — Returns job progress including `status`, `message`, and `percent` (0–100).
 - `POST /api/instagram/trim` — JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result.
 
+- `POST /api/clear-storage` — Clears local storage directories used by the app: `uploads/`, `temp/`, `output/`, `sessions/`, `music/`, and `gameplay/`. Use the Home page button or call this endpoint to permanently delete stored media and session data (local only).
+
 These endpoints are intended for local automation or to integrate with simple scripts.
 
 ---

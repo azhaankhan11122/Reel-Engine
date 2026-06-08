@@ -15,6 +15,7 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 from moviepy import VideoFileClip
 from werkzeug.utils import secure_filename
 import requests
+import shutil
 try:
     import yt_dlp
 except ImportError:
@@ -79,6 +80,7 @@ def _start_job(job_id: str, target):
     def worker():
         jobs[job_id]["status"] = "running"
         jobs[job_id]["message"] = "Processing..."
+        jobs[job_id].setdefault("percent", 0)
         try:
             result = target()
             jobs[job_id].update({
@@ -199,6 +201,7 @@ def _caption_style_from_form(form) -> CaptionStyle:
         pill_color=form.get("pill_color", "#000000"),
         pill_opacity=int(form.get("pill_opacity", 140)),
         dynamic_highlights=form.get("dynamic_highlights", "true") == "true",
+        caption_position=form.get("caption_position", "bottom"),
     )
 
 
@@ -225,24 +228,34 @@ def instagram_mode():
 @app.route("/api/instagram/fetch", methods=["POST"])
 def api_instagram_fetch():
     data = request.get_json(silent=True) or {}
-    url = (data.get("url") or "").strip()
-    if not url:
-        return jsonify({"error": "Please enter the Instagram Reel link."}), 400
+    # Accept either a single 'url' or a newline-separated 'urls' list
+    urls = []
+    if data.get("urls"):
+        urls = [u.strip() for u in data.get("urls") if u and u.strip()]
+    else:
+        raw = (data.get("url") or "").strip()
+        if raw:
+            urls = [u.strip() for u in raw.splitlines() if u.strip()]
+    if not urls:
+        return jsonify({"error": "Please enter at least one Instagram Reel link."}), 400
 
-    job_id = str(uuid.uuid4())[:10]
-    try:
-        path, duration = _download_remote_video(url, job_id)
-        if duration is None:
-            with VideoFileClip(str(path)) as clip:
-                duration = clip.duration or 0
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    results = []
+    for u in urls:
+        job_id = str(uuid.uuid4())[:10]
+        try:
+            path, duration = _download_remote_video(u, job_id)
+            if duration is None:
+                with VideoFileClip(str(path)) as clip:
+                    duration = clip.duration or 0
+            results.append({
+                "filename": path.name,
+                "duration": round(duration, 1),
+                "preview_url": f"/uploads/{path.name}",
+            })
+        except Exception as e:
+            results.append({"error": str(e), "url": u})
 
-    return jsonify({
-        "filename": path.name,
-        "duration": round(duration, 1),
-        "preview_url": f"/uploads/{path.name}",
-    })
+    return jsonify({"results": results})
 
 
 @app.route("/api/instagram/transcribe", methods=["POST"])
@@ -259,12 +272,19 @@ def api_instagram_transcribe():
         _extract_audio_from_video(video_path, audio_path)
         segments = transcribe_audio(audio_path)
         text = " ".join(seg.text.strip() for seg in segments if getattr(seg, "text", None))
+        # also include audio duration for client-side comparison
+        try:
+            from moviepy.editor import AudioFileClip
+            audio_dur = AudioFileClip(str(audio_path)).duration
+        except Exception:
+            audio_dur = None
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
     return jsonify({
         "filename": video_path.name,
         "duration": round(duration or 0, 1),
+        "audio_duration": round(audio_dur or 0, 1),
         "transcript": text or "No spoken audio was detected.",
     })
 
@@ -297,11 +317,19 @@ def api_instagram_assemble():
     jobs[job_id] = {
         "status": "queued",
         "message": "Assembling Instagram Short...",
+        "percent": 0,
         "mode": "instagram",
         "created": datetime.now().isoformat(),
     }
 
     def task():
+        def progress_cb(pct, msg=None):
+            jobs[job_id]["percent"] = int(pct)
+            if msg:
+                jobs[job_id]["message"] = msg
+
+        # mark rendering started
+        jobs[job_id]["percent"] = 5
         out_path = _run_async(
             run_manual_pipeline(
                 background_path,
@@ -312,8 +340,10 @@ def api_instagram_assemble():
                 music_path=music_path,
                 music_volume=music_volume if music_path else 0,
                 voice=voice,
+                progress_callback=progress_cb,
             )
         )
+        jobs[job_id]["percent"] = 100
         return {"video_url": f"/output/{out_path.name}"}
 
     _start_job(job_id, task)
@@ -525,6 +555,7 @@ def api_status(job_id):
         "status": job["status"],
         "message": job["message"],
         "mode": job.get("mode"),
+        "percent": int(job.get("percent", 0)),
     }
     if job["status"] == "done":
         payload["result"] = job.get("result", {})
@@ -549,6 +580,58 @@ def serve_upload(filename):
 @app.route("/output/<path:filename>")
 def serve_output(filename):
     return send_from_directory(OUTPUT_DIR, filename)
+
+
+@app.route("/api/instagram/trim", methods=["POST"])
+def api_instagram_trim():
+    data = request.get_json(silent=True) or {}
+    filename = (data.get("filename") or "").strip()
+    try:
+        start = float(data.get("start", 0))
+        end = float(data.get("end", 0))
+    except Exception:
+        return jsonify({"error": "Invalid start/end values."}), 400
+    if not filename:
+        return jsonify({"error": "Missing filename to trim."}), 400
+    src = UPLOAD_DIR / secure_filename(filename)
+    if not src.exists():
+        return jsonify({"error": "Source file not found."}), 404
+    out_name = f"{src.stem}_trim_{int(start)}_{int(end)}{src.suffix}"
+    out_path = UPLOAD_DIR / out_name
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", str(src), "-ss", str(start), "-to", str(end), "-c", "copy", str(out_path)
+        ], check=True, capture_output=True)
+    except subprocess.CalledProcessError as exc:
+        return jsonify({"error": f"Trim failed: {exc.stderr.decode('utf-8', errors='ignore')}"}), 500
+    return jsonify({"filename": out_name, "preview_url": f"/uploads/{out_name}"})
+
+
+@app.route("/api/clear-storage", methods=["POST"])
+def api_clear_storage():
+    """Delete files under upload/temp/output/sessions/music/gameplay directories.
+    This is meant for local development use only and will permanently remove files.
+    """
+    targets = [UPLOAD_DIR, TEMP_DIR, OUTPUT_DIR, SESSIONS_DIR, MUSIC_DIR, GAMEPLAY_DIR]
+    results = {}
+    for d in targets:
+        removed = 0
+        if not d.exists():
+            results[str(d.name)] = "missing"
+            continue
+        for child in list(d.iterdir()):
+            try:
+                if child.is_dir():
+                    shutil.rmtree(child)
+                    removed += 1
+                else:
+                    child.unlink()
+                    removed += 1
+            except Exception as e:
+                results.setdefault(str(d.name), []).append(f"err:{child.name}:{e}")
+        if str(d.name) not in results:
+            results[str(d.name)] = f"removed:{removed}"
+    return jsonify({"ok": True, "message": "Storage cleared.", "details": results})
 
 
 if __name__ == "__main__":
