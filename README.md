@@ -36,12 +36,16 @@ The app exports a **1080×1920 MP4** with automatic captions, voiceover, and opt
 
 ## 🖥 Launch the UI
 
+Install dependencies and run the UI (local development):
+
 ```bash
+cd /Users/azhaankhan/Downloads/make_shorts
 pip install -r requirements.txt
+# Start the web UI (defaults to port 5000; falls back to 5001 if occupied)
 python ui/app.py
 ```
 
-Open **http://127.0.0.1:5000** in your browser.
+Open the URL printed by the server, typically `http://127.0.0.1:5000` (or `:5001` if 5000 is in use).
 
 ---
 
@@ -70,6 +74,19 @@ Open **http://127.0.0.1:5000** in your browser.
 - Edit the extracted transcript before rendering.
 - Generate captions, voiceover, and final video from the confirmed reel.
 
+New (June 2026): Instagram Mode enhancements
+- Paste multiple Reel URLs (one per line) in Step 1 — the app downloads each and shows a selectable preview list.
+- Choose which reel to use as the background; confirm to proceed.
+- The transcribe step now returns both `duration` (video) and `audio_duration` (extracted audio) so you can compare audio vs video length.
+- If audio/video lengths differ, the UI will suggest options:
+  - Auto-adjust: add more script text (based on default speaking speed) if the video is longer than the audio.
+  - Trim video: the app includes a trimming API so you can cut a chosen reel segment before rendering.
+  - Choose caption position (top/center/bottom) in Step 4.
+
+Progress feedback: rendering now displays a visual progress bar and percentage (via the `/api/status/<job_id>` response's `percent` field).
+
+Notes: For best caption results, prefer reels without on-screen text overlays and confirm the chosen background before continuing.
+
 > Note: Use Reels with minimal on-screen text to get the best caption overlay results.
 
 ---
@@ -81,6 +98,7 @@ Open **http://127.0.0.1:5000** in your browser.
 - Whisper transcription produces time-aligned captions.
 - Captions render in pill style with dynamic color highlights.
 - Text is positioned to avoid platform UI overlays.
+- New: caption vertical position selectable (`top`, `center`, `bottom`).
 
 ### Background visuals
 - AI Mode uses gameplay footage downloaded from Pexels.
@@ -161,6 +179,16 @@ The app uses:
 - `faster-whisper` for transcription
 - `requests` for HTTP downloads
 - `yt-dlp` for Instagram Reel downloads
+
+## 🧭 API Endpoints (useful for automation)
+
+- `POST /api/instagram/fetch` — Accepts JSON `{ "url": "..." }` or `{ "urls": ["...","..."] }`. Returns `results` array with `{ filename, duration, preview_url }` for each fetched reel.
+- `POST /api/instagram/transcribe` — Accepts `{ "url": "..." }`. Returns `{ filename, duration, audio_duration, transcript }`.
+- `POST /api/instagram/assemble` — Form POST used by the UI to render the final video; returns `{ job_id }` to poll with `/api/status/<job_id>`.
+- `GET /api/status/<job_id>` — Returns job progress including `status`, `message`, and `percent` (0–100).
+- `POST /api/instagram/trim` — JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result.
+
+These endpoints are intended for local automation or to integrate with simple scripts.
 
 ---
 
