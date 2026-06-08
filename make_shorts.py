@@ -186,6 +186,7 @@ class CaptionStyle:
     pill_color: str = "#000000"
     pill_opacity: int = PILL_OPACITY
     dynamic_highlights: bool = True
+    caption_position: str = "bottom"
 
 
 def hex_to_rgba(hex_color, alpha=255):
@@ -876,7 +877,14 @@ def assemble_video(media_paths, audio_path: Path, segments, out_path: Path, capt
     video = video.with_audio(audio)
 
     chunks = make_caption_chunks(segments)
-    caption_y = int(H * CAPTION_Y_CENTER - CAPTION_BOX_HEIGHT / 2)
+    # Determine caption vertical position based on style
+    pos = (caption_style.caption_position if caption_style is not None else "bottom") if hasattr(caption_style, "caption_position") else "bottom"
+    if pos == "top":
+        caption_y = int(H * 0.15)
+    elif pos == "center":
+        caption_y = int(H * CAPTION_Y_CENTER - CAPTION_BOX_HEIGHT / 2)
+    else:
+        caption_y = int(H * 0.82 - CAPTION_BOX_HEIGHT / 2)
 
     cap_clips = []
     for i, chunk in enumerate(chunks):
@@ -1042,6 +1050,7 @@ async def run_manual_pipeline(
     music_path: Path | None = None,
     music_volume: float = 0.15,
     voice: str = TTS_VOICE,
+    progress_callback=None,
 ):
     """Manual pipeline: user video + custom text + caption styling."""
     check_ffmpeg()
@@ -1054,9 +1063,24 @@ async def run_manual_pipeline(
         raise ValueError("Script text cannot be empty.")
 
     audio_path = temp_dir / "voiceover_manual.mp3"
+    if progress_callback:
+        try:
+            progress_callback(15, "Generating TTS voiceover...")
+        except Exception:
+            pass
     await generate_audio(text.strip(), audio_path, voice=voice)
+    if progress_callback:
+        try:
+            progress_callback(35, "Transcribing generated audio...")
+        except Exception:
+            pass
     segments = transcribe_audio(audio_path)
     out_path = out_dir / "shorts_manual.mp4"
+    if progress_callback:
+        try:
+            progress_callback(60, "Preparing visuals and captions...")
+        except Exception:
+            pass
     assemble_video([video_path], audio_path, segments, out_path, caption_style=caption_style)
     if music_path and music_path.exists() and music_volume > 0:
         mix_background_music(out_path, music_path, music_volume)

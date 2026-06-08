@@ -18,52 +18,74 @@ function goToInstagramStep(n) {
 }
 
 async function fetchReelBackground() {
-  const url = document.getElementById("reelUrl").value.trim();
+  const raw = document.getElementById("reelUrls").value.trim();
   const errors = document.getElementById("errors");
   const btn = document.getElementById("fetchReelBtn");
   errors.innerHTML = "";
 
-  if (!url) {
-    showError("errors", "Please paste a valid Instagram Reel link.");
+  if (!raw) {
+    showError("errors", "Please paste one or more Instagram Reel links.");
+    return;
+  }
+
+  const urls = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!urls.length) {
+    showError("errors", "Please paste one or more valid Reel links.");
     return;
   }
 
   btn.disabled = true;
-  showStatus("bgStatus", "Downloading the reel background...");
+  showStatus("bgStatus", "Downloading the reel backgrounds...");
 
   try {
     const res = await fetch("/api/instagram/fetch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ urls }),
     });
     const data = await res.json();
     if (!res.ok) {
-      showError("errors", data.error || "Could not download the reel.");
+      showError("errors", data.error || "Could not download the reels.");
       btn.disabled = false;
       document.getElementById("bgStatus").classList.remove("visible");
       return;
     }
 
-    instagramState.backgroundFile = data.filename;
-    instagramState.backgroundDuration = data.duration;
-    document.getElementById("backgroundFile").value = data.filename;
-
     const preview = document.getElementById("backgroundPreview");
-    preview.innerHTML = `
-      <div class="card">
-        <h3>Reel loaded</h3>
-        <p class="subtitle">Length: ${data.duration}s</p>
-        <video class="preview" controls src="/uploads/${data.filename}"></video>
-      </div>
-    `;
+    preview.innerHTML = `<div class="card"><h3>Choose a background reel</h3><div id="reelList"></div></div>`;
+    const list = preview.querySelector('#reelList');
+    list.innerHTML = '';
+    data.results.forEach((r, idx) => {
+      if (r.error) {
+        const el = document.createElement('div');
+        el.className = 'reel-item error';
+        el.textContent = `Failed: ${r.url || ''} — ${r.error}`;
+        list.appendChild(el);
+        return;
+      }
+      const id = `reelChoice_${idx}`;
+      const item = document.createElement('div');
+      item.className = 'reel-item';
+      item.innerHTML = `
+        <label style="display:flex; gap:0.75rem; align-items:center;">
+          <input type="radio" name="reel_choice" id="${id}" value="${r.filename}" ${idx===0? 'checked' : ''}>
+          <div style="flex:1;">
+            <strong>${r.filename}</strong>
+            <div class="subtitle">Length: ${r.duration}s</div>
+            <video class="preview" controls src="/uploads/${r.filename}" style="max-width:320px; display:block; margin-top:0.5rem;"></video>
+          </div>
+        </label>
+      `;
+      list.appendChild(item);
+    });
+
     preview.classList.remove("hidden");
     document.getElementById("confirmBackgroundBtn").classList.remove("hidden");
 
     document.getElementById("bgStatus").classList.remove("visible");
     btn.disabled = false;
   } catch (err) {
-    showError("errors", err.message || "Failed to fetch reel.");
+    showError("errors", err.message || "Failed to fetch reels.");
     btn.disabled = false;
     document.getElementById("bgStatus").classList.remove("visible");
   }
@@ -112,10 +134,16 @@ async function extractVoiceTranscript() {
 }
 
 function confirmBackground() {
-  if (!instagramState.backgroundFile) {
-    showError("errors", "Please fetch and confirm a reel background first.");
+  const sel = document.querySelector('input[name="reel_choice"]:checked');
+  if (!sel) {
+    showError("errors", "Please select a background reel.");
     return;
   }
+  instagramState.backgroundFile = sel.value;
+  // try to capture duration from preview card
+  const vid = sel.closest('.reel-item')?.querySelector('video');
+  instagramState.backgroundDuration = vid ? Math.round((vid.duration || 0) * 10)/10 : null;
+  document.getElementById('backgroundFile').value = instagramState.backgroundFile;
   goToInstagramStep(2);
 }
 
@@ -162,8 +190,24 @@ function initInstagramWizard() {
 
       await pollJob(data.job_id, (job) => {
         showStatus("renderStatus", job.message || job.status);
+        // update progress bar
+        const pct = Math.max(0, Math.min(100, parseInt(job.percent || 0)));
+        const bar = document.getElementById('progressBar');
+        const fill = document.getElementById('progressFill');
+        const pctTxt = document.getElementById('progressPercent');
+        if (bar && fill && pctTxt) {
+          bar.style.display = 'block';
+          pctTxt.style.display = 'block';
+          fill.style.width = pct + '%';
+          pctTxt.textContent = pct + '%';
+        }
         if (job.status === "done") {
           document.getElementById("renderStatus").classList.remove("visible");
+          // ensure progress shows 100%
+          const fill = document.getElementById('progressFill');
+          const pctTxt = document.getElementById('progressPercent');
+          if (fill) fill.style.width = '100%';
+          if (pctTxt) pctTxt.textContent = '100%';
           const r = job.result;
           const panel = document.getElementById("resultPanel");
           panel.classList.add("visible");

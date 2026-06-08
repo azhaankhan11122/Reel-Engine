@@ -27,8 +27,8 @@
     <h2>Instagram reel background</h2>
     <p class="subtitle" style="margin-bottom:1rem;">Paste a reel link and use that video as the background for your Short.</p>
     <div class="field">
-      <label for="reelUrl">Reel URL</label>
-      <input type="url" id="reelUrl" placeholder="Paste Instagram Reel link here" autofocus>
+      <label for="reelUrls">Reel URLs (one per line)</label>
+      <textarea id="reelUrls" placeholder="Paste one or more Instagram Reel links (each on its own line)" rows="3" autofocus></textarea>
     </div>
     <p class="subtitle warning">Use only videos with no text overlays for best caption results.</p>
     <button class="btn btn-primary" id="fetchReelBtn" onclick="fetchReelBackground()">Fetch Reel →</button>
@@ -109,6 +109,12 @@
     <div class="spinner"></div>
     <p class="status-msg">Assembling your Instagram Short...</p>
     <p class="subtitle" style="margin-top:0.5rem; font-size:0.8rem;">TTS voiceover → captions → reel background video</p>
+  </div>
+  <div style="margin-top:1rem;">
+    <div id="progressBar" style="width:100%; background:#222; height:14px; border-radius:8px; overflow:hidden; display:none;">
+      <div id="progressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#4caf50,#8bc34a);"></div>
+    </div>
+    <div id="progressPercent" style="margin-top:6px; font-size:0.9rem; display:none;">0%</div>
   </div>
   <div class="result-panel" id="resultPanel"></div>
   <div class="wizard-nav" id="resultNav" style="display:none;">
