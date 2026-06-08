@@ -552,6 +552,12 @@ def serve_output(filename):
 
 
 if __name__ == "__main__":
-    print("\n  Make Shorts UI")
-    print("  Open http://127.0.0.1:5000 in your browser\n")
-    app.run(host="127.0.0.1", port=5000, debug=False, threaded=True)
+    port = 5000
+    try:
+        app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
+    except OSError:
+        port = 5001
+        print(f"\n  Port {port-1} in use, trying {port}...\n")
+        print("  Make Shorts UI")
+        print(f"  Open http://127.0.0.1:{port} in your browser\n")
+        app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
