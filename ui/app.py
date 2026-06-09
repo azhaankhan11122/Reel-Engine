@@ -16,6 +16,7 @@ from moviepy import VideoFileClip
 from werkzeug.utils import secure_filename
 import requests
 import shutil
+import re
 try:
     import yt_dlp
 except ImportError:
@@ -205,6 +206,70 @@ def _caption_style_from_form(form) -> CaptionStyle:
     )
 
 
+def _generate_caption_and_tags(text: str):
+    """Simple heuristic to create a punchy caption and a list of hashtags from the script text.
+    This is intentionally local and lightweight — extracts keywords and crafts a short hook.
+    """
+    if not text:
+        return {"caption": "", "tags": []}
+    s = text.strip()
+    # Pick the first sentence or first 70 chars as the hook
+    first_sentence = re.split(r'[\.\n!\?]', s)[0][:120].strip()
+    # Create a hook: if it already has a question or exclamation, keep; else add a leading hook
+    hook = first_sentence
+    if not re.search(r'[!?]$', hook):
+        if len(hook.split()) < 6:
+            hook = hook + ' — you need to see this.'
+        else:
+            hook = 'This blew my mind: ' + hook
+
+    # Extract keywords: words >4 chars, not stopwords
+    stop = set(['there','their','about','which','would','should','could','these','those','when','where','what','this','that','with','your','you','from','have','were','them','they'])
+    words = re.findall(r"\b[\w']{4,}\b", s.lower())
+    keywords = [w for w in words if w not in stop]
+    uniq = []
+    for w in keywords:
+        if w not in uniq:
+            uniq.append(w)
+        if len(uniq) >= 8:
+            break
+    tags = [('#' + re.sub(r'[^a-z0-9]','', w)) for w in uniq[:8]]
+
+    # Add a couple of trending-ish tags heuristically
+    if 'how' in s.lower() or 'why' in s.lower():
+        tags = tags[:4] + ['#lifehacks', '#viral']
+    else:
+        tags = tags[:4] + ['#shorts', '#trending']
+
+    return {"caption": hook, "tags": tags}
+
+
+def _apply_watermark(src_path: Path, watermark_text: str, position: str, opacity_pct: float) -> Path:
+    """Apply watermark text to `src_path` and write a new file in OUTPUT_DIR with _wm suffix.
+    Position: top-left, top-right, bottom-left, bottom-right, center
+    """
+    out_name = f"{src_path.stem}_wm{src_path.suffix}"
+    out_path = OUTPUT_DIR / out_name
+    alpha = max(0.0, min(1.0, opacity_pct / 100.0))
+    # map position to ffmpeg drawtext coordinates
+    pos_map = {
+        'top-left': "x=16:y=16",
+        'top-right': "x=w-tw-16:y=16",
+        'bottom-left': "x=16:y=h-th-16",
+        'bottom-right': "x=w-tw-16:y=h-th-16",
+        'center': "x=(w-tw)/2:y=(h-th)/2",
+    }
+    coord = pos_map.get(position, pos_map['bottom-right'])
+    # escape text for ffmpeg
+    txt = watermark_text.replace("'", "\\'")
+    draw = f"drawtext=text='{txt}':fontcolor=white@{alpha}:fontsize=36:box=1:boxcolor=black@0.3:{coord}"
+    try:
+        subprocess.run(['ffmpeg', '-y', '-i', str(src_path), '-vf', draw, '-c:a', 'copy', str(out_path)], check=True, capture_output=True)
+        return out_path
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(f"Watermarking failed: {exc.stderr.decode('utf-8', errors='ignore')}")
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -304,6 +369,16 @@ def api_instagram_transcribe():
     })
 
 
+@app.route('/api/analyze-text', methods=['POST'])
+def api_analyze_text():
+    data = request.get_json(silent=True) or {}
+    text = (data.get('text') or '').strip()
+    if not text:
+        return jsonify({'error': 'Missing text to analyze.'}), 400
+    out = _generate_caption_and_tags(text)
+    return jsonify(out)
+
+
 @app.route("/api/instagram/assemble", methods=["POST"])
 def api_instagram_assemble():
     background_file = (request.form.get("background_file") or "").strip()
@@ -322,6 +397,12 @@ def api_instagram_assemble():
     style = _caption_style_from_form(request.form)
     add_music = request.form.get("add_music") == "true"
     music_volume = _parse_music_volume(request.form.get("music_volume", 15))
+    watermark_text = (request.form.get('watermark_text') or '').strip()
+    watermark_position = request.form.get('watermark_position', 'bottom-right')
+    try:
+        watermark_opacity = float(request.form.get('watermark_opacity', 50))
+    except Exception:
+        watermark_opacity = 50.0
     job_id = str(uuid.uuid4())[:8]
 
     try:
@@ -358,8 +439,12 @@ def api_instagram_assemble():
                 progress_callback=progress_cb,
             )
         )
+        # Optionally apply watermark post-process
+        final_path = out_path
+        if watermark_text:
+            final_path = _apply_watermark(final_path, watermark_text, watermark_position, watermark_opacity)
         jobs[job_id]["percent"] = 100
-        return {"video_url": f"/output/{out_path.name}"}
+        return {"video_url": f"/output/{final_path.name}"}
 
     _start_job(job_id, task)
     return jsonify({"job_id": job_id})
@@ -473,6 +558,12 @@ def api_ai_assemble():
     style = _caption_style_from_form(request.form)
     add_music = request.form.get("add_music") == "true"
     music_volume = _parse_music_volume(request.form.get("music_volume", 15))
+    watermark_text = (request.form.get('watermark_text') or '').strip()
+    watermark_position = request.form.get('watermark_position', 'bottom-right')
+    try:
+        watermark_opacity = float(request.form.get('watermark_opacity', 50))
+    except Exception:
+        watermark_opacity = 50.0
 
     job_id = str(uuid.uuid4())[:8]
     try:
@@ -503,8 +594,11 @@ def api_ai_assemble():
                 out_name=out_name,
             )
         )
+        final = out_path
+        if watermark_text:
+            final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
         return {
-            "video_url": f"/output/{out_path.name}",
+            "video_url": f"/output/{final.name}",
             "script": script,
         }
 
@@ -529,6 +623,12 @@ def api_manual_generate():
     style = _caption_style_from_form(request.form)
     add_music = request.form.get("add_music") == "true"
     music_volume = _parse_music_volume(request.form.get("music_volume", 15))
+        watermark_text = (request.form.get('watermark_text') or '').strip()
+        watermark_position = request.form.get('watermark_position', 'bottom-right')
+        try:
+            watermark_opacity = float(request.form.get('watermark_opacity', 50))
+        except Exception:
+            watermark_opacity = 50.0
 
     job_id = str(uuid.uuid4())[:8]
     saved_name = f"manual_{job_id}{ext}"
@@ -555,6 +655,10 @@ def api_manual_generate():
                 music_volume=music_volume if music_path else 0,
             )
         )
+            final = out_path
+            if watermark_text:
+                final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
+            return {"video_url": f"/output/{final.name}"}
         return {"video_url": f"/output/{out_path.name}"}
 
     _start_job(job_id, task)

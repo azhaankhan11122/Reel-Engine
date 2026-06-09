@@ -29,6 +29,10 @@
       <label for="text">What should the voiceover say?</label>
       <textarea id="text" name="text" placeholder="Write your script here. Keep it punchy — 30 to 55 seconds when read aloud works best."></textarea>
     </div>
+    <div style="margin-top:0.5rem; display:flex; gap:0.5rem; align-items:center;">
+      <button id="analyzeManualBtn" type="button" class="btn btn-sm">Analyze for caption & tags</button>
+      <div id="analyzeManualResult" style="flex:1"></div>
+    </div>
   </div>
 
   {% include "_music_section.html" %}
@@ -36,6 +40,34 @@
   <div class="card">
     <h2 style="margin-bottom:1rem;">Caption Style</h2>
     {% include "_caption_style.html" %}
+  </div>
+
+  <div class="card">
+    <h2>Watermark (optional)</h2>
+    <div class="field">
+      <label for="watermark_text">Watermark Text</label>
+      <input type="text" name="watermark_text" id="watermark_text_manual" placeholder="YourBrand">
+    </div>
+    <div class="field">
+      <label for="watermark_position">Position</label>
+      <select name="watermark_position" id="watermark_position_manual">
+        <option value="bottom-right">Bottom Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="top-right">Top Right</option>
+        <option value="top-left">Top Left</option>
+        <option value="center">Center</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="watermark_opacity">Opacity</label>
+      <input type="range" id="watermark_opacity_manual" name="watermark_opacity" min="0" max="100" value="50">
+      <div style="margin-top:0.5rem;">
+        <div id="videoPreviewWrap" style="position:relative; width:360px; max-width:100%;">
+          <video id="videoPreview" controls style="width:100%; border-radius:8px; display:none"></video>
+          <div id="watermarkOverlay" style="position:absolute; pointer-events:none; color:white; font-weight:700; font-size:20px; text-shadow:0 2px 8px rgba(0,0,0,0.6);">YourBrand</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <button type="submit" class="btn btn-manual" id="generateBtn">
@@ -137,5 +169,56 @@ document.getElementById("manualForm").addEventListener("submit", async (e) => {
     document.getElementById("statusPanel").classList.remove("visible");
   }
 });
+// Analyze manual script for caption & tags
+document.getElementById('analyzeManualBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('text').value.trim();
+  if (!text) return alert('Enter script text first');
+  const r = await fetch('/api/analyze-text', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+  const j = await r.json();
+  if (!r.ok) return alert(j.error || 'Analysis failed');
+  document.getElementById('analyzeManualResult').innerHTML = `<div class="script-preview"><strong>Caption:</strong> ${j.caption}<br><strong>Tags:</strong> ${j.tags.join(' ')}</div>`;
+});
+
+// Watermark live preview for manual mode
+(function(){
+  const videoInput = document.getElementById('videoInput');
+  const preview = document.getElementById('videoPreview');
+  const wrap = document.getElementById('videoPreviewWrap');
+  const overlay = document.getElementById('watermarkOverlay');
+  const opacity = document.getElementById('watermark_opacity_manual');
+  const textInput = document.getElementById('watermark_text_manual');
+  const posSelect = document.getElementById('watermark_position_manual');
+
+  function updateOverlay(){
+    overlay.textContent = textInput.value || 'YourBrand';
+    overlay.style.opacity = (opacity.value/100).toString();
+    const pos = posSelect.value;
+    const map = {
+      'bottom-right': {right:'16px', left:'auto', bottom:'16px', top:'auto', transform:''},
+      'bottom-left': {left:'16px', right:'auto', bottom:'16px', top:'auto', transform:''},
+      'top-right': {right:'16px', left:'auto', top:'16px', bottom:'auto', transform:''},
+      'top-left': {left:'16px', right:'auto', top:'16px', bottom:'auto', transform:''},
+      'center': {left:'50%', top:'50%', transform:'translate(-50%,-50%)', right:'auto', bottom:'auto'},
+    };
+    const style = map[pos] || map['bottom-right'];
+    overlay.style.left = style.left || 'auto';
+    overlay.style.right = style.right || 'auto';
+    overlay.style.top = style.top || 'auto';
+    overlay.style.bottom = style.bottom || 'auto';
+    overlay.style.transform = style.transform || '';
+  }
+
+  videoInput.addEventListener('change', ()=>{
+    const f = videoInput.files && videoInput.files[0];
+    if (f) {
+      preview.src = URL.createObjectURL(f);
+      preview.style.display = 'block';
+      updateOverlay();
+    }
+  });
+  opacity.addEventListener('input', updateOverlay);
+  textInput.addEventListener('input', updateOverlay);
+  posSelect.addEventListener('change', updateOverlay);
+})();
 </script>
 {% endblock %}

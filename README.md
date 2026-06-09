@@ -1,34 +1,20 @@
+
 <p align="center">
-  <img src="https://img.shields.io/badge/Shorts-9:16-7C5CFF?style=for-the-badge" alt="9:16 Shorts"/>
-  <img src="https://img.shields.io/badge/Cost-$0-00D4AA?style=for-the-badge" alt="Zero cost"/>
-  <img src="https://img.shields.io/badge/API%20Keys-None-FF5C7A?style=for-the-badge" alt="No API keys"/>
-  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://media.giphy.com/media/3o7aD6vQpQ7q2jVQqY/giphy.gif" alt="sparkle" width="220" />
 </p>
 
-<h1 align="center">🎬 Make Shorts</h1>
-<h3 align="center">Local video automation for Shorts, Reels, and TikTok.<br/>No cloud fees, no paid tokens, no external API keys.</h3>
+<h1 align="center">✨ Make Shorts — Ship Viral Videos Locally</h1>
+<h3 align="center">Gen-Z ready editor for Shorts, Reels & TikTok — fast, free, and on your machine.</h3>
 
 <p align="center">
-  <strong>AI Mode</strong> · <strong>Manual Mode</strong> · <strong>Instagram Mode</strong> · <strong>Voice transcription</strong> · <strong>Caption styling</strong>
-</p>
-
-<p align="center">
-  <a href="#-launch-the-ui">Launch UI</a> ·
-  <a href="#-modes">Modes</a> ·
-  <a href="#-features">Features</a> ·
-  <a href="#-quick-start">Quick Start</a> ·
-  <a href="#-project-structure">Project Structure</a>
+  <strong>AI Mode</strong> · <strong>Manual Mode</strong> · <strong>Instagram Mode</strong> · <strong>Watermark</strong> · <strong>Viral Captioning</strong>
 </p>
 
 ---
 
-## ⚡ What is this?
+## ⚡ Quick Pitch
 
-**Make Shorts** is a locally-run editor and rendering pipeline for vertical short-form videos.
-Use the web UI to build shorts from:
-- an AI topic prompt,
-- your own video + custom text,
-- or an Instagram Reel as source material.
+Make Shorts turns simple ideas into ready-to-post vertical videos. Paste a prompt or a Reel link, tweak captions, add music, and export — all offline. Think of it as your local micro-studio that helps you go viral without cloud costs.
 
 The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
 

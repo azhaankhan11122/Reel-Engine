@@ -69,6 +69,10 @@
       <label for="scriptText">Script</label>
       <textarea id="scriptText" rows="8" placeholder="Generating script..."></textarea>
     </div>
+    <div style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center;">
+      <button id="analyzeScriptBtn" class="btn btn-sm" type="button">Analyze for caption & tags</button>
+      <div id="analyzeScriptResult" style="flex:1"></div>
+    </div>
     <div class="wizard-nav">
       <button class="btn btn-ghost" onclick="goToStep(2)">← Back</button>
       <button class="btn btn-primary" onclick="goToStep(4)">Next: Voice & Style →</button>
@@ -101,6 +105,28 @@
     <div class="card">
       <h2 style="margin-bottom:1rem;">Caption Style</h2>
       {% include "_caption_style.html" %}
+    </div>
+
+    <div class="card">
+      <h2>Watermark (optional)</h2>
+      <div class="field">
+        <label for="watermark_text">Watermark Text</label>
+        <input type="text" name="watermark_text" id="watermark_text" placeholder="YourBrand">
+      </div>
+      <div class="field">
+        <label for="watermark_position">Position</label>
+        <select name="watermark_position" id="watermark_position">
+          <option value="bottom-right">Bottom Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+          <option value="center">Center</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="watermark_opacity">Opacity</label>
+        <input type="range" id="watermark_opacity" name="watermark_opacity" min="0" max="100" value="50">
+      </div>
     </div>
 
     {% include "_music_section.html" %}
@@ -138,5 +164,14 @@ setupRange("music_volume", "musicVolumeVal");
 setupMusicToggle("add_music", "musicOptions");
 setupColorPickers();
 initAIWizard();
+document.getElementById('analyzeScriptBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('scriptText').value.trim();
+  if (!text) return alert('No script text to analyze');
+  const r = await fetch('/api/analyze-text', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+  const j = await r.json();
+  if (!r.ok) return alert(j.error || 'Analysis failed');
+  const el = document.getElementById('analyzeScriptResult');
+  el.innerHTML = `<div class="script-preview"><strong>Caption:</strong> ${j.caption}<br><strong>Tags:</strong> ${j.tags.join(' ')}</div>`;
+});
 </script>
 {% endblock %}

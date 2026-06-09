@@ -11,8 +11,24 @@
   <input type="hidden" id="background_file" name="background_file">
   <label>Script / Voiceover Text</label>
   <textarea id="scriptText" name="text" rows="6" style="width:100%"></textarea>
+  <div style="margin-top:0.5rem; display:flex; gap:0.5rem; align-items:center;">
+    <button id="analyzeInstCustomBtn" type="button" class="btn btn-sm">Analyze for caption & tags</button>
+    <div id="analyzeInstCustomResult" style="flex:1"></div>
+  </div>
   <label>Voice</label>
   <select id="voiceSelect" name="voice"></select>
+  <div class="field" style="margin-top:0.75rem;">
+    <label>Watermark (optional)</label>
+    <input type="text" name="watermark_text" id="watermark_text_instcustom" placeholder="YourBrand">
+    <select name="watermark_position" id="watermark_position_instcustom" style="margin-top:0.5rem;">
+      <option value="bottom-right">Bottom Right</option>
+      <option value="bottom-left">Bottom Left</option>
+      <option value="top-right">Top Right</option>
+      <option value="top-left">Top Left</option>
+      <option value="center">Center</option>
+    </select>
+    <div style="margin-top:0.5rem;"><input type="range" name="watermark_opacity" id="watermark_opacity_instcustom" min="0" max="100" value="50"></div>
+  </div>
   <button type="submit">Render Video</button>
 </form>
 
@@ -54,6 +70,15 @@ document.getElementById('assembleForm').addEventListener('submit', async (e)=>{
     else if (j.status === 'error') alert('Render failed: '+(j.message||'error'));
     else setTimeout(poll, 2000);
   })();
+});
+
+document.getElementById('analyzeInstCustomBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('scriptText').value.trim();
+  if (!text) return alert('No script text to analyze');
+  const r = await fetch('/api/analyze-text', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+  const j = await r.json();
+  if (!r.ok) return alert(j.error || 'Analysis failed');
+  document.getElementById('analyzeInstCustomResult').innerHTML = `<div class="script-preview"><strong>Caption:</strong> ${j.caption}<br><strong>Tags:</strong> ${j.tags.join(' ')}</div>`;
 });
 </script>
 
