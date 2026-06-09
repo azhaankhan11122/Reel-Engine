@@ -280,6 +280,6 @@ Do whatever you want. Build your channel. No attribution required.
 
 <p align="center">
   <strong>Built for creators who ship.</strong><br/>
-  <sub>Zero API keys · Zero limits · Zero excuses.</sub>
-  <sub>Made by Azhaan Khan</sub>
+  <sub>Zero API keys · Zero limits · Zero excuses.</sub><br/>
+  <strong>Made by Azhaan Khan</strong>
 </p>
