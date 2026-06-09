@@ -225,6 +225,21 @@ def instagram_mode():
     return render_template("instagram_mode.html")
 
 
+@app.route("/instagram-custom")
+def instagram_custom_mode():
+    return render_template("instagram_custom.html")
+
+
+@app.route("/instagram-custom/edit")
+def instagram_custom_edit():
+    return render_template("instagram_custom_edit.html")
+
+
+@app.route('/watermark')
+def watermark_mode():
+    return render_template('watermark.html')
+
+
 @app.route("/api/instagram/fetch", methods=["POST"])
 def api_instagram_fetch():
     data = request.get_json(silent=True) or {}
@@ -632,6 +647,59 @@ def api_clear_storage():
         if str(d.name) not in results:
             results[str(d.name)] = f"removed:{removed}"
     return jsonify({"ok": True, "message": "Storage cleared.", "details": results})
+
+
+@app.route('/api/watermark', methods=['POST'])
+def api_watermark():
+    """Apply a simple text watermark using ffmpeg and run as a background job."""
+    watermark_text = (request.form.get('watermark_text') or '').strip()
+    try:
+        opacity_pct = int(request.form.get('opacity', 50))
+    except Exception:
+        opacity_pct = 50
+    video = request.files.get('video')
+    if not video or not video.filename:
+        return jsonify({'error': 'Please upload a video file.'}), 400
+    job_id = str(uuid.uuid4())[:8]
+    ext = Path(secure_filename(video.filename)).suffix or '.mp4'
+    src_name = f'watermark_src_{job_id}{ext}'
+    src_path = UPLOAD_DIR / src_name
+    video.save(str(src_path))
+
+    out_name = f'shorts_watermark_{job_id}.mp4'
+    out_path = OUTPUT_DIR / out_name
+
+    jobs[job_id] = {
+        'status': 'queued',
+        'message': 'Preparing watermark job...',
+        'percent': 0,
+        'mode': 'watermark',
+        'created': datetime.now().isoformat(),
+    }
+
+    def task():
+        try:
+            jobs[job_id]['status'] = 'running'
+            jobs[job_id]['percent'] = 5
+            jobs[job_id]['message'] = 'Applying watermark...'
+            alpha = max(0.0, min(1.0, opacity_pct / 100.0))
+            # Use drawtext with fontcolor alpha to set opacity; position bottom-right
+            draw = (
+                f"drawtext=text='{watermark_text}':fontcolor=white@{alpha}:fontsize=48:box=1:boxcolor=black@0.3:"
+                f"x=w-tw-16:y=h-th-16"
+            )
+            subprocess.run([
+                'ffmpeg', '-y', '-i', str(src_path), '-vf', draw, '-c:a', 'copy', str(out_path)
+            ], check=True, capture_output=True)
+            jobs[job_id]['percent'] = 100
+            jobs[job_id]['message'] = 'Watermark complete.'
+            return {'video_url': f'/output/{out_path.name}'}
+        except subprocess.CalledProcessError as exc:
+            jobs[job_id].update({'status': 'error', 'message': exc.stderr.decode('utf-8', errors='ignore')})
+            raise
+
+    _start_job(job_id, task)
+    return jsonify({'job_id': job_id})
 
 
 if __name__ == "__main__":

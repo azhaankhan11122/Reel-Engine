@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Edit Script — Instagram Custom{% endblock %}
+
+{% block content %}
+<h1>Confirm Reel & Add Script</h1>
+<div>
+  <video id="previewVideo" controls style="width:360px; max-width:100%"></video>
+</div>
+
+<form id="assembleForm" style="margin-top:1rem">
+  <input type="hidden" id="background_file" name="background_file">
+  <label>Script / Voiceover Text</label>
+  <textarea id="scriptText" name="text" rows="6" style="width:100%"></textarea>
+  <label>Voice</label>
+  <select id="voiceSelect" name="voice"></select>
+  <button type="submit">Render Video</button>
+</form>
+
+<div id="status" style="margin-top:1rem"></div>
+
+<script>
+async function loadVoices(){
+  const res = await fetch('/api/ai/voices');
+  const data = await res.json();
+  const sel = document.getElementById('voiceSelect');
+  data.voices.forEach(v=>{
+    const o = document.createElement('option'); o.value=v.id; o.textContent=v.label; sel.appendChild(o);
+  });
+}
+loadVoices();
+
+const params = new URLSearchParams(window.location.search);
+const filename = params.get('filename');
+if (!filename) {
+  document.getElementById('status').textContent = 'Missing filename. Go back and fetch a reel.';
+} else {
+  document.getElementById('background_file').value = filename;
+  document.getElementById('previewVideo').src = `/uploads/${filename}`;
+}
+
+document.getElementById('assembleForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const res = await fetch('/api/instagram/assemble', { method:'POST', body: form });
+  const data = await res.json();
+  if (!res.ok) return alert(data.error || JSON.stringify(data));
+  const jobId = data.job_id;
+  document.getElementById('status').textContent = 'Rendering...';
+  // poll
+  (async function poll(){
+    const r = await fetch(`/api/status/${jobId}`); const j = await r.json();
+    document.getElementById('status').textContent = `${j.message} (${j.percent || 0}%)`;
+    if (j.status === 'done') window.location = j.result.video_url;
+    else if (j.status === 'error') alert('Render failed: '+(j.message||'error'));
+    else setTimeout(poll, 2000);
+  })();
+});
+</script>
+
+{% endblock %}

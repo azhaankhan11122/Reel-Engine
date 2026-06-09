@@ -74,6 +74,16 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` (or `:5001
 - Edit the extracted transcript before rendering.
 - Generate captions, voiceover, and final video from the confirmed reel.
 
+### ✍️ Instagram + Custom Captions
+- Paste a Reel link and fetch the background video.
+- Add your own script in the editor to create a custom voiceover and matching captions.
+- Good for dubbing reels or replacing the original audio with a scripted narration.
+
+### 💧 Watermark Mode
+- Upload a video and add a text watermark with adjustable opacity.
+- The app uses `ffmpeg` to render a bottom-right watermark with a semi-transparent box for contrast.
+- Useful for quickly branding videos before posting.
+
 New (June 2026): Instagram Mode enhancements
 - Paste multiple Reel URLs (one per line) in Step 1 — the app downloads each and shows a selectable preview list.
 - Choose which reel to use as the background; confirm to proceed.

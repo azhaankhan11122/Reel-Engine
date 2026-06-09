@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Instagram + Custom Captions{% endblock %}
+
+{% block content %}
+<h1>Instagram + Custom Captions</h1>
+<p>Paste a Reel link below, fetch the video, then input your custom script to render captions and voiceover.</p>
+
+<form id="fetchForm">
+  <label>Instagram Reel URL</label>
+  <input type="text" id="reelUrl" name="url" style="width:100%" placeholder="https://www.instagram.com/reel/...?utm_source=...">
+  <button type="submit">Fetch Reel</button>
+</form>
+
+<div id="fetchResult" style="margin-top:1rem"></div>
+
+<script>
+document.getElementById('fetchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url = document.getElementById('reelUrl').value.trim();
+  if (!url) return alert('Enter a reel URL');
+  const res = await fetch('/api/instagram/fetch', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
+  const data = await res.json();
+  if (!res.ok) return alert(data.error || JSON.stringify(data));
+  const item = data.results && data.results[0];
+  if (!item) return alert('No result');
+  // redirect to edit page
+  window.location = `/instagram-custom/edit?filename=${encodeURIComponent(item.filename)}`;
+});
+</script>
+
+{% endblock %}

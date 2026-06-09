@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Watermark Mode{% endblock %}
+
+{% block content %}
+<h1>Watermark Mode</h1>
+<p>Upload a video, enter watermark text, adjust opacity, and render a watermarked video.</p>
+
+<form id="watermarkForm" enctype="multipart/form-data">
+  <label>Video</label>
+  <input type="file" name="video" accept="video/*" required>
+  <label>Watermark Text</label>
+  <input type="text" name="watermark_text" placeholder="MyBrand" required>
+  <label>Opacity</label>
+  <input type="range" id="opacityRange" name="opacity" min="0" max="100" value="50">
+  <span id="opacityVal">50</span>%
+  <button type="submit">Render Watermarked Video</button>
+</form>
+
+<div id="result" style="margin-top:1rem"></div>
+
+<script>
+document.getElementById('opacityRange').addEventListener('input', (e)=>{
+  document.getElementById('opacityVal').textContent = e.target.value;
+});
+
+document.getElementById('watermarkForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const res = await fetch('/api/watermark', { method: 'POST', body: form });
+  const data = await res.json();
+  if (!res.ok) return alert(data.error || JSON.stringify(data));
+  const jobId = data.job_id;
+  document.getElementById('result').textContent = 'Rendering...';
+  (async function poll(){
+    const r = await fetch(`/api/status/${jobId}`); const j = await r.json();
+    document.getElementById('result').textContent = `${j.message} (${j.percent || 0}%)`;
+    if (j.status === 'done') {
+      const url = j.result.video_url;
+      document.getElementById('result').innerHTML = `Done — <a href="${url}">Download video</a>`;
+    } else if (j.status === 'error') alert('Watermark failed: '+(j.message||'error'));
+    else setTimeout(poll, 1500);
+  })();
+});
+</script>
+
+{% endblock %}
