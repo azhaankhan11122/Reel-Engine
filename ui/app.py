@@ -623,12 +623,12 @@ def api_manual_generate():
     style = _caption_style_from_form(request.form)
     add_music = request.form.get("add_music") == "true"
     music_volume = _parse_music_volume(request.form.get("music_volume", 15))
-        watermark_text = (request.form.get('watermark_text') or '').strip()
-        watermark_position = request.form.get('watermark_position', 'bottom-right')
-        try:
-            watermark_opacity = float(request.form.get('watermark_opacity', 50))
-        except Exception:
-            watermark_opacity = 50.0
+    watermark_text = (request.form.get('watermark_text') or '').strip()
+    watermark_position = request.form.get('watermark_position', 'bottom-right')
+    try:
+        watermark_opacity = float(request.form.get('watermark_opacity', 50))
+    except Exception:
+        watermark_opacity = 50.0
 
     job_id = str(uuid.uuid4())[:8]
     saved_name = f"manual_{job_id}{ext}"
@@ -655,9 +655,9 @@ def api_manual_generate():
                 music_volume=music_volume if music_path else 0,
             )
         )
-            final = out_path
-            if watermark_text:
-                final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
+        final = out_path
+        if watermark_text:
+            final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
             return {"video_url": f"/output/{final.name}"}
         return {"video_url": f"/output/{out_path.name}"}
 
