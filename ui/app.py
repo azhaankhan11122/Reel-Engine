@@ -12,7 +12,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
-from moviepy import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video.VideoClip import TextClip
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from werkzeug.utils import secure_filename
 import requests
 import shutil
@@ -250,24 +252,49 @@ def _apply_watermark(src_path: Path, watermark_text: str, position: str, opacity
     """
     out_name = f"{src_path.stem}_wm{src_path.suffix}"
     out_path = OUTPUT_DIR / out_name
-    alpha = max(0.0, min(1.0, opacity_pct / 100.0))
-    # map position to ffmpeg drawtext coordinates
-    pos_map = {
-        'top-left': "x=16:y=16",
-        'top-right': "x=w-tw-16:y=16",
-        'bottom-left': "x=16:y=h-th-16",
-        'bottom-right': "x=w-tw-16:y=h-th-16",
-        'center': "x=(w-tw)/2:y=(h-th)/2",
-    }
-    coord = pos_map.get(position, pos_map['bottom-right'])
-    # escape text for ffmpeg
-    txt = watermark_text.replace("'", "\\'")
-    draw = f"drawtext=text='{txt}':fontcolor=white@{alpha}:fontsize=36:box=1:boxcolor=black@0.3:{coord}"
+    # Opacity as fraction for moviepy
+    opacity = max(0.0, min(1.0, opacity_pct / 100.0))
     try:
-        subprocess.run(['ffmpeg', '-y', '-i', str(src_path), '-vf', draw, '-c:a', 'copy', str(out_path)], check=True, capture_output=True)
+        # Load source video
+        video = VideoFileClip(str(src_path))
+        # Create text clip for watermark (no explicit font to use default system font)
+        txt = TextClip(
+            text=watermark_text,
+            font_size=48,
+            color='white',
+            stroke_color='black',
+            stroke_width=2,
+        ).with_opacity(opacity).set_duration(video.duration)
+        # Position mapping for moviepy (adds 16px margin)
+        pos_map = {
+            'top-left': lambda w, h: (16, 16),
+            'top-right': lambda w, h: (w - txt.w - 16, 16),
+            'bottom-left': lambda w, h: (16, h - txt.h - 16),
+            'bottom-right': lambda w, h: (w - txt.w - 16, h - txt.h - 16),
+            'center': lambda w, h: ((w - txt.w) // 2, (h - txt.h) // 2),
+        }
+        get_pos = pos_map.get(position, pos_map['bottom-right'])
+        # Compute static position based on video dimensions
+        pos = get_pos(int(video.w), int(video.h))
+        txt = txt.with_position(pos)
+        # Composite video with watermark
+        result = CompositeVideoClip([video, txt])
+        # Write output preserving audio (copy) - using ffmpeg through moviepy
+        result.write_videofile(
+            str(out_path),
+            codec='libx264',
+            audio_codec='aac',
+            temp_audiofile='temp-audio.m4a',
+            remove_temp=True,
+            logger=None,
+        )
+        # Cleanup
+        video.close()
+        txt.close()
+        result.close()
         return out_path
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(f"Watermarking failed: {exc.stderr.decode('utf-8', errors='ignore')}")
+    except Exception as exc:
+        raise RuntimeError(f"Watermarking failed: {exc}")
 
 
 @app.route("/")
@@ -786,20 +813,13 @@ def api_watermark():
             jobs[job_id]['status'] = 'running'
             jobs[job_id]['percent'] = 5
             jobs[job_id]['message'] = 'Applying watermark...'
-            alpha = max(0.0, min(1.0, opacity_pct / 100.0))
-            # Use drawtext with fontcolor alpha to set opacity; position bottom-right
-            draw = (
-                f"drawtext=text='{watermark_text}':fontcolor=white@{alpha}:fontsize=48:box=1:boxcolor=black@0.3:"
-                f"x=w-tw-16:y=h-th-16"
-            )
-            subprocess.run([
-                'ffmpeg', '-y', '-i', str(src_path), '-vf', draw, '-c:a', 'copy', str(out_path)
-            ], check=True, capture_output=True)
+            # Use MoviePy based watermark implementation
+            final_path = _apply_watermark(src_path, watermark_text, 'bottom-right', opacity_pct)
             jobs[job_id]['percent'] = 100
             jobs[job_id]['message'] = 'Watermark complete.'
-            return {'video_url': f'/output/{out_path.name}'}
-        except subprocess.CalledProcessError as exc:
-            jobs[job_id].update({'status': 'error', 'message': exc.stderr.decode('utf-8', errors='ignore')})
+            return {'video_url': f'/output/{final_path.name}'}
+        except Exception as exc:
+            jobs[job_id].update({'status': 'error', 'message': str(exc)})
             raise
 
     _start_job(job_id, task)
