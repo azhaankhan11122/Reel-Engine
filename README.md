@@ -1,26 +1,26 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=rect&color=0:0a0a0a,45:141414,75:111827,100:00d4ff&height=300&section=header&text=MAKE%20SHORTS&fontSize=82&fontColor=00d4ff&fontAlignY=52&desc=Ship%20Viral%20Shorts%2C%20Reels%20%26%20TikToks%20Locally&descSize=20&descAlignY=74&animation=twinkling" alt="Make Shorts Header" />
+<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:0a0a0a,45:141414,75:111827,100:00d4ff&amp;height=300&amp;section=header&amp;text=MAKE%20SHORTS&amp;fontSize=82&amp;fontColor=00d4ff&amp;fontAlignY=52&amp;desc=Ship%20Viral%20Shorts%2C%20Reels%20%26%20TikToks%20Locally&amp;descSize=20&amp;descAlignY=74&amp;animation=twinkling" alt="Make Shorts Header" />
 
-<br>
+<br/>
 
 <h1 align="center">✨ Make Shorts — Ship Viral Videos Locally</h1>
-<h3 align="center">Gen-Z ready editor for Shorts, Reels & TikTok — fast, free, and on your machine.</h3>
+<h3 align="center">Gen-Z ready editor for Shorts, Reels &amp; TikTok — fast, free, and on your machine.</h3>
 
-<br>
+<br/>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.9%2B-0a0a0a?style=for-the-badge&logo=python&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="Python 3.9+" />
-  <img src="https://img.shields.io/badge/Flask-UI-0a0a0a?style=for-the-badge&logo=flask&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="Flask UI" />
-  <img src="https://img.shields.io/badge/MoviePy-Video%20Engine-0a0a0a?style=for-the-badge&logo=python&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="MoviePy" />
-  <img src="https://img.shields.io/badge/ffmpeg-Rendering-0a0a0a?style=for-the-badge&logo=ffmpeg&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="ffmpeg" />
+  <img src="https://img.shields.io/badge/Python-3.9%2B-0a0a0a?style=for-the-badge&amp;logo=python&amp;logoColor=00d4ff&amp;labelColor=141414&amp;color=00d4ff" alt="Python 3.9+" />
+  <img src="https://img.shields.io/badge/Flask-UI-0a0a0a?style=for-the-badge&amp;logo=flask&amp;logoColor=00d4ff&amp;labelColor=141414&amp;color=00d4ff" alt="Flask UI" />
+  <img src="https://img.shields.io/badge/MoviePy-Video%20Engine-0a0a0a?style=for-the-badge&amp;logo=python&amp;logoColor=00d4ff&amp;labelColor=141414&amp;color=00d4ff" alt="MoviePy" />
+  <img src="https://img.shields.io/badge/ffmpeg-Rendering-0a0a0a?style=for-the-badge&amp;logo=ffmpeg&amp;logoColor=00d4ff&amp;labelColor=141414&amp;color=00d4ff" alt="ffmpeg" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Edge--TTS-Voiceover-0a0a0a?style=for-the-badge&logo=microsoftedge&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="Edge-TTS" />
-  <img src="https://img.shields.io/badge/faster--whisper-Captions-0a0a0a?style=for-the-badge&logo=openai&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="faster-whisper" />
-  <img src="https://img.shields.io/badge/yt--dlp-Reel%20Downloads-0a0a0a?style=for-the-badge&logo=youtube&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="yt-dlp" />
-  <img src="https://img.shields.io/badge/Ollama-AI%20Mode-0a0a0a?style=for-the-badge&logo=ollama&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="Ollama" />
+  <img src="https://img.shields.io/badge/Edge--TTS-Voiceover-0a0a0a?style=for-the-badge&amp;logo=microsoftedge&amp;logoColor=ff2bd6&amp;labelColor=141414&amp;color=ff2bd6" alt="Edge-TTS" />
+  <img src="https://img.shields.io/badge/faster--whisper-Captions-0a0a0a?style=for-the-badge&amp;logo=openai&amp;logoColor=ff2bd6&amp;labelColor=141414&amp;color=ff2bd6" alt="faster-whisper" />
+  <img src="https://img.shields.io/badge/yt--dlp-Reel%20Downloads-0a0a0a?style=for-the-badge&amp;logo=youtube&amp;logoColor=ff2bd6&amp;labelColor=141414&amp;color=ff2bd6" alt="yt-dlp" />
+  <img src="https://img.shields.io/badge/Ollama-AI%20Mode-0a0a0a?style=for-the-badge&amp;logo=ollama&amp;logoColor=ff2bd6&amp;labelColor=141414&amp;color=ff2bd6" alt="Ollama" />
 </p>
 
 <p align="center">
@@ -36,13 +36,13 @@
   <a href="#api-endpoints">🧭 API</a>
 </p>
 
-<br>
+<br/>
 
 <img width="900" alt="Neon divider" src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" />
 
 </div>
 
-<br>
+<br/>
 
 <a id="quick-pitch"></a>
 
@@ -50,7 +50,7 @@
 >
 > The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -67,7 +67,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -75,34 +75,34 @@
 
 </div>
 
-<br>
+<br/>
 
 <table align="center">
   <tr>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/📱-Shorts%20%26%20TikToks-0a0a0a?style=flat-square&labelColor=00d4ff&color=141414" alt="Shorts and TikToks" />
-      <br><br>
+      <img src="https://img.shields.io/badge/📱-Shorts%20%26%20TikToks-0a0a0a?style=flat-square&amp;labelColor=00d4ff&amp;color=141414" alt="Shorts and TikToks" />
+      <br/><br/>
       <sub>Ready-to-post vertical videos in <b>1080×1920 MP4</b>.</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/🤖-AI%20Generated%20Videos-0a0a0a?style=flat-square&labelColor=ff2bd6&color=141414" alt="AI Generated Videos" />
-      <br><br>
+      <img src="https://img.shields.io/badge/🤖-AI%20Generated%20Videos-0a0a0a?style=flat-square&amp;labelColor=ff2bd6&amp;color=141414" alt="AI Generated Videos" />
+      <br/><br/>
       <sub>Paste a topic and let AI Mode script, voice, caption, and render.</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/🎥-Reel%20Based%20Edits-0a0a0a?style=flat-square&labelColor=00d4ff&color=141414" alt="Reel Based Edits" />
-      <br><br>
+      <img src="https://img.shields.io/badge/🎥-Reel%20Based%20Edits-0a0a0a?style=flat-square&amp;labelColor=00d4ff&amp;color=141414" alt="Reel Based Edits" />
+      <br/><br/>
       <sub>Use Instagram Reels as background or voiceover sources.</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/💧-Branded%20Watermarks-0a0a0a?style=flat-square&labelColor=ff2bd6&color=141414" alt="Branded Watermarks" />
-      <br><br>
+      <img src="https://img.shields.io/badge/💧-Branded%20Watermarks-0a0a0a?style=flat-square&amp;labelColor=ff2bd6&amp;color=141414" alt="Branded Watermarks" />
+      <br/><br/>
       <sub>Add a quick text watermark with adjustable opacity.</sub>
     </td>
   </tr>
 </table>
 
-<br>
+<br/>
 
 <a id="launch-the-ui"></a>
 
@@ -123,7 +123,7 @@ python ui/app.py
 
 Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http://127.0.0.1:5001` if port `5000` is in use.
 
-<br>
+<br/>
 
 <a id="supported-modes"></a>
 
@@ -133,22 +133,22 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 </div>
 
-<br>
+<br/>
 
 <table align="center">
   <tr>
-    <td align="center"><b>🤖 AI Mode</b><br><sub>Prompt → script → clips → voiceover → captions → MP4</sub></td>
-    <td align="center"><b>✋ Manual Mode</b><br><sub>Your video + your script + custom caption styling</sub></td>
-    <td align="center"><b>🎥 Instagram Mode</b><br><sub>Reel background, reel voiceover, transcript editing</sub></td>
+    <td align="center"><b>🤖 AI Mode</b><br/><sub>Prompt → script → clips → voiceover → captions → MP4</sub></td>
+    <td align="center"><b>✋ Manual Mode</b><br/><sub>Your video + your script + custom caption styling</sub></td>
+    <td align="center"><b>🎥 Instagram Mode</b><br/><sub>Reel background, reel voiceover, transcript editing</sub></td>
   </tr>
   <tr>
-    <td align="center"><b>✍️ Instagram + Custom Captions</b><br><sub>Reel background with your scripted narration</sub></td>
-    <td align="center"><b>💧 Watermark Mode</b><br><sub>Text watermark rendered with ffmpeg</sub></td>
-    <td align="center"><b>📊 Progress Feedback</b><br><sub>Visual progress bar and percentage while rendering</sub></td>
+    <td align="center"><b>✍️ Instagram + Custom Captions</b><br/><sub>Reel background with your scripted narration</sub></td>
+    <td align="center"><b>💧 Watermark Mode</b><br/><sub>Text watermark rendered with ffmpeg</sub></td>
+    <td align="center"><b>📊 Progress Feedback</b><br/><sub>Visual progress bar and percentage while rendering</sub></td>
   </tr>
 </table>
 
-<br>
+<br/>
 
 <details open>
 <summary><b>🤖 AI Mode</b></summary>
@@ -203,7 +203,7 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 </details>
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -233,7 +233,7 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 > 📝 **Note:** For best caption results, prefer Reels without on-screen text overlays and confirm the chosen background before continuing.
 
-<br>
+<br/>
 
 <a id="features"></a>
 
@@ -243,7 +243,7 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 </div>
 
-<br>
+<br/>
 
 <details open>
 <summary><b>🎙️ Automatic voice + captions</b></summary>
@@ -283,7 +283,7 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 </details>
 
-<br>
+<br/>
 
 <a id="quick-start"></a>
 
@@ -293,7 +293,7 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 
 </div>
 
-<br>
+<br/>
 
 ### ✅ Prerequisites
 
@@ -324,7 +324,7 @@ python make_shorts.py --script my_script.txt --gameplay ./my_clips/
 python make_shorts.py --script my_script.txt --images ./my_photos/
 ```
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -358,7 +358,7 @@ python make_shorts.py --script my_script.txt --images ./my_photos/
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -382,15 +382,15 @@ make_shorts/
 └── temp/                 # Temporary audio/video assets
 ```
 
-<br>
+<br/>
 
 <div align="center">
 
-## 🧰 Tech Stack & Dependencies
+## 🧰 Tech Stack &amp; Dependencies
 
 </div>
 
-<br>
+<br/>
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
@@ -403,7 +403,7 @@ make_shorts/
 | **Rendering utility** | `ffmpeg` | Render video operations, including watermark output |
 | **AI Mode helper** | `Ollama` + `llama3.2` | Prompt-to-script generation for AI Mode |
 
-<br>
+<br/>
 
 <a id="api-endpoints"></a>
 
@@ -415,7 +415,7 @@ make_shorts/
 
 These endpoints are intended for local automation or for integrating Make Shorts with simple scripts.
 
-<br>
+<br/>
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -426,7 +426,7 @@ These endpoints are intended for local automation or for integrating Make Shorts
 | `POST` | `/api/instagram/trim` | Accepts JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result. |
 | `POST` | `/api/clear-storage` | Clears local storage directories used by the app: `uploads/`, `temp/`, `output/`, `sessions/`, `music/`, and `gameplay/`. Use the Home page button or call this endpoint to permanently delete stored media and session data locally only. |
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -438,7 +438,7 @@ These endpoints are intended for local automation or for integrating Make Shorts
 - The web UI defaults to `http://127.0.0.1:5000`.
 - If port `5000` is occupied, use another available port.
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -446,7 +446,7 @@ These endpoints are intended for local automation or for integrating Make Shorts
 
 </div>
 
-<br>
+<br/>
 
 <details open>
 <summary><b><code>moviepy.editor</code> import issue</b></summary>
@@ -512,7 +512,7 @@ Speed tips:
 
 </details>
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -520,7 +520,7 @@ Speed tips:
 
 </div>
 
-<br>
+<br/>
 
 <table align="center">
   <tr>
@@ -536,7 +536,7 @@ Speed tips:
   </tr>
 </table>
 
-<br>
+<br/>
 
 <div align="center">
 
@@ -546,22 +546,22 @@ Speed tips:
 
 > Do whatever you want. Build your channel. No attribution required.
 
-<br>
+<br/>
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=rect&color=0:00d4ff,45:111827,75:141414,100:ff2bd6&height=155&section=footer&text=Built%20for%20creators%20who%20ship&fontSize=30&fontColor=ffffff&fontAlignY=55&desc=Zero%20API%20keys%20%C2%B7%20Zero%20limits%20%C2%B7%20Zero%20excuses&descSize=16&descAlignY=75&animation=twinkling" alt="Make Shorts Footer" />
+<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:00d4ff,45:111827,75:141414,100:ff2bd6&amp;height=155&amp;section=footer&amp;text=Built%20for%20creators%20who%20ship&amp;fontSize=30&amp;fontColor=ffffff&amp;fontAlignY=55&amp;desc=Zero%20API%20keys%20%C2%B7%20Zero%20limits%20%C2%B7%20Zero%20excuses&amp;descSize=16&amp;descAlignY=75&amp;animation=twinkling" alt="Make Shorts Footer" />
 
-<br>
+<br/>
 
-<strong>Built for creators who ship.</strong><br>
-<sub>Zero API keys · Zero limits · Zero excuses.</sub><br>
+<strong>Built for creators who ship.</strong><br/>
+<sub>Zero API keys · Zero limits · Zero excuses.</sub><br/>
 <strong>Made by Azhaan Khan</strong>
 
-<br><br>
+<br/><br/>
 
 <a href="http://127.0.0.1:5000">
-  <img src="https://img.shields.io/badge/🚀%20Launch%20Make%20Shorts-0a0a0a?style=for-the-badge&labelColor=00d4ff&color=141414" alt="Launch Make Shorts" />
+  <img src="https://img.shields.io/badge/🚀%20Launch%20Make%20Shorts-0a0a0a?style=for-the-badge&amp;labelColor=00d4ff&amp;color=141414" alt="Launch Make Shorts" />
 </a>
 
 </div>
