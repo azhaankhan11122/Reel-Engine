@@ -1,28 +1,118 @@
+<div align="center">
 
-<p align="center">
-  <img src="https://media.giphy.com/media/3o7aD6vQpQ7q2jVQqY/giphy.gif" alt="sparkle" width="220" />
-</p>
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:0a0a0a,45:141414,75:111827,100:00d4ff&height=300&section=header&text=MAKE%20SHORTS&fontSize=82&fontColor=00d4ff&fontAlignY=52&desc=Ship%20Viral%20Shorts%2C%20Reels%20%26%20TikToks%20Locally&descSize=20&descAlignY=74&animation=twinkling" alt="Make Shorts Header" />
+
+<br>
 
 <h1 align="center">✨ Make Shorts — Ship Viral Videos Locally</h1>
 <h3 align="center">Gen-Z ready editor for Shorts, Reels & TikTok — fast, free, and on your machine.</h3>
+
+<br>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-0a0a0a?style=for-the-badge&logo=python&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="Python 3.9+" />
+  <img src="https://img.shields.io/badge/Flask-UI-0a0a0a?style=for-the-badge&logo=flask&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="Flask UI" />
+  <img src="https://img.shields.io/badge/MoviePy-Video%20Engine-0a0a0a?style=for-the-badge&logo=python&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="MoviePy" />
+  <img src="https://img.shields.io/badge/ffmpeg-Rendering-0a0a0a?style=for-the-badge&logo=ffmpeg&logoColor=00d4ff&labelColor=141414&color=00d4ff" alt="ffmpeg" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Edge--TTS-Voiceover-0a0a0a?style=for-the-badge&logo=microsoftedge&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="Edge-TTS" />
+  <img src="https://img.shields.io/badge/faster--whisper-Captions-0a0a0a?style=for-the-badge&logo=openai&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="faster-whisper" />
+  <img src="https://img.shields.io/badge/yt--dlp-Reel%20Downloads-0a0a0a?style=for-the-badge&logo=youtube&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="yt-dlp" />
+  <img src="https://img.shields.io/badge/Ollama-AI%20Mode-0a0a0a?style=for-the-badge&logo=ollama&logoColor=ff2bd6&labelColor=141414&color=ff2bd6" alt="Ollama" />
+</p>
 
 <p align="center">
   <strong>AI Mode</strong> · <strong>Manual Mode</strong> · <strong>Instagram Mode</strong> · <strong>Watermark</strong> · <strong>Viral Captioning</strong>
 </p>
 
----
+<p align="center">
+  <a href="#quick-pitch">⚡ Quick Pitch</a> •
+  <a href="#launch-the-ui">🖥 Launch UI</a> •
+  <a href="#supported-modes">🧩 Modes</a> •
+  <a href="#features">✨ Features</a> •
+  <a href="#quick-start">🚀 Quick Start</a> •
+  <a href="#api-endpoints">🧭 API</a>
+</p>
 
-## ⚡ Quick Pitch
+<br>
 
-Make Shorts turns simple ideas into ready-to-post vertical videos. Paste a prompt or a Reel link, tweak captions, add music, and export — all offline. Think of it as your local micro-studio that helps you go viral without cloud costs.
+<img width="900" alt="Neon divider" src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" />
 
-The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
+</div>
 
----
+<br>
+
+<a id="quick-pitch"></a>
+
+> ⚡ **Make Shorts turns simple ideas into ready-to-post vertical videos.** Paste a prompt or a Reel link, tweak captions, add music, and export — all offline. Think of it as your local micro-studio that helps you go viral without cloud costs.
+>
+> The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
+
+<br>
+
+<div align="center">
+
+## ✨ Why Make Shorts?
+
+</div>
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  🚫 No paid cloud services       │  ✅ Runs locally on your machine          │
+│  🚫 No complicated editing suite  │  ✅ Prompt, upload, caption, export      │
+│  🚫 No manual caption timing      │  ✅ Whisper-synced viral captions        │
+│  🚫 No slow cloud workflow        │  ✅ Local micro-studio for fast shipping │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+<br>
+
+<div align="center">
+
+## 🎬 What You Can Create
+
+</div>
+
+<br>
+
+<table align="center">
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/📱-Shorts%20%26%20TikToks-0a0a0a?style=flat-square&labelColor=00d4ff&color=141414" alt="Shorts and TikToks" />
+      <br><br>
+      <sub>Ready-to-post vertical videos in <b>1080×1920 MP4</b>.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/🤖-AI%20Generated%20Videos-0a0a0a?style=flat-square&labelColor=ff2bd6&color=141414" alt="AI Generated Videos" />
+      <br><br>
+      <sub>Paste a topic and let AI Mode script, voice, caption, and render.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/🎥-Reel%20Based%20Edits-0a0a0a?style=flat-square&labelColor=00d4ff&color=141414" alt="Reel Based Edits" />
+      <br><br>
+      <sub>Use Instagram Reels as background or voiceover sources.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/💧-Branded%20Watermarks-0a0a0a?style=flat-square&labelColor=ff2bd6&color=141414" alt="Branded Watermarks" />
+      <br><br>
+      <sub>Add a quick text watermark with adjustable opacity.</sub>
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<a id="launch-the-ui"></a>
+
+<div align="center">
 
 ## 🖥 Launch the UI
 
-Install dependencies and run the UI (local development):
+</div>
+
+Install dependencies and run the UI for local development:
 
 ```bash
 cd /Users/azhaankhan/Downloads/make_shorts
@@ -31,13 +121,38 @@ pip install -r requirements.txt
 python ui/app.py
 ```
 
-Open the URL printed by the server, typically `http://127.0.0.1:5000` (or `:5001` if 5000 is in use).
+Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http://127.0.0.1:5001` if port `5000` is in use.
 
----
+<br>
+
+<a id="supported-modes"></a>
+
+<div align="center">
 
 ## 🧩 Supported Modes
 
-### 🤖 AI Mode
+</div>
+
+<br>
+
+<table align="center">
+  <tr>
+    <td align="center"><b>🤖 AI Mode</b><br><sub>Prompt → script → clips → voiceover → captions → MP4</sub></td>
+    <td align="center"><b>✋ Manual Mode</b><br><sub>Your video + your script + custom caption styling</sub></td>
+    <td align="center"><b>🎥 Instagram Mode</b><br><sub>Reel background, reel voiceover, transcript editing</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><b>✍️ Instagram + Custom Captions</b><br><sub>Reel background with your scripted narration</sub></td>
+    <td align="center"><b>💧 Watermark Mode</b><br><sub>Text watermark rendered with ffmpeg</sub></td>
+    <td align="center"><b>📊 Progress Feedback</b><br><sub>Visual progress bar and percentage while rendering</sub></td>
+  </tr>
+</table>
+
+<br>
+
+<details open>
+<summary><b>🤖 AI Mode</b></summary>
+
 - Paste a topic prompt.
 - AI writes a hook-first script.
 - The app downloads free gameplay clips.
@@ -45,14 +160,22 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` (or `:5001
 - Captions are synced using Whisper.
 - Rendered video is ready to download.
 
-### ✋ Manual Mode
+</details>
+
+<details>
+<summary><b>✋ Manual Mode</b></summary>
+
 - Upload your own background video.
 - Enter custom voiceover/script text.
 - Pick caption font, colors, and highlight style.
 - Optionally upload background music.
 - The app generates captions and renders the final video.
 
-### 🎥 Instagram Mode
+</details>
+
+<details>
+<summary><b>🎥 Instagram Mode</b></summary>
+
 - Paste an Instagram Reel link for the background source.
 - A preview of the downloaded reel appears in Step 1 for confirmation.
 - Paste a second reel link for the voiceover source.
@@ -60,83 +183,140 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` (or `:5001
 - Edit the extracted transcript before rendering.
 - Generate captions, voiceover, and final video from the confirmed reel.
 
-### ✍️ Instagram + Custom Captions
+</details>
+
+<details>
+<summary><b>✍️ Instagram + Custom Captions</b></summary>
+
 - Paste a Reel link and fetch the background video.
 - Add your own script in the editor to create a custom voiceover and matching captions.
 - Good for dubbing reels or replacing the original audio with a scripted narration.
 
-### 💧 Watermark Mode
+</details>
+
+<details>
+<summary><b>💧 Watermark Mode</b></summary>
+
 - Upload a video and add a text watermark with adjustable opacity.
 - The app uses `ffmpeg` to render a bottom-right watermark with a semi-transparent box for contrast.
 - Useful for quickly branding videos before posting.
 
-New (June 2026): Instagram Mode enhancements
-- Paste multiple Reel URLs (one per line) in Step 1 — the app downloads each and shows a selectable preview list.
+</details>
+
+<br>
+
+<div align="center">
+
+## 🆕 June 2026 Instagram Mode Enhancements
+
+</div>
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  1. Paste multiple Reel URLs, one per line                                   │
+│  2. Download each Reel and show a selectable preview list                    │
+│  3. Confirm the background Reel before continuing                            │
+│  4. Compare video duration vs extracted audio duration                       │
+│  5. Auto-adjust script, trim video, or choose caption position               │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+- Paste multiple Reel URLs, one per line, in Step 1 — the app downloads each and shows a selectable preview list.
 - Choose which reel to use as the background; confirm to proceed.
-- The transcribe step now returns both `duration` (video) and `audio_duration` (extracted audio) so you can compare audio vs video length.
+- The transcribe step now returns both `duration` for video and `audio_duration` for extracted audio so you can compare audio vs video length.
 - If audio/video lengths differ, the UI will suggest options:
-  - Auto-adjust: add more script text (based on default speaking speed) if the video is longer than the audio.
-  - Trim video: the app includes a trimming API so you can cut a chosen reel segment before rendering.
-  - Choose caption position (top/center/bottom) in Step 4.
+  - **Auto-adjust:** add more script text based on default speaking speed if the video is longer than the audio.
+  - **Trim video:** the app includes a trimming API so you can cut a chosen reel segment before rendering.
+  - **Caption position:** choose caption position as `top`, `center`, or `bottom` in Step 4.
 
-Progress feedback: rendering now displays a visual progress bar and percentage (via the `/api/status/<job_id>` response's `percent` field).
+**Progress feedback:** rendering now displays a visual progress bar and percentage via the `/api/status/<job_id>` response's `percent` field.
 
-Notes: For best caption results, prefer reels without on-screen text overlays and confirm the chosen background before continuing.
+> 📝 **Note:** For best caption results, prefer Reels without on-screen text overlays and confirm the chosen background before continuing.
 
-> Note: Use Reels with minimal on-screen text to get the best caption overlay results.
+<br>
 
----
+<a id="features"></a>
+
+<div align="center">
 
 ## ✨ Features
 
-### Automatic voice + captions
+</div>
+
+<br>
+
+<details open>
+<summary><b>🎙️ Automatic voice + captions</b></summary>
+
 - Edge-TTS creates voiceover audio.
 - Whisper transcription produces time-aligned captions.
 - Captions render in pill style with dynamic color highlights.
 - Text is positioned to avoid platform UI overlays.
-- New: caption vertical position selectable (`top`, `center`, `bottom`).
+- New: caption vertical position selectable as `top`, `center`, or `bottom`.
 
-### Background visuals
+</details>
+
+<details>
+<summary><b>🎞️ Background visuals</b></summary>
+
 - AI Mode uses gameplay footage downloaded from Pexels.
 - Manual Mode uses user-uploaded video directly.
 - Instagram Mode uses the confirmed reel video as background.
 
-### Styling controls
+</details>
+
+<details>
+<summary><b>🎨 Styling controls</b></summary>
+
 - Choose from 11 caption fonts.
 - Customize text color, highlight color, accent color, pill color, and opacity.
 - Toggle automatic power-word highlighting.
 - Optional background music upload with volume control.
 
-### Local-first pipeline
+</details>
+
+<details>
+<summary><b>🧱 Local-first pipeline</b></summary>
+
 - Runs on your machine with no paid cloud services.
 - Uses `ffmpeg`, `moviepy`, `edge-tts`, `faster-whisper`, and `yt-dlp`.
 
----
+</details>
+
+<br>
+
+<a id="quick-start"></a>
+
+<div align="center">
 
 ## 🚀 Quick Start
 
-### Prerequisites
+</div>
+
+<br>
+
+### ✅ Prerequisites
 
 | Tool | Required | Notes |
 |------|----------|-------|
-| Python 3.9+ | ✅ | Use system Python or a virtualenv |
-| ffmpeg | ✅ | `brew install ffmpeg` on macOS |
-| Ollama | Recommended for AI Mode | `ollama pull llama3.2` |
+| **Python 3.9+** | ✅ | Use system Python or a virtualenv |
+| **ffmpeg** | ✅ | `brew install ffmpeg` on macOS |
+| **Ollama** | Recommended for AI Mode | `ollama pull llama3.2` |
 
-### Install
+### 📦 Install
 
 ```bash
 cd /Users/azhaankhan/Downloads/make_shorts
 pip install -r requirements.txt
 ```
 
-### Run the UI
+### 🖥 Run the UI
 
 ```bash
 python ui/app.py
 ```
 
-### Run CLI modes
+### 🧪 Run CLI modes
 
 ```bash
 python make_shorts.py "your topic"
@@ -144,11 +324,49 @@ python make_shorts.py --script my_script.txt --gameplay ./my_clips/
 python make_shorts.py --script my_script.txt --images ./my_photos/
 ```
 
----
+<br>
+
+<div align="center">
+
+## 🏗 Architecture
+
+</div>
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              MAKE SHORTS                                     │
+│                     Local AI + Video Rendering Studio                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐   │
+│   │  Input Modes │      │ Script/Audio │      │ Captions + Styling      │   │
+│   │              │      │              │      │                          │   │
+│   │  Prompt      │ ───▶ │ AI Script    │ ───▶ │ Whisper timed captions  │   │
+│   │  Upload MP4  │      │ Edge-TTS     │      │ 11 fonts + colors       │   │
+│   │  Reel URL    │      │ Reel audio   │      │ top/center/bottom       │   │
+│   └──────────────┘      └──────────────┘      └──────────────┬───────────┘   │
+│                                                               │              │
+│                                                               ▼              │
+│   ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────┐   │
+│   │  Media Layer │      │ Render Core  │      │ Final Output            │   │
+│   │              │      │              │      │                          │   │
+│   │  Pexels      │ ───▶ │ moviepy      │ ───▶ │ 1080×1920 MP4           │   │
+│   │  Uploads     │      │ ffmpeg       │      │ optional music          │   │
+│   │  Instagram   │      │ yt-dlp       │      │ optional watermark      │   │
+│   └──────────────┘      └──────────────┘      └──────────────────────────┘   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+<br>
+
+<div align="center">
 
 ## 📁 Project Structure
 
-```
+</div>
+
+```text
 make_shorts/
 ├── make_shorts.py        # Core render pipeline
 ├── requirements.txt      # Python dependencies
@@ -164,65 +382,105 @@ make_shorts/
 └── temp/                 # Temporary audio/video assets
 ```
 
----
+<br>
 
-## 🔧 Dependencies
+<div align="center">
 
-The app uses:
-- `flask` for the web UI
-- `moviepy` for video composition
-- `edge-tts` for voice generation
-- `faster-whisper` for transcription
-- `requests` for HTTP downloads
-- `yt-dlp` for Instagram Reel downloads
+## 🧰 Tech Stack & Dependencies
 
-## 🧭 API Endpoints (useful for automation)
+</div>
 
-- `POST /api/instagram/fetch` — Accepts JSON `{ "url": "..." }` or `{ "urls": ["...","..."] }`. Returns `results` array with `{ filename, duration, preview_url }` for each fetched reel.
-- `POST /api/instagram/transcribe` — Accepts `{ "url": "..." }`. Returns `{ filename, duration, audio_duration, transcript }`.
-- `POST /api/instagram/assemble` — Form POST used by the UI to render the final video; returns `{ job_id }` to poll with `/api/status/<job_id>`.
-- `GET /api/status/<job_id>` — Returns job progress including `status`, `message`, and `percent` (0–100).
-- `POST /api/instagram/trim` — JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result.
+<br>
 
-- `POST /api/clear-storage` — Clears local storage directories used by the app: `uploads/`, `temp/`, `output/`, `sessions/`, `music/`, and `gameplay/`. Use the Home page button or call this endpoint to permanently delete stored media and session data (local only).
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Web UI** | `flask` | Local browser-based interface |
+| **Video composition** | `moviepy` | Compose clips, captions, audio, and final video |
+| **Voice generation** | `edge-tts` | Create voiceover audio |
+| **Transcription** | `faster-whisper` | Generate time-aligned captions |
+| **HTTP downloads** | `requests` | Fetch remote assets |
+| **Instagram downloads** | `yt-dlp` | Download Instagram Reel sources |
+| **Rendering utility** | `ffmpeg` | Render video operations, including watermark output |
+| **AI Mode helper** | `Ollama` + `llama3.2` | Prompt-to-script generation for AI Mode |
 
-These endpoints are intended for local automation or to integrate with simple scripts.
+<br>
 
----
+<a id="api-endpoints"></a>
+
+<div align="center">
+
+## 🧭 API Endpoints
+
+</div>
+
+These endpoints are intended for local automation or for integrating Make Shorts with simple scripts.
+
+<br>
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/instagram/fetch` | Accepts JSON `{ "url": "..." }` or `{ "urls": ["...", "..."] }`. Returns a `results` array with `{ filename, duration, preview_url }` for each fetched reel. |
+| `POST` | `/api/instagram/transcribe` | Accepts `{ "url": "..." }`. Returns `{ filename, duration, audio_duration, transcript }`. |
+| `POST` | `/api/instagram/assemble` | Form POST used by the UI to render the final video. Returns `{ job_id }` to poll with `/api/status/<job_id>`. |
+| `GET` | `/api/status/<job_id>` | Returns job progress including `status`, `message`, and `percent` from `0` to `100`. |
+| `POST` | `/api/instagram/trim` | Accepts JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result. |
+| `POST` | `/api/clear-storage` | Clears local storage directories used by the app: `uploads/`, `temp/`, `output/`, `sessions/`, `music/`, and `gameplay/`. Use the Home page button or call this endpoint to permanently delete stored media and session data locally only. |
+
+<br>
+
+<div align="center">
 
 ## 🛠 Notes
+
+</div>
 
 - AI Mode requires Ollama for prompt-to-script generation.
 - The web UI defaults to `http://127.0.0.1:5000`.
 - If port `5000` is occupied, use another available port.
 
----
+<br>
+
+<div align="center">
 
 ## ⚠️ Troubleshooting
 
-### `moviepy.editor` import issue
+</div>
+
+<br>
+
+<details open>
+<summary><b><code>moviepy.editor</code> import issue</b></summary>
+
 If `python ui/app.py` fails with `No module named 'moviepy.editor'`, install the requirements and try again.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Ollama issues
+</details>
+
+<details>
+<summary><b>Ollama issues</b></summary>
+
 Start Ollama before using AI Mode:
 
 ```bash
 ollama pull llama3.2
 ollama serve
 ```
+
+Or run the service/open the desktop app and pull the model:
+
 ```bash
 ollama serve
 # or open the Ollama desktop app
 ollama pull llama3.2
 ```
+
 </details>
 
 <details>
-<summary><strong>ffmpeg not found</strong></summary>
+<summary><b>ffmpeg not found</b></summary>
 
 ```bash
 # Mac
@@ -232,40 +490,78 @@ export PATH="/opt/homebrew/bin:$PATH"
 # Linux
 sudo apt install ffmpeg
 ```
+
 </details>
 
 <details>
-<summary><strong>Video looks blank / dark</strong></summary>
+<summary><b>Video looks blank / dark</b></summary>
 
 Gameplay download may have failed. Use **Manual Mode** and upload your own MP4, or check your internet connection.
+
 </details>
 
 <details>
-<summary><strong>Render is slow</strong></summary>
+<summary><b>Render is slow</b></summary>
 
-Normal for local CPU rendering. A 50s Short takes ~2–5 min. Speed tips:
+Normal for local CPU rendering. A 50s Short takes ~2–5 min.
+
+Speed tips:
+
 - Set `WHISPER_MODEL = "tiny"` in `make_shorts.py`
-- Lower `FPS` to 24
+- Lower `FPS` to `24`
+
 </details>
 
----
+<br>
+
+<div align="center">
 
 ## 🎓 Pro Tips for Viral Shorts
 
-1. **Hook in 1 second** — start with a bold claim or question
-2. **Title = first line** of your script
-3. **Music at 10–20%** volume — audible but never competing with voice
-4. **Robotic fonts** (Orbitron, Audiowide) crush it for tech/gaming niches
-5. **Post 11 AM–1 PM** and **7–9 PM** in your audience's timezone
+</div>
 
----
+<br>
+
+<table align="center">
+  <tr>
+    <td><b>1.</b> Hook in 1 second — start with a bold claim or question</td>
+    <td><b>2.</b> Title = first line of your script</td>
+  </tr>
+  <tr>
+    <td><b>3.</b> Music at 10–20% volume — audible but never competing with voice</td>
+    <td><b>4.</b> Robotic fonts like Orbitron and Audiowide crush it for tech/gaming niches</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><b>5.</b> Post 11 AM–1 PM and 7–9 PM in your audience's timezone</td>
+  </tr>
+</table>
+
+<br>
+
+<div align="center">
 
 ## 📜 License
 
-Do whatever you want. Build your channel. No attribution required.
+</div>
 
-<p align="center">
-  <strong>Built for creators who ship.</strong><br/>
-  <sub>Zero API keys · Zero limits · Zero excuses.</sub><br/>
-  <strong>Made by Azhaan Khan</strong>
-</p>
+> Do whatever you want. Build your channel. No attribution required.
+
+<br>
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:00d4ff,45:111827,75:141414,100:ff2bd6&height=155&section=footer&text=Built%20for%20creators%20who%20ship&fontSize=30&fontColor=ffffff&fontAlignY=55&desc=Zero%20API%20keys%20%C2%B7%20Zero%20limits%20%C2%B7%20Zero%20excuses&descSize=16&descAlignY=75&animation=twinkling" alt="Make Shorts Footer" />
+
+<br>
+
+<strong>Built for creators who ship.</strong><br>
+<sub>Zero API keys · Zero limits · Zero excuses.</sub><br>
+<strong>Made by Azhaan Khan</strong>
+
+<br><br>
+
+<a href="http://127.0.0.1:5000">
+  <img src="https://img.shields.io/badge/🚀%20Launch%20Make%20Shorts-0a0a0a?style=for-the-badge&labelColor=00d4ff&color=141414" alt="Launch Make Shorts" />
+</a>
+
+</div>
