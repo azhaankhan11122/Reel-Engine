@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Web UI for Make Shorts — AI Mode (wizard) & Manual Mode."""
+"""Web UI for Reel Engine — AI Mode (wizard) & Manual Mode."""
 
 import asyncio
 import sys
@@ -833,6 +833,6 @@ if __name__ == "__main__":
     except OSError:
         port = 5001
         print(f"\n  Port {port-1} in use, trying {port}...\n")
-        print("  Make Shorts UI")
+        print("  Reel Engine UI")
         print(f"  Open http://127.0.0.1:{port} in your browser\n")
         app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
