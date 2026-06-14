@@ -4,7 +4,7 @@
 
 <br/>
 
-<h1 align="center">✨ Make Shorts — Ship Viral Videos Locally</h1>
+<h1 align="center">✨ Reel Engine — Ship Viral Videos Locally</h1>
 <h3 align="center">Gen-Z ready editor for Shorts, Reels &amp; TikTok — fast, free, and on your machine.</h3>
 
 <br/>
@@ -46,7 +46,7 @@
 
 <a id="quick-pitch"></a>
 
-> ⚡ **Make Shorts turns simple ideas into ready-to-post vertical videos.** Paste a prompt or a Reel link, tweak captions, add music, and export — all offline. Think of it as your local micro-studio that helps you go viral without cloud costs.
+> ⚡ **Reel Engine turns simple ideas into ready-to-post vertical videos.** Paste a prompt or a Reel link, tweak captions, add music, and export — all offline. Think of it as your local micro-studio that helps you go viral without cloud costs.
 >
 > The app exports a **1080×1920 MP4** with automatic captions, voiceover, and optional music.
 
@@ -54,7 +54,7 @@
 
 <div align="center">
 
-## ✨ Why Make Shorts?
+## ✨ Why Reel Engine?
 
 </div>
 
@@ -334,7 +334,7 @@ python make_shorts.py --script my_script.txt --images ./my_photos/
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                              MAKE SHORTS                                     │
+│                              REEL ENGINR                                     │
 │                     Local AI + Video Rendering Studio                        │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
@@ -413,7 +413,7 @@ make_shorts/
 
 </div>
 
-These endpoints are intended for local automation or for integrating Make Shorts with simple scripts.
+These endpoints are intended for local automation or for integrating Reel Engine with simple scripts.
 
 <br/>
 
