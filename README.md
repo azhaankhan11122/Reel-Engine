@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:0a0a0a,45:141414,75:111827,100:00d4ff&amp;height=300&amp;section=header&amp;text=MAKE%20SHORTS&amp;fontSize=82&amp;fontColor=00d4ff&amp;fontAlignY=52&amp;desc=Ship%20Viral%20Shorts%2C%20Reels%20%26%20TikToks%20Locally&amp;descSize=20&amp;descAlignY=74&amp;animation=twinkling" alt="Make Shorts Header" />
+<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:0a0a0a,45:141414,75:111827,100:00d4ff&amp;height=300&amp;section=header&amp;text=MAKE%20SHORTS&amp;fontSize=82&amp;fontColor=00d4ff&amp;fontAlignY=52&amp;desc=Ship%20Viral%20Shorts%2C%20Reels%20%26%20TikToks%20Locally&amp;descSize=20&amp;descAlignY=74&amp;animation=twinkling" alt="Reel Engine Header" />
 
 <br/>
 
@@ -550,7 +550,7 @@ Speed tips:
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:00d4ff,45:111827,75:141414,100:ff2bd6&amp;height=155&amp;section=footer&amp;text=Built%20for%20creators%20who%20ship&amp;fontSize=30&amp;fontColor=ffffff&amp;fontAlignY=55&amp;desc=Zero%20API%20keys%20%C2%B7%20Zero%20limits%20%C2%B7%20Zero%20excuses&amp;descSize=16&amp;descAlignY=75&amp;animation=twinkling" alt="Make Shorts Footer" />
+<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:00d4ff,45:111827,75:141414,100:ff2bd6&amp;height=155&amp;section=footer&amp;text=Built%20for%20creators%20who%20ship&amp;fontSize=30&amp;fontColor=ffffff&amp;fontAlignY=55&amp;desc=Zero%20API%20keys%20%C2%B7%20Zero%20limits%20%C2%B7%20Zero%20excuses&amp;descSize=16&amp;descAlignY=75&amp;animation=twinkling" alt="Reel Engine Footer" />
 
 <br/>
 
@@ -561,7 +561,7 @@ Speed tips:
 <br/><br/>
 
 <a href="http://127.0.0.1:5000">
-  <img src="https://img.shields.io/badge/🚀%20Launch%20Make%20Shorts-0a0a0a?style=for-the-badge&amp;labelColor=00d4ff&amp;color=141414" alt="Launch Make Shorts" />
+  <img src="https://img.shields.io/badge/🚀%20Launch%20Make%20Shorts-0a0a0a?style=for-the-badge&amp;labelColor=00d4ff&amp;color=141414" alt="Launch Reel Engine" />
 </a>
 
 </div>
