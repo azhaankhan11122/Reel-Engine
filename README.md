@@ -425,6 +425,59 @@ These endpoints are intended for local automation or for integrating Reel Engine
 | `GET` | `/api/status/<job_id>` | Returns job progress including `status`, `message`, and `percent` from `0` to `100`. |
 | `POST` | `/api/instagram/trim` | Accepts JSON `{ "filename": "...", "start": 3.2, "end": 12.5 }`. Returns `{ filename, preview_url }` for the trimmed result. |
 | `POST` | `/api/clear-storage` | Clears local storage directories used by the app: `uploads/`, `temp/`, `output/`, `sessions/`, `music/`, and `gameplay/`. Use the Home page button or call this endpoint to permanently delete stored media and session data locally only. |
+| `GET` | `/studio` | Serves the Studio multi-track timeline video editor. |
+| `GET` | `/api/studio/projects` | Lists all saved project sessions with their details. |
+| `POST` | `/api/studio/project/create` | Initializes a new blank project JSON state. |
+| `GET` | `/api/studio/project/<id>` | Loads the project timeline JSON configuration. |
+| `POST` | `/api/studio/project/<id>/save` | Saves the project timeline state (tracks, clips, text overlays, assets). |
+| `POST` | `/api/studio/media/upload` | Uploads local video/audio/image assets to `studio_uploads/` and extracts duration/metadata. |
+| `POST` | `/api/studio/media/reel-video` | Downloads an Instagram Reel via `yt-dlp` to serve as a video asset. |
+| `POST` | `/api/studio/audio/reel-extract` | Downloads an Instagram Reel, extracts its audio track to MP3, and saves it. |
+| `POST` | `/api/studio/audio/tts` | Converts text to speech voiceover using Edge-TTS. |
+| `POST` | `/api/studio/captions/generate` | Generates timestamp-aligned captions from audio/video using `faster-whisper`. |
+| `POST` | `/api/studio/render` | Composites the multi-track timeline into a final 1080x1920 MP4 using MoviePy/FFmpeg in the background. Returns `{ job_id }`. |
+
+<br/>
+
+<div align="center">
+
+## 🎬 Reel Studio manual testing instructions
+
+</div>
+
+Follow these steps to manually test the Reel Studio feature:
+
+1. **Launch the Server:** Run the server locally using Python:
+   ```bash
+   python3 ui/app.py
+   ```
+2. **Navigate to the Studio:** Go to `http://127.0.0.1:5000/` and click the **Studio Mode** card, or open `http://127.0.0.1:5000/studio` directly.
+3. **Import Video & Audio Assets:**
+   - **Upload:** Drag and drop an MP4 video file onto the **Media** tab upload box. It will upload, extract a preview thumbnail, compute duration, and show in the grid.
+   - **Instagram Fetch:** Paste an Instagram Reel URL in the input box and click **Fetch**. The app will download the video locally and add it to your library.
+   - **Reel Audio Extract:** Paste a Reel URL in the **Audio** tab input box and click **Extract**. The app will fetch the audio track as an MP3 and add it to the audio list.
+   - **TTS Voiceover:** Under the **Audio** tab, type a script in the text area, select a neural voice, and click **Generate**. The audio will be generated and automatically placed on the Voice track.
+4. **Interact with the Timeline:**
+   - Drag items from the media/audio libraries and drop them onto their respective tracks (**Video Main**, **Video PIP**, **Images**, or **Music**).
+   - Drag clips horizontally to change their start time.
+   - Drag the left/right boundaries of any clip to trim its start/end offsets.
+   - Move the playhead by clicking or dragging on the time ruler.
+   - Press **Space** to play/pause the video canvas preview.
+   - Select a clip and press **S** to split it at the current playhead time.
+   - Select a clip and press **Delete** to remove it.
+   - Zoom in/out of the timeline using the `+` / `-` buttons.
+5. **Modify Clip Properties:**
+   - Select a clip in the timeline. The **Property Inspector** on the right will activate.
+   - For **Video/Image clips**, adjust scale, rotation, positions, opacity, crop mode (cover/contain/fill), filters, playback speed, or volume.
+   - For **Text clips**, click **Add Heading Text** in the Text tab. Double-click the text box in the inspector, customize the content, font sizes, colors, alignment, and toggle the background pill box.
+6. **Generate Captions:**
+   - Select an imported media track from the **Captions** dropdown, then click **Generate Captions**.
+   - Review and edit the word timings and transcription segments in the sidebar or edit them manually.
+7. **Render & Export:**
+   - Click the **Export Video** button in the top right.
+   - The render progress bar will show up-to-date status (Processing tracks, Compositing, Rendering output).
+   - When complete, click the **Download MP4** button to download the finalized vertical video.
+
 
 <br/>
 

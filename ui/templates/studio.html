@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reel Studio — Editor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='studio.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="studio-body">
+  <div class="bg-glow"></div>
+
+  <!-- Top Bar -->
+  <header class="studio-header">
+    <div class="header-left">
+      <a href="/" class="studio-logo-link">
+        <div class="logo"><i class="fa-solid fa-clapperboard"></i></div>
+        <span class="studio-title">Reel Studio</span>
+      </a>
+      <div class="project-name-wrapper">
+        <input type="text" id="projectName" value="Untitled Studio Project" placeholder="Project Name">
+        <i class="fa-solid fa-pen name-edit-icon"></i>
+      </div>
+    </div>
+    <div class="header-center">
+      <button id="btnUndo" class="ctrl-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+      <button id="btnRedo" class="ctrl-btn" title="Redo (Ctrl+Shift+Z)"><i class="fa-solid fa-rotate-right"></i></button>
+      <button id="btnSave" class="studio-btn secondary-btn" title="Save Project (Ctrl+S)"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      <button id="btnLoadProject" class="studio-btn secondary-btn"><i class="fa-solid fa-folder-open"></i> Projects</button>
+    </div>
+    <div class="header-right">
+      <button id="btnExport" class="studio-btn primary-btn"><i class="fa-solid fa-paper-plane"></i> Export Video</button>
+    </div>
+  </header>
+
+  <!-- Main Grid Workspace -->
+  <div class="studio-workspace">
+    
+    <!-- Left Sidebar (Tabs & Library) -->
+    <div class="studio-left-sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="tab-media"><i class="fa-solid fa-photo-film"></i><span>Media</span></button>
+        <button class="tab-btn" data-tab="tab-audio"><i class="fa-solid fa-music"></i><span>Audio</span></button>
+        <button class="tab-btn" data-tab="tab-text"><i class="fa-solid fa-font"></i><span>Text</span></button>
+        <button class="tab-btn" data-tab="tab-captions"><i class="fa-solid fa-closed-captioning"></i><span>Captions</span></button>
+        <button class="tab-btn" data-tab="tab-effects"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Effects</span></button>
+        <button class="tab-btn" data-tab="tab-transitions"><i class="fa-solid fa-film"></i><span>Transitions</span></button>
+      </div>
+
+      <div class="tab-contents">
+        <!-- Media Tab -->
+        <div id="tab-media" class="tab-content active">
+          <h3>Media Library</h3>
+          <div class="upload-area" id="mediaUploadZone">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <p>Drag & Drop videos/images or click to upload</p>
+            <input type="file" id="mediaFileInput" accept="video/*,image/*" style="display: none;">
+          </div>
+          
+          <div class="import-section">
+            <label>Import Instagram Reel</label>
+            <div class="input-row">
+              <input type="text" id="reelVideoUrl" placeholder="https://www.instagram.com/reel/...">
+              <button id="btnImportReelVideo" class="studio-btn"><i class="fa-solid fa-download"></i> Fetch</button>
+            </div>
+          </div>
+          
+          <div class="assets-grid" id="mediaAssetsGrid">
+            <!-- Dynamically populated assets -->
+          </div>
+        </div>
+
+        <!-- Audio Tab -->
+        <div id="tab-audio" class="tab-content">
+          <h3>Audio Library</h3>
+          <div class="upload-area" id="audioUploadZone">
+            <i class="fa-solid fa-file-audio upload-icon"></i>
+            <p>Upload music or audio files (MP3/WAV/M4A)</p>
+            <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
+          </div>
+
+          <div class="import-section">
+            <label>Extract Audio from Reel</label>
+            <div class="input-row">
+              <input type="text" id="reelAudioUrl" placeholder="https://www.instagram.com/reel/...">
+              <button id="btnImportReelAudio" class="studio-btn"><i class="fa-solid fa-music"></i> Extract</button>
+            </div>
+          </div>
+
+          <div class="import-section">
+            <label>Text to Speech Voiceover</label>
+            <textarea id="ttsText" placeholder="Type script here to convert to voiceover..."></textarea>
+            <div class="voice-row">
+              <select id="ttsVoiceSelect">
+                <!-- Dynamically loaded voices -->
+              </select>
+              <button id="btnGenerateTTS" class="studio-btn"><i class="fa-solid fa-microphone"></i> Generate</button>
+            </div>
+          </div>
+
+          <div class="assets-list" id="audioAssetsList">
+            <!-- Dynamically populated audio assets -->
+          </div>
+        </div>
+
+        <!-- Text Tab -->
+        <div id="tab-text" class="tab-content">
+          <h3>Text Overlays</h3>
+          <p class="tab-helper-text">Add custom text to your video timeline</p>
+          <div class="text-presets">
+            <button class="preset-text-btn add-heading" data-preset="heading">Add Heading Text</button>
+            <button class="preset-text-btn add-subheading" data-preset="subheading">Add Subheading</button>
+            <button class="preset-text-btn add-paragraph" data-preset="paragraph">Add Body Text</button>
+          </div>
+        </div>
+
+        <!-- Captions Tab -->
+        <div id="tab-captions" class="tab-content">
+          <h3>Auto Captions</h3>
+          <p class="tab-helper-text">Extract spoken audio into text segments automatically using local faster-whisper model.</p>
+          
+          <div class="caption-generator-box">
+            <label for="captionAssetSelect">Select Audio/Video Source</label>
+            <select id="captionAssetSelect">
+              <option value="">-- Choose imported media --</option>
+            </select>
+            <button id="btnGenerateAutoCaptions" class="studio-btn primary-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Captions</button>
+          </div>
+
+          <div class="manual-captions-section">
+            <h4>Manual Captions / Subtitles</h4>
+            <button id="btnAddManualCaption" class="studio-btn secondary-btn"><i class="fa-solid fa-plus"></i> Add Caption Segment</button>
+          </div>
+
+          <div class="captions-list-editor" id="captionsListEditor">
+            <!-- List of caption segments for manual editing -->
+          </div>
+        </div>
+
+        <!-- Effects Tab -->
+        <div id="tab-effects" class="tab-content">
+          <h3>Video Styling Filters</h3>
+          <p class="tab-helper-text">Select a video clip to apply styling filters</p>
+          <div class="filters-grid">
+            <button class="filter-preset-card" data-filter="none"><div class="filter-preview none"></div><span>Original</span></button>
+            <button class="filter-preset-card" data-filter="grayscale"><div class="filter-preview grayscale"></div><span>B&W Grayscale</span></button>
+            <button class="filter-preset-card" data-filter="blur"><div class="filter-preview blur-filter"></div><span>Gaussian Blur</span></button>
+            <button class="filter-preset-card" data-filter="vintage"><div class="filter-preview vintage"></div><span>Retro Vintage</span></button>
+            <button class="filter-preset-card" data-filter="warm"><div class="filter-preview warm"></div><span>Warm Tint</span></button>
+            <button class="filter-preset-card" data-filter="cool"><div class="filter-preview cool"></div><span>Cool Tint</span></button>
+          </div>
+        </div>
+
+        <!-- Transitions Tab -->
+        <div id="tab-transitions" class="tab-content">
+          <h3>Clips Transitions</h3>
+          <p class="tab-helper-text">Add transition overlays between main video segments</p>
+          <div class="transitions-list">
+            <button class="transition-card" data-transition="none">
+              <i class="fa-solid fa-circle-notch"></i><span>None</span>
+            </button>
+            <button class="transition-card" data-transition="fade">
+              <i class="fa-solid fa-circle-half-stroke"></i><span>Fade Dissolve</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Canvas Preview Panel -->
+    <div class="studio-center-panel">
+      <div class="canvas-container">
+        <!-- 9:16 portrait video frame preview -->
+        <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+        
+        <div class="canvas-overlay-loading" id="canvasLoading">
+          <div class="spinner"></div>
+          <span id="canvasLoadingMsg">Fetching...</span>
+        </div>
+      </div>
+      
+      <!-- Video Player Timeline Controls -->
+      <div class="player-controls">
+        <div class="player-buttons">
+          <button id="btnPrevFrame" class="player-btn" title="Back 1 frame"><i class="fa-solid fa-backward-step"></i></button>
+          <button id="btnPlayPause" class="player-btn play" title="Play/Pause (Space)"><i class="fa-solid fa-play"></i></button>
+          <button id="btnNextFrame" class="player-btn" title="Forward 1 frame"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+        <div class="player-time">
+          <span id="timeCurrent">00:00.00</span>
+          <span class="divider">/</span>
+          <span id="timeTotal">00:00.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar (Properties Panel) -->
+    <div class="studio-right-sidebar" id="propertiesPanel">
+      <div class="properties-header">
+        <h3><i class="fa-solid fa-sliders"></i> Property Inspector</h3>
+      </div>
+      
+      <!-- General Project Properties (shown when no clip is selected) -->
+      <div id="properties-project" class="properties-section active">
+        <label class="section-title">Project Settings</label>
+        <div class="property-row">
+          <span>Canvas Size:</span>
+          <strong>1080 x 1920 (9:16)</strong>
+        </div>
+        <div class="property-row">
+          <span>Frames Per Sec:</span>
+          <strong>30 FPS</strong>
+        </div>
+        <div class="property-row">
+          <span>Total Length:</span>
+          <strong id="projDuration">0.00s</strong>
+        </div>
+        <p class="properties-empty-hint"><i class="fa-solid fa-arrow-pointer"></i> Select a clip in the timeline below to edit its size, position, alignment, and audio properties.</p>
+      </div>
+
+      <!-- Video / Overlay Clip Properties -->
+      <div id="properties-video" class="properties-section">
+        <label class="section-title">Video Element Properties</label>
+        
+        <div class="field">
+          <label>Crop / Scaling Mode</label>
+          <select id="propVideoCropMode">
+            <option value="cover">Cover (Fill & Crop Center)</option>
+            <option value="contain">Contain (Fit Aspect Ratio)</option>
+            <option value="fill">Fill (Stretch to Borders)</option>
+          </select>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label>Scale X/Y</label>
+            <input type="number" id="propVideoScale" value="1" step="0.05" min="0.1" max="10">
+          </div>
+          <div class="field">
+            <label>Rotate (deg)</label>
+            <input type="number" id="propVideoRotation" value="0" step="5" min="-360" max="360">
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label>Position X</label>
+            <input type="number" id="propVideoX" value="540">
+          </div>
+          <div class="field">
+            <label>Position Y</label>
+            <input type="number" id="propVideoY" value="960">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Opacity: <span id="valVideoOpacity">100</span>%</label>
+          <input type="range" id="propVideoOpacity" min="0" max="100" value="100">
+        </div>
+
+        <label class="section-title">Timing & Trimming</label>
+        <div class="field-grid">
+          <div class="field">
+            <label>Start (s)</label>
+            <input type="number" id="propVideoStart" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Duration (s)</label>
+            <input type="number" id="propVideoDuration" step="0.1" min="0.1">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Src Offset Start (s)</label>
+            <input type="number" id="propVideoTrimStart" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Playback Speed</label>
+            <select id="propVideoSpeed">
+              <option value="0.5">0.5x Slow</option>
+              <option value="1.0" selected>1.0x Normal</option>
+              <option value="1.5">1.5x Fast</option>
+              <option value="2.0">2.0x Double</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="section-title">Audio Volume</label>
+        <div class="field">
+          <label>Clip Volume: <span id="valVideoVolume">100</span>%</label>
+          <input type="range" id="propVideoVolume" min="0" max="100" value="100">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="propVideoMuted">
+          <label for="propVideoMuted" style="display:inline; text-transform:none;">Muted (Disable audio completely)</label>
+        </div>
+      </div>
+
+      <!-- Image Clip Properties -->
+      <div id="properties-image" class="properties-section">
+        <label class="section-title">Image Overlay Properties</label>
+        <div class="field-grid">
+          <div class="field">
+            <label>Scale</label>
+            <input type="number" id="propImageScale" value="1" step="0.05" min="0.1" max="10">
+          </div>
+          <div class="field">
+            <label>Rotation (deg)</label>
+            <input type="number" id="propImageRotation" value="0" step="5" min="-360" max="360">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Position X</label>
+            <input type="number" id="propImageX" value="540">
+          </div>
+          <div class="field">
+            <label>Position Y</label>
+            <input type="number" id="propImageY" value="960">
+          </div>
+        </div>
+        <div class="field">
+          <label>Opacity: <span id="valImageOpacity">100</span>%</label>
+          <input type="range" id="propImageOpacity" min="0" max="100" value="100">
+        </div>
+
+        <label class="section-title">Timing</label>
+        <div class="field-grid">
+          <div class="field">
+            <label>Start (s)</label>
+            <input type="number" id="propImageStart" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Duration (s)</label>
+            <input type="number" id="propImageDuration" step="0.1" min="0.1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Clip Properties -->
+      <div id="properties-text" class="properties-section">
+        <label class="section-title">Text Box Properties</label>
+        <div class="field">
+          <label>Text Content</label>
+          <textarea id="propTextContent" rows="3" placeholder="Enter overlay text..."></textarea>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Font Size</label>
+            <input type="number" id="propTextSize" min="12" max="300" value="80">
+          </div>
+          <div class="field">
+            <label>Font Family</label>
+            <select id="propTextFontFamily">
+              <option value="impact">Impact</option>
+              <option value="arial_black">Arial Black</option>
+              <option value="montserrat">Montserrat Black</option>
+              <option value="bold">Bold Sans</option>
+              <option value="orbitron">Orbitron</option>
+              <option value="audiowide">Audiowide</option>
+              <option value="share_tech">Share Tech</option>
+              <option value="press_start">Press Start</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="field-grid">
+          <div class="field">
+            <label>Text Color</label>
+            <input type="color" id="propTextColor" value="#ffffff">
+          </div>
+          <div class="field">
+            <label>Alignment</label>
+            <select id="propTextAlignment">
+              <option value="left">Left</option>
+              <option value="center" selected>Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="propTextUseBg" checked>
+          <label for="propTextUseBg" style="display:inline; text-transform:none;">Use Bounding Box Pill</label>
+        </div>
+        
+        <div class="field-grid" id="textBgColorWrapper">
+          <div class="field">
+            <label>Pill Color</label>
+            <input type="color" id="propTextBgColor" value="#000000">
+          </div>
+          <div class="field">
+            <label>Pill Opacity</label>
+            <input type="range" id="propTextBgOpacity" min="0" max="255" value="140">
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label>Position X</label>
+            <input type="number" id="propTextX" value="540">
+          </div>
+          <div class="field">
+            <label>Position Y</label>
+            <input type="number" id="propTextY" value="960">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Start (s)</label>
+            <input type="number" id="propTextStart" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Duration (s)</label>
+            <input type="number" id="propTextDuration" step="0.1" min="0.1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Clip Properties -->
+      <div id="properties-audio" class="properties-section">
+        <label class="section-title">Audio Clip Properties</label>
+        <div class="field">
+          <label>Volume: <span id="valAudioVolume">100</span>%</label>
+          <input type="range" id="propAudioVolume" min="0" max="100" value="100">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="propAudioMuted">
+          <label for="propAudioMuted" style="display:inline; text-transform:none;">Muted</label>
+        </div>
+
+        <label class="section-title">Fades & Trims</label>
+        <div class="field-grid">
+          <div class="field">
+            <label>Fade In (s)</label>
+            <input type="number" id="propAudioFadeIn" min="0" max="10" step="0.1" value="0">
+          </div>
+          <div class="field">
+            <label>Fade Out (s)</label>
+            <input type="number" id="propAudioFadeOut" min="0" max="10" step="0.1" value="0">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Start Time (s)</label>
+            <input type="number" id="propAudioStart" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Timeline Length</label>
+            <input type="number" id="propAudioDuration" step="0.1" min="0.1">
+          </div>
+        </div>
+        <div class="field">
+          <label>Source Audio Offset Start (s)</label>
+          <input type="number" id="propAudioTrimStart" step="0.1" min="0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Timeline Section -->
+  <div class="studio-bottom-panel">
+    <!-- Timeline Actions Bar -->
+    <div class="timeline-toolbar">
+      <div class="toolbar-left">
+        <button id="btnSplitClip" class="timeline-tool-btn" title="Split Clip at Playhead (S)"><i class="fa-solid fa-scissors"></i> Split</button>
+        <button id="btnDuplicateClip" class="timeline-tool-btn" title="Duplicate Selected Clip"><i class="fa-solid fa-copy"></i> Duplicate</button>
+        <button id="btnDeleteClip" class="timeline-tool-btn danger" title="Delete Selected Clip (Delete/Backspace)"><i class="fa-solid fa-trash"></i> Delete</button>
+      </div>
+      <div class="toolbar-right">
+        <button id="btnZoomOut" class="timeline-tool-btn" title="Zoom Out Timeline (-)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <div class="zoom-slider-wrapper">
+          <input type="range" id="timelineZoom" min="1" max="100" value="50">
+        </div>
+        <button id="btnZoomIn" class="timeline-tool-btn" title="Zoom In Timeline (+)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+      </div>
+    </div>
+
+    <!-- Timeline Scroll Container -->
+    <div class="timeline-editor-wrapper" id="timelineWrapper">
+      <!-- Tracks Info Column -->
+      <div class="timeline-labels-column">
+        <div class="track-label"><i class="fa-solid fa-video"></i> Video Main</div>
+        <div class="track-label"><i class="fa-solid fa-layer-group"></i> Video PIP</div>
+        <div class="track-label"><i class="fa-solid fa-image"></i> Images</div>
+        <div class="track-label"><i class="fa-solid fa-font"></i> Texts</div>
+        <div class="track-label"><i class="fa-solid fa-closed-captioning"></i> Captions</div>
+        <div class="track-label"><i class="fa-solid fa-microphone"></i> Voiceover</div>
+        <div class="track-label"><i class="fa-solid fa-music"></i> Music</div>
+      </div>
+
+      <!-- Tracks Content Area -->
+      <div class="timeline-tracks-container" id="tracksContainer">
+        <!-- Vertical Red Playhead line -->
+        <div class="timeline-playhead" id="timelinePlayhead"></div>
+        <div class="timeline-time-ruler" id="timeRuler"></div>
+
+        <!-- Tracks layers -->
+        <div class="timeline-track" data-track-id="video_main" data-track-type="video"></div>
+        <div class="timeline-track" data-track-id="video_overlay" data-track-type="overlay"></div>
+        <div class="timeline-track" data-track-id="image_overlay" data-track-type="image"></div>
+        <div class="timeline-track" data-track-id="text" data-track-type="text"></div>
+        <div class="timeline-track" data-track-id="captions" data-track-type="captions"></div>
+        <div class="timeline-track" data-track-id="voice" data-track-type="voice"></div>
+        <div class="timeline-track" data-track-id="music" data-track-type="music"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Projects Modal dialog -->
+  <div class="studio-modal" id="projectsModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-folder-open"></i> Load Saved Projects</h3>
+        <button class="modal-close" id="btnProjectsModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <button id="btnCreateNewProject" class="studio-btn primary-btn" style="width: 100%; margin-bottom: 1.5rem;"><i class="fa-solid fa-plus"></i> Create New Project</button>
+        <div class="projects-list-wrapper" id="projectsModalList">
+          <p class="modal-loading-hint">Loading saved sessions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exporting Progress Modal dialog -->
+  <div class="studio-modal" id="exportModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-film"></i> Rendering Final Video</h3>
+        <button class="modal-close" id="btnExportModalClose">&times;</button>
+      </div>
+      <div class="modal-body text-center">
+        <p id="exportStatusMsg">Uploading assets and compiling tracks...</p>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="exportProgressFill"></div>
+        </div>
+        
+        <div class="progress-percent" id="exportProgressPct">0%</div>
+
+        <div class="export-result-box" id="exportResultBox" style="display: none;">
+          <i class="fa-solid fa-circle-check success-icon"></i>
+          <h4>Video Rendered Successfully!</h4>
+          <a href="#" id="btnDownloadRenderedVideo" class="studio-btn primary-btn download-btn" download><i class="fa-solid fa-arrow-down-to-bracket"></i> Download MP4</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden assets container for HTML5 background video/audio tags used in canvas preview rendering -->
+  <div id="studio-hidden-players" style="display: none;"></div>
+
+  <!-- Client-side logic scripts -->
+  <script src="{{ url_for('static', filename='studio.js') }}"></script>
+</body>
+</html>

@@ -15,6 +15,7 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
 from werkzeug.utils import secure_filename
 import requests
 import shutil
@@ -37,7 +38,11 @@ from make_shorts import (
     run_manual_pipeline,
     search_clips_for_prompt,
     transcribe_audio,
+    generate_audio,
+    make_caption_chunks,
 )
+from studio_renderer import render_studio_project
+
 
 UPLOAD_DIR = PROJECT_DIR / "uploads"
 OUTPUT_DIR = PROJECT_DIR / "output"
@@ -826,13 +831,373 @@ def api_watermark():
     return jsonify({'job_id': job_id})
 
 
+
+# ============================ STUDIO ENDPOINTS ============================
+STUDIO_UPLOAD_DIR = PROJECT_DIR / "studio_uploads"
+STUDIO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+STUDIO_SESSIONS_DIR = SESSIONS_DIR / "studio"
+STUDIO_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+@app.route("/studio_uploads/<path:filename>")
+def serve_studio_upload(filename):
+    return send_from_directory(STUDIO_UPLOAD_DIR, filename)
+
+@app.route("/studio")
+def studio_editor():
+    return render_template("studio.html")
+
+@app.route("/api/studio/projects", methods=["GET"])
+def api_studio_projects_list():
+    import json
+    projects = []
+    if STUDIO_SESSIONS_DIR.exists():
+        for d in STUDIO_SESSIONS_DIR.iterdir():
+            if d.is_dir():
+                proj_file = d / "project.json"
+                if proj_file.exists():
+                    try:
+                        with open(proj_file, "r", encoding="utf-8") as f:
+                            pdata = json.load(f)
+                            projects.append({
+                                "id": pdata.get("id"),
+                                "name": pdata.get("name", "Untitled Project"),
+                                "updated": d.stat().st_mtime
+                            })
+                    except Exception:
+                        pass
+    projects.sort(key=lambda x: x["updated"], reverse=True)
+    return jsonify({"projects": projects})
+
+@app.route("/api/studio/project/create", methods=["POST"])
+def api_studio_project_create():
+    import json
+    project_id = f"studio_{uuid.uuid4().hex[:8]}"
+    project_dir = STUDIO_SESSIONS_DIR / project_id
+    project_dir.mkdir(parents=True, exist_ok=True)
+    
+    project_data = {
+        "id": project_id,
+        "name": "Untitled Studio Project",
+        "width": 1080,
+        "height": 1920,
+        "fps": 30,
+        "duration": 0,
+        "assets": [],
+        "tracks": [
+            { "id": "video_main", "type": "video", "clips": [] },
+            { "id": "video_overlay", "type": "overlay", "clips": [] },
+            { "id": "image_overlay", "type": "image", "clips": [] },
+            { "id": "text", "type": "text", "clips": [] },
+            { "id": "captions", "type": "captions", "clips": [] },
+            { "id": "voice", "type": "audio", "clips": [] },
+            { "id": "music", "type": "audio", "clips": [] }
+        ]
+    }
+    
+    with open(project_dir / "project.json", "w", encoding="utf-8") as f:
+        json.dump(project_data, f, indent=2)
+        
+    return jsonify(project_data)
+
+@app.route("/api/studio/project/<project_id>", methods=["GET"])
+def api_studio_project_load(project_id):
+    import json
+    project_file = STUDIO_SESSIONS_DIR / project_id / "project.json"
+    if not project_file.exists():
+        return jsonify({"error": "Project not found"}), 404
+        
+    with open(project_file, "r", encoding="utf-8") as f:
+        project_data = json.load(f)
+        
+    return jsonify(project_data)
+
+@app.route("/api/studio/project/<project_id>/save", methods=["POST"])
+def api_studio_project_save(project_id):
+    import json
+    project_file = STUDIO_SESSIONS_DIR / project_id / "project.json"
+    if not project_file.parent.exists():
+        return jsonify({"error": "Project does not exist"}), 404
+        
+    data = request.get_json(silent=True) or {}
+    if not data:
+        return jsonify({"error": "No project data received"}), 400
+        
+    with open(project_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        
+    return jsonify({"success": True})
+
+@app.route("/api/studio/media/upload", methods=["POST"])
+def api_studio_media_upload():
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return jsonify({"error": "No file uploaded"}), 400
+        
+    filename = secure_filename(file.filename)
+    filename_unique = f"{uuid.uuid4().hex[:6]}_{filename}"
+    dest = STUDIO_UPLOAD_DIR / filename_unique
+    file.save(str(dest))
+    
+    asset_type = "image"
+    duration = 0.0
+    width = 0
+    height = 0
+    
+    ext = Path(filename).suffix.lower()
+    
+    if ext in {".mp4", ".mov", ".webm", ".mkv", ".m4v"}:
+        asset_type = "video"
+        try:
+            with VideoFileClip(str(dest)) as clip:
+                duration = float(clip.duration or 0.0)
+                width = int(clip.w)
+                height = int(clip.h)
+        except Exception as e:
+            print(f"[WARN] MoviePy fail to read uploaded video info: {e}")
+    elif ext in AUDIO_EXTENSIONS:
+        asset_type = "audio"
+        try:
+            with AudioFileClip(str(dest)) as clip:
+                duration = float(clip.duration or 0.0)
+        except Exception as e:
+            print(f"[WARN] MoviePy fail to read uploaded audio info: {e}")
+    else:
+        asset_type = "image"
+        try:
+            with Image.open(str(dest)) as img:
+                width, height = img.size
+        except Exception as e:
+            print(f"[WARN] PIL fail to read uploaded image info: {e}")
+            
+    preview_url = f"/studio_uploads/{filename_unique}"
+    if asset_type == "video":
+        thumb_name = f"{dest.stem}_thumb.jpg"
+        thumb_path = STUDIO_UPLOAD_DIR / thumb_name
+        try:
+            from make_shorts import _extract_thumbnail
+            if _extract_thumbnail(dest, thumb_path):
+                preview_url = f"/studio_uploads/{thumb_name}"
+        except Exception as e:
+            print(f"[WARN] Thumbnail generation failed: {e}")
+            
+    asset_info = {
+        "id": f"asset_{uuid.uuid4().hex[:8]}",
+        "type": asset_type,
+        "name": filename,
+        "url": f"/studio_uploads/{filename_unique}",
+        "preview_url": preview_url,
+        "path": str(dest),
+        "duration": round(duration, 2),
+        "width": width,
+        "height": height
+    }
+    return jsonify(asset_info)
+
+@app.route("/api/studio/media/reel-video", methods=["POST"])
+def api_studio_media_reel_video():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "Please enter an Instagram Reel link"}), 400
+        
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        path, duration = _download_remote_video(url, job_id)
+        filename = f"reel_{job_id}_{path.name}"
+        dest = STUDIO_UPLOAD_DIR / filename
+        shutil.move(str(path), str(dest))
+        
+        width = 1080
+        height = 1920
+        try:
+            with VideoFileClip(str(dest)) as clip:
+                duration = float(clip.duration or duration or 0.0)
+                width = int(clip.w)
+                height = int(clip.h)
+        except Exception as e:
+            print(f"[WARN] MoviePy error on reel load: {e}")
+            
+        thumb_name = f"{dest.stem}_thumb.jpg"
+        thumb_path = STUDIO_UPLOAD_DIR / thumb_name
+        preview_url = f"/studio_uploads/{filename}"
+        try:
+            from make_shorts import _extract_thumbnail
+            if _extract_thumbnail(dest, thumb_path):
+                preview_url = f"/studio_uploads/{thumb_name}"
+        except Exception as e:
+            print(f"[WARN] Thumbnail extraction failed: {e}")
+            
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "video",
+            "name": f"Instagram Reel ({job_id})",
+            "url": f"/studio_uploads/{filename}",
+            "preview_url": preview_url,
+            "path": str(dest),
+            "duration": round(duration or 0.0, 2),
+            "width": width,
+            "height": height
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/studio/audio/reel-extract", methods=["POST"])
+def api_studio_audio_reel_extract():
+    data = request.get_json(silent=True) or {}
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "Please enter an Instagram Reel link"}), 400
+        
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        video_path, duration = _download_remote_video(url, job_id)
+        audio_name = f"extracted_{job_id}.mp3"
+        dest = STUDIO_UPLOAD_DIR / audio_name
+        
+        _extract_audio_from_video(video_path, dest)
+        
+        if video_path.exists():
+            video_path.unlink()
+            
+        duration = 0.0
+        try:
+            with AudioFileClip(str(dest)) as clip:
+                duration = float(clip.duration or 0.0)
+        except Exception as e:
+            print(f"[WARN] Failed to get audio duration: {e}")
+            
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "audio",
+            "name": f"Reel Audio ({job_id})",
+            "url": f"/studio_uploads/{audio_name}",
+            "preview_url": f"/studio_uploads/{audio_name}",
+            "path": str(dest),
+            "duration": round(duration, 2)
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/studio/audio/tts", methods=["POST"])
+def api_studio_audio_tts():
+    data = request.get_json(silent=True) or {}
+    text = (data.get("text") or "").strip()
+    voice = (data.get("voice") or "en-US-GuyNeural").strip()
+    if not text:
+        return jsonify({"error": "Please enter text to convert to speech"}), 400
+        
+    job_id = str(uuid.uuid4())[:10]
+    audio_name = f"tts_{job_id}.mp3"
+    dest = STUDIO_UPLOAD_DIR / audio_name
+    
+    try:
+        _run_async(generate_audio(text, dest, voice=voice))
+        
+        duration = 0.0
+        try:
+            with AudioFileClip(str(dest)) as clip:
+                duration = float(clip.duration or 0.0)
+        except Exception as e:
+            print(f"[WARN] Failed to get TTS duration: {e}")
+            
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "audio",
+            "name": f"TTS: {text[:20]}...",
+            "url": f"/studio_uploads/{audio_name}",
+            "path": str(dest),
+            "duration": round(duration, 2)
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/studio/captions/generate", methods=["POST"])
+def api_studio_captions_generate():
+    data = request.get_json(silent=True) or {}
+    asset_url = data.get("assetUrl")
+    
+    path = None
+    if asset_url:
+        filename = Path(asset_url).name
+        p1 = STUDIO_UPLOAD_DIR / filename
+        p2 = UPLOAD_DIR / filename
+        path = p1 if p1.exists() else p2
+        
+    if not path or not path.exists():
+        return jsonify({"error": "Media file not found for caption generation"}), 404
+        
+    is_video = path.suffix.lower() in {".mp4", ".mov", ".webm", ".mkv", ".m4v"}
+    transcribe_path = path
+    temp_audio = None
+    
+    try:
+        if is_video:
+            temp_audio = TEMP_DIR / f"temp_transcribe_{uuid.uuid4().hex[:8]}.mp3"
+            _extract_audio_from_video(path, temp_audio)
+            transcribe_path = temp_audio
+            
+        segments = transcribe_audio(transcribe_path)
+        chunks = make_caption_chunks(segments)
+        
+        if temp_audio and temp_audio.exists():
+            temp_audio.unlink()
+            
+        return jsonify({"chunks": chunks})
+    except Exception as e:
+        if temp_audio and temp_audio.exists():
+            temp_audio.unlink()
+        return jsonify({"error": f"Caption generation failed: {str(e)}"}), 500
+
+@app.route("/api/studio/render", methods=["POST"])
+def api_studio_render():
+    project_data = request.get_json(silent=True) or {}
+    project_id = project_data.get("id")
+    if not project_id:
+        return jsonify({"error": "Missing project ID"}), 400
+        
+    job_id = str(uuid.uuid4())[:8]
+    out_name = f"render_{project_id}_{job_id}.mp4"
+    out_path = OUTPUT_DIR / out_name
+    
+    jobs[job_id] = {
+        "status": "queued",
+        "message": "Initializing render...",
+        "percent": 0,
+        "mode": "studio",
+        "created": datetime.now().isoformat(),
+    }
+    
+    def task():
+        def progress_cb(pct, msg=None):
+            jobs[job_id]["percent"] = int(pct)
+            if msg:
+                jobs[job_id]["message"] = msg
+                
+        render_studio_project(project_data, out_path, progress_callback=progress_cb)
+        return {"video_url": f"/output/{out_name}"}
+        
+    _start_job(job_id, task)
+    return jsonify({"job_id": job_id})
+
+
 if __name__ == "__main__":
+    import socket
+    def is_port_in_use(port):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('127.0.0.1', port)) == 0
+
     port = 5000
+    if is_port_in_use(port):
+        port = 5001
+        if is_port_in_use(port):
+            port = 5002
+            
+    print(f"\n  Starting Reel Engine UI on http://127.0.0.1:{port}\n")
     try:
         app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
-    except OSError:
-        port = 5001
-        print(f"\n  Port {port-1} in use, trying {port}...\n")
-        print("  Reel Engine UI")
-        print(f"  Open http://127.0.0.1:{port} in your browser\n")
-        app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
+    except Exception as e:
+        print(f"Failed to start server: {e}")
+

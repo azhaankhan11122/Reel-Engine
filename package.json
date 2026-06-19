@@ -1,0 +1,13 @@
+{
+  "name": "make_shorts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "jsdom": "^24.0.0"
+  }
+}
