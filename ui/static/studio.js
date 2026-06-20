@@ -609,6 +609,37 @@ function addAssetToLibrary(asset) {
   }
 }
 
+
+async function saveAssetToCreatorVault(asset, subtype='upload') {
+  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
+  if (!name) return; // User cancelled
+
+  try {
+    const res = await fetch('/api/library/assets/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: asset.path,
+        name: name,
+        type: asset.type,
+        subtype: subtype,
+        source: { url: asset.url }
+      })
+    });
+
+    if (res.ok) {
+      loadVaultAssets(); // Reload the vault tab
+      alert('Saved to Creator Vault!');
+    } else {
+      const data = await res.json();
+      alert('Failed to save to Vault: ' + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error saving to Vault.');
+  }
+}
+
 function rebuildAssetsLibrary() {
   const mediaGrid = document.getElementById('mediaAssetsGrid');
   const audioList = document.getElementById('audioAssetsList');
@@ -633,6 +664,7 @@ function rebuildAssetsLibrary() {
           ${previewTag}
         </div>
         <div class="asset-card-info">${asset.name}</div>
+        <button class="save-vault-btn" title="Save to Creator Vault"><i class="fa-solid fa-box-archive"></i> Save</button>
       `;
       
       // Drag events
@@ -647,6 +679,14 @@ function rebuildAssetsLibrary() {
         addAssetToTimeline(asset.id, trackId, playheadTime);
       });
       
+      const saveBtn = card.querySelector('.save-vault-btn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          saveAssetToCreatorVault(asset, asset.type === 'video' ? 'reel_video' : 'upload');
+        });
+      }
+
       mediaGrid.appendChild(card);
     } else if (asset.type === 'audio') {
       const item = document.createElement('div');
@@ -657,6 +697,7 @@ function rebuildAssetsLibrary() {
         <i class="fa-solid fa-volume-high"></i>
         <span class="asset-list-title">${asset.name}</span>
         <span class="asset-list-duration">${formatTimeCode(asset.duration)}</span>
+        <button class="save-vault-btn" title="Save to Creator Vault" style="width: auto; padding: 2px 6px; margin-left: 5px;"><i class="fa-solid fa-box-archive"></i></button>
       `;
       
       item.addEventListener('dragstart', (e) => {
@@ -2179,4 +2220,199 @@ function getFontFamilyName(key) {
   if (key === 'orbitron') return '"Orbitron", monospace';
   if (key === 'montserrat') return '"Outfit", sans-serif';
   return 'Impact, sans-serif';
+}
+
+// ==========================================
+// CREATOR VAULT LOGIC
+// ==========================================
+let vaultAssets = [];
+let currentVaultFilter = 'all';
+
+async function loadVaultAssets() {
+  try {
+    const res = await fetch('/api/library/assets');
+    if (!res.ok) throw new Error('Failed to load vault assets');
+    vaultAssets = await res.json();
+    renderVaultAssets();
+  } catch (err) {
+    console.error('Vault error:', err);
+  }
+}
+
+function renderVaultAssets() {
+  const grid = document.getElementById('vaultGrid');
+  if (!grid) return;
+
+  const searchQ = (document.getElementById('vaultSearchInput')?.value || '').toLowerCase();
+
+  let filtered = vaultAssets.filter(a => {
+    if (currentVaultFilter === 'video' && a.type !== 'video') return false;
+    if (currentVaultFilter === 'audio' && a.type !== 'audio') return false;
+    if (currentVaultFilter === 'image' && a.type !== 'image') return false;
+    if (currentVaultFilter === 'favorites' && !a.favorite) return false;
+    if (searchQ && !a.name.toLowerCase().includes(searchQ)) return false;
+    return true;
+  });
+
+  grid.innerHTML = '';
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-boxes-packing empty-icon"></i>
+        <p>No assets found.</p>
+      </div>`;
+    return;
+  }
+
+  filtered.forEach(asset => {
+    const card = document.createElement('div');
+    card.className = 'vault-asset-card';
+
+    let thumbHtml = '';
+    if (asset.thumbnail_url) {
+      thumbHtml = `<img src="${asset.thumbnail_url}" class="vault-asset-thumb" alt="${asset.name}">`;
+    } else if (asset.type === 'video') {
+      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-video"></i></div>`;
+    } else if (asset.type === 'audio') {
+      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-music"></i></div>`;
+    } else if (asset.type === 'image') {
+      thumbHtml = `<img src="${asset.url}" class="vault-asset-thumb" alt="${asset.name}">`;
+    } else {
+      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-file"></i></div>`;
+    }
+
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="vault-asset-name" title="${asset.name}">${asset.name}</div>
+      <div class="vault-asset-meta">
+        <span>${asset.type.toUpperCase()}</span>
+        <span>${asset.duration > 0 ? asset.duration + 's' : ''}</span>
+      </div>
+      <div class="vault-asset-actions">
+        <button class="vault-action-btn add-btn" title="Add to Timeline"><i class="fa-solid fa-plus"></i></button>
+        <button class="vault-action-btn fav-btn ${asset.favorite ? 'active' : ''}" title="Favorite"><i class="fa-solid fa-heart"></i></button>
+        <button class="vault-action-btn rename-btn" title="Rename"><i class="fa-solid fa-pen"></i></button>
+      </div>
+    `;
+
+    // Add to Timeline
+    card.querySelector('.add-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      addAssetToTimeline(asset);
+    });
+
+    // Favorite
+    card.querySelector('.fav-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await toggleVaultFavorite(asset.id, !asset.favorite);
+    });
+
+    // Rename
+    card.querySelector('.rename-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const newName = prompt('Enter new name:', asset.name);
+      if (newName && newName.trim() !== '' && newName !== asset.name) {
+        await renameVaultAsset(asset.id, newName.trim());
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+async function toggleVaultFavorite(id, isFav) {
+  try {
+    const res = await fetch(`/api/library/assets/${id}/favorite`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({favorite: isFav})
+    });
+    if (res.ok) loadVaultAssets();
+  } catch(e) { console.error(e); }
+}
+
+async function renameVaultAsset(id, newName) {
+  try {
+    const res = await fetch(`/api/library/assets/${id}/rename`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: newName})
+    });
+    if (res.ok) loadVaultAssets();
+  } catch(e) { console.error(e); }
+}
+
+function addAssetToTimeline(asset) {
+  const timelineAsset = {
+    id: 'vault_' + Math.random().toString(36).substr(2, 9),
+    type: asset.type,
+    name: asset.name,
+    url: asset.url,
+    path: asset.path,
+    duration: asset.duration || 5.0
+  };
+
+  if (asset.type === 'video') {
+    timelineAsset.preview_url = asset.thumbnail_url || asset.url;
+    addMediaClip('video_overlay', timelineAsset);
+  } else if (asset.type === 'image') {
+    timelineAsset.preview_url = asset.url;
+    addMediaClip('image_overlay', timelineAsset);
+  } else if (asset.type === 'audio') {
+    if (asset.subtype === 'tts' || asset.name.toLowerCase().includes('tts')) {
+      addMediaClip('voice', timelineAsset);
+    } else {
+      addMediaClip('music', timelineAsset);
+    }
+  }
+}
+
+// Ensure Vault initializes when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('vaultSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => renderVaultAssets());
+  }
+
+  document.querySelectorAll('.vault-filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.vault-filter-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      currentVaultFilter = e.currentTarget.getAttribute('data-filter');
+      renderVaultAssets();
+    });
+  });
+
+  loadVaultAssets();
+});
+
+// API Wrapper for Save to Vault Integration (appended safely)
+async function saveAssetToCreatorVault(asset, subtype='upload') {
+  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
+  if (!name) return; // User cancelled
+
+  try {
+    const res = await fetch('/api/library/assets/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: asset.path,
+        name: name,
+        type: asset.type,
+        subtype: subtype,
+        source: { url: asset.url } // store the original url
+      })
+    });
+
+    if (res.ok) {
+      if (typeof loadVaultAssets === 'function') loadVaultAssets(); // Reload the vault tab
+      alert('Saved to Creator Vault!');
+    } else {
+      const data = await res.json();
+      alert('Failed to save to Vault: ' + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error saving to Vault.');
+  }
 }

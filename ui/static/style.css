@@ -543,3 +543,38 @@ optgroup {
   font-size: 0.95rem;
   line-height: 1.6;
 }
+
+/* Dashboard Y2K / Neon Styles */
+.y2k-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #ff00ff, #00ffff);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-left: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  animation: pulseGlow 2s infinite;
+}
+
+.neon-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,255,255,0.3);
+  box-shadow: 0 0 15px rgba(0,255,255,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.neon-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 25px rgba(0,255,255,0.3), inset 0 0 15px rgba(255,0,255,0.1);
+  border-color: #00ffff;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
