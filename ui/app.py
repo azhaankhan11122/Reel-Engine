@@ -12,6 +12,102 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
+import json
+import shutil
+import datetime
+
+MEDIA_LIBRARY_DIR = Path(__file__).parent.parent / "media_library"
+MEDIA_ASSETS_FILE = MEDIA_LIBRARY_DIR / "assets.json"
+
+def _load_library_assets():
+    if not MEDIA_ASSETS_FILE.exists():
+        return []
+    try:
+        with open(MEDIA_ASSETS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[WARN] Failed to load library assets: {e}")
+        return []
+
+def _save_library_assets(assets):
+    try:
+        with open(MEDIA_ASSETS_FILE, "w", encoding="utf-8") as f:
+            json.dump(assets, f, indent=2)
+    except Exception as e:
+        print(f"[WARN] Failed to save library assets: {e}")
+
+def _add_asset_to_library(source_path, name, asset_type, subtype, source_info=None):
+    source_p = Path(source_path)
+    if not source_p.exists():
+        raise FileNotFoundError(f"Source file not found: {source_path}")
+
+    asset_id = f"asset_{uuid.uuid4().hex[:8]}"
+    ext = source_p.suffix
+    dest_filename = f"{asset_id}{ext}"
+
+    # Determine target folder
+    if asset_type == "video":
+        target_dir = MEDIA_LIBRARY_DIR / "video"
+    elif asset_type == "audio":
+        target_dir = MEDIA_LIBRARY_DIR / "audio"
+    else:
+        target_dir = MEDIA_LIBRARY_DIR / "image"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    dest_p = target_dir / dest_filename
+
+    # Copy file
+    shutil.copy2(str(source_p), str(dest_p))
+
+    # Extract duration if applicable
+    duration = 0.0
+    if asset_type == "video":
+        try:
+            with VideoFileClip(str(dest_p)) as clip:
+                duration = float(clip.duration or 0.0)
+        except:
+            pass
+    elif asset_type == "audio":
+        try:
+            with AudioFileClip(str(dest_p)) as clip:
+                duration = float(clip.duration or 0.0)
+        except:
+            pass
+
+    # Optional thumbnail for video
+    thumbnail_url = None
+    if asset_type == "video":
+        thumb_name = f"{asset_id}_thumb.jpg"
+        thumb_path = MEDIA_LIBRARY_DIR / "thumbnails" / thumb_name
+        try:
+            from make_shorts import _extract_thumbnail
+            if _extract_thumbnail(dest_p, thumb_path):
+                thumbnail_url = f"/media-library/thumbnails/{thumb_name}"
+        except:
+            pass
+
+    asset = {
+        "id": asset_id,
+        "name": name,
+        "type": asset_type,
+        "subtype": subtype,
+        "filename": dest_filename,
+        "path": f"media_library/{asset_type}/{dest_filename}",
+        "url": f"/media-library/{asset_type}/{dest_filename}",
+        "thumbnail_url": thumbnail_url,
+        "duration": round(duration, 2),
+        "source": source_info or {},
+        "created_at": datetime.datetime.now().isoformat(),
+        "updated_at": datetime.datetime.now().isoformat(),
+        "tags": [],
+        "favorite": False
+    }
+
+    assets = _load_library_assets()
+    assets.insert(0, asset)
+    _save_library_assets(assets)
+
+    return asset
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -845,6 +941,104 @@ def serve_studio_upload(filename):
 @app.route("/studio")
 def studio_editor():
     return render_template("studio.html")
+
+@app.route("/media-library/<folder>/<filename>")
+def serve_media_library(folder, filename):
+    safe_folder = secure_filename(folder)
+    return send_from_directory(str(MEDIA_LIBRARY_DIR / safe_folder), filename)
+
+@app.route("/api/library/assets", methods=["GET"])
+def api_library_assets_get():
+    assets = _load_library_assets()
+
+    asset_type = request.args.get("type")
+    search_q = request.args.get("q", "").lower()
+    favorite = request.args.get("favorite")
+
+    if asset_type:
+        assets = [a for a in assets if a.get("type") == asset_type]
+    if search_q:
+        assets = [a for a in assets if search_q in a.get("name", "").lower()]
+    if favorite == "1":
+        assets = [a for a in assets if a.get("favorite")]
+
+    return jsonify(assets)
+
+@app.route("/api/library/assets/add", methods=["POST"])
+def api_library_assets_add():
+    data = request.get_json(silent=True) or {}
+    path = data.get("path")
+    name = data.get("name", "Untitled Asset")
+    asset_type = data.get("type", "video")
+    subtype = data.get("subtype", "upload")
+    source_info = data.get("source", {})
+
+    if not path:
+        return jsonify({"error": "No file path provided"}), 400
+
+    try:
+        asset = _add_asset_to_library(path, name, asset_type, subtype, source_info)
+        return jsonify({"success": True, "asset": asset})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/library/assets/<asset_id>/rename", methods=["POST"])
+def api_library_assets_rename(asset_id):
+    data = request.get_json(silent=True) or {}
+    new_name = data.get("name", "").strip()
+
+    if not new_name:
+        return jsonify({"error": "Name cannot be empty"}), 400
+
+    assets = _load_library_assets()
+    for a in assets:
+        if a["id"] == asset_id:
+            a["name"] = new_name
+            a["updated_at"] = datetime.datetime.now().isoformat()
+            a["updated_at"] = datetime.datetime.now().isoformat()
+            _save_library_assets(assets)
+            return jsonify({"success": True, "asset": a})
+
+    return jsonify({"error": "Asset not found"}), 404
+
+@app.route("/api/library/assets/<asset_id>/favorite", methods=["POST"])
+def api_library_assets_favorite(asset_id):
+    data = request.get_json(silent=True) or {}
+    favorite = bool(data.get("favorite", False))
+
+    assets = _load_library_assets()
+    for a in assets:
+        if a["id"] == asset_id:
+            a["favorite"] = favorite
+            a["updated_at"] = datetime.datetime.now().isoformat()
+            _save_library_assets(assets)
+            return jsonify({"success": True, "asset": a})
+
+    return jsonify({"error": "Asset not found"}), 404
+
+@app.route("/api/library/assets/<asset_id>", methods=["DELETE"])
+def api_library_assets_delete(asset_id):
+    assets = _load_library_assets()
+    new_assets = []
+    deleted = False
+    for a in assets:
+        if a["id"] == asset_id:
+            deleted = True
+            try:
+                # Optionally delete file
+                p = Path(__file__).parent.parent / a["path"]
+                if p.exists():
+                    p.unlink()
+            except:
+                pass
+        else:
+            new_assets.append(a)
+
+    if deleted:
+        _save_library_assets(new_assets)
+        return jsonify({"success": True})
+
+    return jsonify({"error": "Asset not found"}), 404
 
 @app.route("/api/studio/projects", methods=["GET"])
 def api_studio_projects_list():

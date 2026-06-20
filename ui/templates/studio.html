@@ -42,6 +42,7 @@
     <!-- Left Sidebar (Tabs & Library) -->
     <div class="studio-left-sidebar">
       <div class="sidebar-tabs">
+        <button class="tab-btn" data-tab="tab-vault"><i class="fa-solid fa-box-archive"></i><span>Vault</span></button>
         <button class="tab-btn active" data-tab="tab-media"><i class="fa-solid fa-photo-film"></i><span>Media</span></button>
         <button class="tab-btn" data-tab="tab-audio"><i class="fa-solid fa-music"></i><span>Audio</span></button>
         <button class="tab-btn" data-tab="tab-text"><i class="fa-solid fa-font"></i><span>Text</span></button>
@@ -51,6 +52,31 @@
       </div>
 
       <div class="tab-contents">
+        <!-- Creator Vault Tab -->
+        <div id="tab-vault" class="tab-content creator-vault">
+          <h3><i class="fa-solid fa-box-archive"></i> Creator Vault</h3>
+          <p class="tab-helper-text">Your local media library. Save once, reuse forever.</p>
+
+          <div class="vault-controls">
+            <input type="text" id="vaultSearchInput" class="vault-search" placeholder="Search assets...">
+            <div class="vault-filters">
+              <button class="vault-filter-btn active" data-filter="all">All</button>
+              <button class="vault-filter-btn" data-filter="video"><i class="fa-solid fa-video"></i> Video</button>
+              <button class="vault-filter-btn" data-filter="audio"><i class="fa-solid fa-music"></i> Audio</button>
+              <button class="vault-filter-btn" data-filter="image"><i class="fa-solid fa-image"></i> Image</button>
+              <button class="vault-filter-btn" data-filter="favorites"><i class="fa-solid fa-heart"></i> Favs</button>
+            </div>
+          </div>
+
+          <div id="vaultGrid" class="media-grid vault-grid">
+            <!-- Vault items will be rendered here -->
+            <div class="empty-state">
+              <i class="fa-solid fa-boxes-packing empty-icon"></i>
+              <p>Vault is empty.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Media Tab -->
         <div id="tab-media" class="tab-content active">
           <h3>Media Library</h3>

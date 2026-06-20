@@ -618,3 +618,26 @@ Speed tips:
 </a>
 
 </div>
+
+
+<a id="creator-vault"></a>
+<div align="center">
+
+## 🗃️ Creator Vault — Save Once, Reuse Forever
+
+</div>
+
+> Save imported Reels, extracted audio, generated voiceovers, and uploaded media into a local reusable asset library.
+
+```text
+┌────────────────────────────────────────────────────────────────────┐
+│ Reel Video │ Reel Audio │ TTS Voice │ Uploads                      │
+└─────┬──────┴─────┬──────┴─────┬─────┴──────┬──────────────────────┘
+      ▼            ▼            ▼            ▼
+              🗃️ Creator Vault
+      Rename · Search · Favorite · Reuse · Add to Studio
+                          ▼
+                  🎛️ Studio Timeline
+                          ▼
+                  1080×1920 MP4 Export
+```
