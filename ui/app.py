@@ -12,6 +12,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
+
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
+
+
 import json
 import shutil
 import datetime
@@ -108,6 +113,7 @@ def _add_asset_to_library(source_path, name, asset_type, subtype, source_info=No
     _save_library_assets(assets)
 
     return asset
+
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -942,6 +948,7 @@ def serve_studio_upload(filename):
 def studio_editor():
     return render_template("studio.html")
 
+
 @app.route("/media-library/<folder>/<filename>")
 def serve_media_library(folder, filename):
     safe_folder = secure_filename(folder)
@@ -995,7 +1002,6 @@ def api_library_assets_rename(asset_id):
         if a["id"] == asset_id:
             a["name"] = new_name
             a["updated_at"] = datetime.datetime.now().isoformat()
-            a["updated_at"] = datetime.datetime.now().isoformat()
             _save_library_assets(assets)
             return jsonify({"success": True, "asset": a})
 
@@ -1025,7 +1031,6 @@ def api_library_assets_delete(asset_id):
         if a["id"] == asset_id:
             deleted = True
             try:
-                # Optionally delete file
                 p = Path(__file__).parent.parent / a["path"]
                 if p.exists():
                     p.unlink()

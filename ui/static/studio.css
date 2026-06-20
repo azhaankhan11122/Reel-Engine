@@ -1561,10 +1561,3 @@ body.studio-body {
   50% { box-shadow: 0 0 20px rgba(0,255,255,0.6); }
   100% { box-shadow: 0 0 5px rgba(0,255,255,0.2); }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
-}

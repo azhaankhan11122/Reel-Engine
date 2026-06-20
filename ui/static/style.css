@@ -543,8 +543,6 @@ optgroup {
   font-size: 0.95rem;
   line-height: 1.6;
 }
-
-/* Dashboard Y2K / Neon Styles */
 .y2k-badge {
   display: inline-block;
   background: linear-gradient(90deg, #ff00ff, #00ffff);
