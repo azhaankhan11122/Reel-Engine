@@ -609,37 +609,6 @@ function addAssetToLibrary(asset) {
   }
 }
 
-
-async function saveAssetToCreatorVault(asset, subtype='upload') {
-  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
-  if (!name) return; // User cancelled
-
-  try {
-    const res = await fetch('/api/library/assets/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: asset.path,
-        name: name,
-        type: asset.type,
-        subtype: subtype,
-        source: { url: asset.url }
-      })
-    });
-
-    if (res.ok) {
-      loadVaultAssets(); // Reload the vault tab
-      alert('Saved to Creator Vault!');
-    } else {
-      const data = await res.json();
-      alert('Failed to save to Vault: ' + data.error);
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Error saving to Vault.');
-  }
-}
-
 function rebuildAssetsLibrary() {
   const mediaGrid = document.getElementById('mediaAssetsGrid');
   const audioList = document.getElementById('audioAssetsList');
@@ -2259,7 +2228,7 @@ function renderVaultAssets() {
     grid.innerHTML = `
       <div class="empty-state">
         <i class="fa-solid fa-boxes-packing empty-icon"></i>
-        <p>No assets found.</p>
+        <p>Vault is empty.</p>
       </div>`;
     return;
   }
@@ -2295,19 +2264,16 @@ function renderVaultAssets() {
       </div>
     `;
 
-    // Add to Timeline
     card.querySelector('.add-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       addAssetToTimeline(asset);
     });
 
-    // Favorite
     card.querySelector('.fav-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
       await toggleVaultFavorite(asset.id, !asset.favorite);
     });
 
-    // Rename
     card.querySelector('.rename-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
       const newName = prompt('Enter new name:', asset.name);
@@ -2367,7 +2333,36 @@ function addAssetToTimeline(asset) {
   }
 }
 
-// Ensure Vault initializes when DOM is ready
+async function saveAssetToCreatorVault(asset, subtype='upload') {
+  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
+  if (!name) return; // User cancelled
+
+  try {
+    const res = await fetch('/api/library/assets/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: asset.path,
+        name: name,
+        type: asset.type,
+        subtype: subtype,
+        source: { url: asset.url }
+      })
+    });
+
+    if (res.ok) {
+      if (typeof loadVaultAssets === 'function') loadVaultAssets();
+      alert('Saved to Creator Vault!');
+    } else {
+      const data = await res.json();
+      alert('Failed to save to Vault: ' + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error saving to Vault.');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('vaultSearchInput');
   if (searchInput) {
@@ -2385,34 +2380,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadVaultAssets();
 });
-
-// API Wrapper for Save to Vault Integration (appended safely)
-async function saveAssetToCreatorVault(asset, subtype='upload') {
-  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
-  if (!name) return; // User cancelled
-
-  try {
-    const res = await fetch('/api/library/assets/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: asset.path,
-        name: name,
-        type: asset.type,
-        subtype: subtype,
-        source: { url: asset.url } // store the original url
-      })
-    });
-
-    if (res.ok) {
-      if (typeof loadVaultAssets === 'function') loadVaultAssets(); // Reload the vault tab
-      alert('Saved to Creator Vault!');
-    } else {
-      const data = await res.json();
-      alert('Failed to save to Vault: ' + data.error);
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Error saving to Vault.');
-  }
-}
