@@ -354,39 +354,38 @@ def _generate_caption_and_tags(text: str):
 
 
 def _apply_watermark(src_path: Path, watermark_text: str, position: str, opacity_pct: float) -> Path:
-    """Apply watermark text to `src_path` and write a new file in OUTPUT_DIR with _wm suffix.
-    Position: top-left, top-right, bottom-left, bottom-right, center
-    """
     out_name = f"{src_path.stem}_wm{src_path.suffix}"
     out_path = OUTPUT_DIR / out_name
-    # Opacity as fraction for moviepy
     opacity = max(0.0, min(1.0, opacity_pct / 100.0))
     try:
-        # Load source video
         video = VideoFileClip(str(src_path))
-        # Create text clip for watermark (no explicit font to use default system font)
+        # MoviePy 2 TextClip args. Font must be specified or it may crash.
         txt = TextClip(
             text=watermark_text,
+            font="Arial",
             font_size=48,
             color='white',
             stroke_color='black',
             stroke_width=2,
-        ).with_opacity(opacity).set_duration(video.duration)
-        # Position mapping for moviepy (adds 16px margin)
-        pos_map = {
-            'top-left': lambda w, h: (16, 16),
-            'top-right': lambda w, h: (w - txt.w - 16, 16),
-            'bottom-left': lambda w, h: (16, h - txt.h - 16),
-            'bottom-right': lambda w, h: (w - txt.w - 16, h - txt.h - 16),
-            'center': lambda w, h: ((w - txt.w) // 2, (h - txt.h) // 2),
-        }
-        get_pos = pos_map.get(position, pos_map['bottom-right'])
-        # Compute static position based on video dimensions
-        pos = get_pos(int(video.w), int(video.h))
+            method='caption',
+            size=(video.w - 32, None) # Allow wrapping
+        ).with_opacity(opacity).with_duration(video.duration)
+
+        # Position using strings is safer in v2 for relative placement
+        if position == 'top-left':
+            pos = ('left', 'top')
+        elif position == 'top-right':
+            pos = ('right', 'top')
+        elif position == 'bottom-left':
+            pos = ('left', 'bottom')
+        elif position == 'center':
+            pos = ('center', 'center')
+        else:
+            pos = ('right', 'bottom')
+
         txt = txt.with_position(pos)
-        # Composite video with watermark
+
         result = CompositeVideoClip([video, txt])
-        # Write output preserving audio (copy) - using ffmpeg through moviepy
         result.write_videofile(
             str(out_path),
             codec='libx264',
