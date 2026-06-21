@@ -252,38 +252,39 @@ def _generate_caption_and_tags(text: str):
 
 
 def _apply_watermark(src_path: Path, watermark_text: str, position: str, opacity_pct: float) -> Path:
+    """Apply watermark text to `src_path` and write a new file in OUTPUT_DIR with _wm suffix.
+    Position: top-left, top-right, bottom-left, bottom-right, center
+    """
     out_name = f"{src_path.stem}_wm{src_path.suffix}"
     out_path = OUTPUT_DIR / out_name
+    # Opacity as fraction for moviepy
     opacity = max(0.0, min(1.0, opacity_pct / 100.0))
     try:
+        # Load source video
         video = VideoFileClip(str(src_path))
-        # MoviePy 2 TextClip args. Font must be specified.
+        # Create text clip for watermark (no explicit font to use default system font)
         txt = TextClip(
             text=watermark_text,
-            font="Arial",
             font_size=48,
             color='white',
             stroke_color='black',
             stroke_width=2,
-            method='caption',
-            size=(video.w - 32, None)
-        ).with_opacity(opacity).with_duration(video.duration)
-
-        # Position logic safe for MoviePy v2
-        if position == 'top-left':
-            pos = ('left', 'top')
-        elif position == 'top-right':
-            pos = ('right', 'top')
-        elif position == 'bottom-left':
-            pos = ('left', 'bottom')
-        elif position == 'center':
-            pos = ('center', 'center')
-        else:
-            pos = ('right', 'bottom')
-
+        ).with_opacity(opacity).set_duration(video.duration)
+        # Position mapping for moviepy (adds 16px margin)
+        pos_map = {
+            'top-left': lambda w, h: (16, 16),
+            'top-right': lambda w, h: (w - txt.w - 16, 16),
+            'bottom-left': lambda w, h: (16, h - txt.h - 16),
+            'bottom-right': lambda w, h: (w - txt.w - 16, h - txt.h - 16),
+            'center': lambda w, h: ((w - txt.w) // 2, (h - txt.h) // 2),
+        }
+        get_pos = pos_map.get(position, pos_map['bottom-right'])
+        # Compute static position based on video dimensions
+        pos = get_pos(int(video.w), int(video.h))
         txt = txt.with_position(pos)
-
+        # Composite video with watermark
         result = CompositeVideoClip([video, txt])
+        # Write output preserving audio (copy) - using ffmpeg through moviepy
         result.write_videofile(
             str(out_path),
             codec='libx264',
@@ -991,6 +992,204 @@ def api_studio_media_upload():
         "height": height
     }
     return jsonify(asset_info)
+
+
+def detect_media_platform(url: str) -> dict:
+    url = url.strip()
+    if 'instagram.com/reel/' in url or 'instagram.com/p/' in url:
+        return {"platform": "instagram", "kind": "reel", "normalized_url": url, "is_supported": True}
+    elif 'youtube.com/watch' in url or 'youtu.be/' in url or 'youtube.com/shorts/' in url:
+        return {"platform": "youtube", "kind": "video", "normalized_url": url, "is_supported": True}
+    return {"platform": "unsupported", "kind": None, "normalized_url": url, "is_supported": False, "error": "Unsupported URL. Please paste an Instagram Reel or YouTube link."}
+
+def _download_youtube_clip(url: str, job_id: str, start: str, end: str):
+    video_base = UPLOAD_DIR / f"youtube_clip_{job_id}"
+    out_path = video_base.with_suffix(".mp4")
+
+    # Simple fallback: download full video then trim with ffmpeg
+    try:
+        full_path, _ = _download_remote_video(url, job_id)
+
+        # Trim it
+        subprocess.run([
+            "ffmpeg", "-y", "-ss", str(start), "-to", str(end),
+            "-i", str(full_path), "-c:v", "libx264", "-c:a", "aac",
+            str(out_path)
+        ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # Remove original
+        if full_path.exists():
+            full_path.unlink()
+
+        with VideoFileClip(str(out_path)) as clip:
+            duration = float(clip.duration or 0.0)
+
+        return out_path, duration
+    except Exception as exc:
+        if out_path.exists():
+            out_path.unlink()
+        raise RuntimeError(f"Clip download failed: {exc}")
+
+@app.route("/api/media/detect-link", methods=["POST"])
+def api_media_detect_link():
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "")
+    return jsonify(detect_media_platform(url))
+
+@app.route("/api/media/fetch", methods=["POST"])
+def api_media_fetch():
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+    platform_info = detect_media_platform(url)
+
+    if not platform_info["is_supported"]:
+        return jsonify({"error": platform_info["error"]}), 400
+
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        path, duration = _download_remote_video(url, job_id)
+        prefix = "youtube" if platform_info["platform"] == "youtube" else "reel"
+        filename = f"{prefix}_{job_id}_{path.name}"
+        dest = STUDIO_UPLOAD_DIR / filename
+        shutil.move(str(path), str(dest))
+
+        width = 1080
+        height = 1920
+        try:
+            with VideoFileClip(str(dest)) as clip:
+                duration = float(clip.duration or duration or 0.0)
+                width = int(clip.w)
+                height = int(clip.h)
+        except Exception as e:
+            print(f"[WARN] MoviePy error on fetch load: {e}")
+
+        thumb_name = f"{dest.stem}_thumb.jpg"
+        thumb_path = STUDIO_UPLOAD_DIR / thumb_name
+        preview_url = f"/studio_uploads/{filename}"
+        try:
+            from make_shorts import _extract_thumbnail
+            if _extract_thumbnail(dest, thumb_path):
+                preview_url = f"/studio_uploads/{thumb_name}"
+        except Exception as e:
+            pass
+
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "video",
+            "name": f"{platform_info['platform'].title()} Video ({job_id})",
+            "url": f"/studio_uploads/{filename}",
+            "preview_url": preview_url,
+            "path": str(dest),
+            "duration": round(duration or 0.0, 2),
+            "width": width,
+            "height": height,
+            "platform": platform_info["platform"]
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/media/clip", methods=["POST"])
+def api_media_clip():
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+    start = data.get("start", "0")
+    end = data.get("end", "0")
+
+    platform_info = detect_media_platform(url)
+    if not platform_info["is_supported"]:
+        return jsonify({"error": platform_info["error"]}), 400
+
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        path, duration = _download_youtube_clip(url, job_id, start, end)
+        filename = f"youtube_clip_{job_id}_{path.name}"
+        dest = STUDIO_UPLOAD_DIR / filename
+        shutil.move(str(path), str(dest))
+
+        width = 1080
+        height = 1920
+        try:
+            with VideoFileClip(str(dest)) as clip:
+                duration = float(clip.duration or duration or 0.0)
+                width = int(clip.w)
+                height = int(clip.h)
+        except Exception as e:
+            print(f"[WARN] MoviePy error on clip load: {e}")
+
+        thumb_name = f"{dest.stem}_thumb.jpg"
+        thumb_path = STUDIO_UPLOAD_DIR / thumb_name
+        preview_url = f"/studio_uploads/{filename}"
+        try:
+            from make_shorts import _extract_thumbnail
+            if _extract_thumbnail(dest, thumb_path):
+                preview_url = f"/studio_uploads/{thumb_name}"
+        except Exception as e:
+            pass
+
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "video",
+            "name": f"YouTube Clip ({start}-{end})",
+            "url": f"/studio_uploads/{filename}",
+            "preview_url": preview_url,
+            "path": str(dest),
+            "duration": round(duration or 0.0, 2),
+            "width": width,
+            "height": height,
+            "platform": platform_info["platform"]
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/media/audio-extract", methods=["POST"])
+def api_media_audio_extract():
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+    mode = data.get("mode", "full")
+    start = data.get("start", "0")
+    end = data.get("end", "0")
+
+    platform_info = detect_media_platform(url)
+    if not platform_info["is_supported"]:
+        return jsonify({"error": platform_info["error"]}), 400
+
+    job_id = str(uuid.uuid4())[:10]
+    try:
+        if mode == "clip" and platform_info["platform"] == "youtube":
+            video_path, _ = _download_youtube_clip(url, job_id, start, end)
+        else:
+            video_path, _ = _download_remote_video(url, job_id)
+
+        audio_name = f"extracted_{job_id}.mp3"
+        dest = STUDIO_UPLOAD_DIR / audio_name
+
+        _extract_audio_from_video(video_path, dest)
+
+        if video_path.exists():
+            video_path.unlink()
+
+        duration = 0.0
+        try:
+            with AudioFileClip(str(dest)) as clip:
+                duration = float(clip.duration or 0.0)
+        except Exception:
+            pass
+
+        asset_info = {
+            "id": f"asset_{uuid.uuid4().hex[:8]}",
+            "type": "audio",
+            "name": f"{platform_info['platform'].title()} Audio ({job_id})",
+            "url": f"/studio_uploads/{audio_name}",
+            "preview_url": f"/studio_uploads/{audio_name}",
+            "path": str(dest),
+            "duration": round(duration, 2),
+            "platform": platform_info["platform"]
+        }
+        return jsonify(asset_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/studio/media/reel-video", methods=["POST"])
 def api_studio_media_reel_video():

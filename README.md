@@ -2,10 +2,10 @@
 
 # Reel Engine
 
-**A local-first Python/Flask video creation app with an Apple-inspired UI and motion-rich design.**
+**A local-first Python/Flask video creation app.**
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/your-repo/Reel-Engine?style=for-the-badge)
-![UI](https://img.shields.io/badge/UI-Apple--Inspired-blue?style=for-the-badge)
+![UI](https://img.shields.io/badge/Imports-YouTube_%26_Shorts-red?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
 
 </div>
@@ -18,8 +18,13 @@ A VN-inspired timeline editor built right into your browser. Add video tracks, p
 </details>
 
 <details>
-<summary><b>💧 Watermark Tool</b></summary>
-Securely embed watermarks across any media with dynamic scaling and fluid rendering, fully compatible with MoviePy v2.
+<summary><b>▶️ YouTube Import & Clip Extraction</b></summary>
+
+- Auto-detects YouTube vs Instagram links.
+- Supports YouTube videos, Shorts, and youtu.be links.
+- Import a selected timestamp range or the entire video.
+- Extract audio from YouTube clips for voiceover/captions.
+- Reuse imported clips in Studio Mode.
 </details>
 
 <details>
@@ -27,18 +32,20 @@ Securely embed watermarks across any media with dynamic scaling and fluid render
 Generate highly accurate timestamps using `faster-whisper` and convert them into beautifully styled text clips using `moviepy`.
 </details>
 
-<details>
-<summary><b>💅 Apple-Inspired UI</b></summary>
-Clean typography (San Francisco system font stack), generous whitespace, glassmorphism, soft drop shadows, magnetic cursor interactions, and subtle motion-rich mesh gradients.
-</details>
-
 ## 🛠 Architecture
 
 ```text
-Upload/Reel → Extract/Process → Studio Timeline → Apply Watermarks → Export
+Instagram / YouTube URL → Auto-detect → Clip or Full Import → Studio Timeline / Captions → Export
 ```
+
+### Local API Endpoints
+- `POST /api/media/detect-link`
+- `POST /api/media/fetch`
+- `POST /api/media/clip`
+- `POST /api/media/audio-extract`
 
 ### Troubleshooting
 
-- **Watermark fails to apply**: Ensure `ffmpeg` and `imagemagick` are correctly installed on your system. Moviepy relies on these binaries to overlay TextClips properly.
-- **Missing Apple Fonts**: If you are not on macOS, the system will gracefully fallback to `Arial` or `sans-serif` while retaining the updated padding and structural UI elements.
+- **YouTube video unavailable/private**: Make sure the video is public and your local IP is not being blocked.
+- **Timestamp format invalid**: Enter timestamps as raw seconds or `MM:SS`.
+- **Full video import is slow**: yt-dlp downloading long videos locally takes time based on your bandwidth.

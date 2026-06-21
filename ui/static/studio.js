@@ -2180,3 +2180,145 @@ function getFontFamilyName(key) {
   if (key === 'montserrat') return '"Outfit", sans-serif';
   return 'Impact, sans-serif';
 }
+
+
+// ==========================================
+// YOUTUBE IMPORT LOGIC
+// ==========================================
+
+async function checkLinkType(url) {
+  try {
+    const res = await fetch('/api/media/detect-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    return await res.json();
+  } catch (err) {
+    return { platform: "unsupported", is_supported: false };
+  }
+}
+
+// Media Tab Video detection
+const reelVideoUrlInput = document.getElementById('reelVideoUrl');
+const ytVideoControls = document.getElementById('youtubeVideoControls');
+const btnImportReelVideo = document.getElementById('btnImportReelVideo');
+
+reelVideoUrlInput.addEventListener('input', async (e) => {
+  const url = e.target.value.trim();
+  if (!url) {
+    ytVideoControls.style.display = 'none';
+    btnImportReelVideo.style.display = 'inline-flex';
+    return;
+  }
+
+  const info = await checkLinkType(url);
+  if (info.platform === 'youtube') {
+    ytVideoControls.style.display = 'block';
+    btnImportReelVideo.style.display = 'none'; // hide the default instagram fetch
+  } else {
+    ytVideoControls.style.display = 'none';
+    btnImportReelVideo.style.display = 'inline-flex';
+  }
+});
+
+document.getElementById('btnImportYtFull').addEventListener('click', () => {
+  importGenericMedia('full');
+});
+document.getElementById('btnImportYtClip').addEventListener('click', () => {
+  importGenericMedia('clip');
+});
+
+async function importGenericMedia(mode) {
+  const url = document.getElementById('reelVideoUrl').value.trim();
+  const start = document.getElementById('ytVideoStart').value.trim();
+  const end = document.getElementById('ytVideoEnd').value.trim();
+
+  if (!url) return alert("Please paste a link.");
+  if (mode === 'clip' && (!start || !end)) return alert("Please provide start and end timestamps.");
+
+  const endpoint = mode === 'full' ? '/api/media/fetch' : '/api/media/clip';
+
+  showCanvasLoading(`Downloading YouTube video (${mode})...`);
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, start, end })
+    });
+    const data = await res.json();
+    if (data.error) {
+      alert("Import failed: " + data.error);
+    } else {
+      addAssetToLibrary(data);
+      document.getElementById('reelVideoUrl').value = '';
+      ytVideoControls.style.display = 'none';
+      btnImportReelVideo.style.display = 'inline-flex';
+    }
+  } catch (err) {
+    alert("API call failed: " + err);
+  } finally {
+    hideCanvasLoading();
+  }
+}
+
+// Audio Tab detection
+const reelAudioUrlInput = document.getElementById('reelAudioUrl');
+const ytAudioControls = document.getElementById('youtubeAudioControls');
+const btnImportReelAudio = document.getElementById('btnImportReelAudio');
+
+reelAudioUrlInput.addEventListener('input', async (e) => {
+  const url = e.target.value.trim();
+  if (!url) {
+    ytAudioControls.style.display = 'none';
+    btnImportReelAudio.style.display = 'inline-flex';
+    return;
+  }
+
+  const info = await checkLinkType(url);
+  if (info.platform === 'youtube') {
+    ytAudioControls.style.display = 'block';
+    btnImportReelAudio.style.display = 'none';
+  } else {
+    ytAudioControls.style.display = 'none';
+    btnImportReelAudio.style.display = 'inline-flex';
+  }
+});
+
+document.getElementById('btnImportYtAudioFull').addEventListener('click', () => {
+  importGenericAudio('full');
+});
+document.getElementById('btnImportYtAudioClip').addEventListener('click', () => {
+  importGenericAudio('clip');
+});
+
+async function importGenericAudio(mode) {
+  const url = document.getElementById('reelAudioUrl').value.trim();
+  const start = document.getElementById('ytAudioStart').value.trim();
+  const end = document.getElementById('ytAudioEnd').value.trim();
+
+  if (!url) return alert("Please paste a link.");
+  if (mode === 'clip' && (!start || !end)) return alert("Please provide start and end timestamps.");
+
+  showCanvasLoading(`Extracting YouTube audio (${mode})...`);
+  try {
+    const res = await fetch('/api/media/audio-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, mode, start, end })
+    });
+    const data = await res.json();
+    if (data.error) {
+      alert("Extraction failed: " + data.error);
+    } else {
+      addAssetToLibrary(data);
+      document.getElementById('reelAudioUrl').value = '';
+      ytAudioControls.style.display = 'none';
+      btnImportReelAudio.style.display = 'inline-flex';
+    }
+  } catch (err) {
+    alert("API call failed: " + err);
+  } finally {
+    hideCanvasLoading();
+  }
+}

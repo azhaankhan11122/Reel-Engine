@@ -61,10 +61,21 @@
           </div>
           
           <div class="import-section">
-            <label>Import Instagram Reel</label>
+            <label>Import Social Video</label>
             <div class="input-row">
-              <input type="text" id="reelVideoUrl" placeholder="https://www.instagram.com/reel/...">
+              <input type="text" id="reelVideoUrl" placeholder="Paste Instagram Reel or YouTube link...">
               <button id="btnImportReelVideo" class="studio-btn"><i class="fa-solid fa-download"></i> Fetch</button>
+            </div>
+            <div id="youtubeVideoControls" style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+              <div style="font-size: 0.85rem; margin-bottom: 5px; color: var(--accent2);"><i class="fa-brands fa-youtube"></i> YouTube detected</div>
+              <div class="input-row" style="margin-bottom: 8px;">
+                <input type="text" id="ytVideoStart" placeholder="Start (e.g. 00:15)" style="width: 48%;">
+                <input type="text" id="ytVideoEnd" placeholder="End (e.g. 00:45)" style="width: 48%;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="btnImportYtClip" class="studio-btn" style="flex: 1; font-size: 0.8rem;">Import Clip</button>
+                <button id="btnImportYtFull" class="studio-btn" style="flex: 1; font-size: 0.8rem;">Import Full</button>
+              </div>
             </div>
           </div>
           
@@ -83,10 +94,21 @@
           </div>
 
           <div class="import-section">
-            <label>Extract Audio from Reel</label>
+            <label>Extract Social Audio</label>
             <div class="input-row">
-              <input type="text" id="reelAudioUrl" placeholder="https://www.instagram.com/reel/...">
+              <input type="text" id="reelAudioUrl" placeholder="Paste Instagram Reel or YouTube link...">
               <button id="btnImportReelAudio" class="studio-btn"><i class="fa-solid fa-music"></i> Extract</button>
+            </div>
+            <div id="youtubeAudioControls" style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+              <div style="font-size: 0.85rem; margin-bottom: 5px; color: var(--accent2);"><i class="fa-brands fa-youtube"></i> YouTube detected</div>
+              <div class="input-row" style="margin-bottom: 8px;">
+                <input type="text" id="ytAudioStart" placeholder="Start (e.g. 00:15)" style="width: 48%;">
+                <input type="text" id="ytAudioEnd" placeholder="End (e.g. 00:45)" style="width: 48%;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="btnImportYtAudioClip" class="studio-btn" style="flex: 1; font-size: 0.8rem;">Extract Clip</button>
+                <button id="btnImportYtAudioFull" class="studio-btn" style="flex: 1; font-size: 0.8rem;">Extract Full</button>
+              </div>
             </div>
           </div>
 

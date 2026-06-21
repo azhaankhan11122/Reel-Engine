@@ -67,33 +67,3 @@ function setupMusicToggle(checkboxId, optionsId) {
   cb.addEventListener("change", toggle);
   toggle();
 }
-
-
-// Magnetic cursor effect for buttons
-document.addEventListener('DOMContentLoaded', () => {
-    const magneticElements = document.querySelectorAll('.mode-card, .btn');
-
-    magneticElements.forEach(elem => {
-        elem.classList.add('magnetic-btn');
-        elem.addEventListener('mousemove', (e) => {
-            const rect = elem.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-
-            // Subtle pull
-            elem.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
-        });
-
-        elem.addEventListener('mouseleave', () => {
-            elem.style.transform = `translate(0px, 0px)`;
-        });
-    });
-
-    // Add fade-in-up class to sections
-    const cards = document.querySelectorAll('.mode-card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('fade-in-up');
-    });
-});
