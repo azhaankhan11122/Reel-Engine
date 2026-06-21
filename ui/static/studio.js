@@ -633,7 +633,6 @@ function rebuildAssetsLibrary() {
           ${previewTag}
         </div>
         <div class="asset-card-info">${asset.name}</div>
-        <button class="save-vault-btn" title="Save to Creator Vault"><i class="fa-solid fa-box-archive"></i> Save</button>
       `;
       
       // Drag events
@@ -648,14 +647,6 @@ function rebuildAssetsLibrary() {
         addAssetToTimeline(asset.id, trackId, playheadTime);
       });
       
-      const saveBtn = card.querySelector('.save-vault-btn');
-      if (saveBtn) {
-        saveBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          saveAssetToCreatorVault(asset, asset.type === 'video' ? 'reel_video' : 'upload');
-        });
-      }
-
       mediaGrid.appendChild(card);
     } else if (asset.type === 'audio') {
       const item = document.createElement('div');
@@ -666,7 +657,6 @@ function rebuildAssetsLibrary() {
         <i class="fa-solid fa-volume-high"></i>
         <span class="asset-list-title">${asset.name}</span>
         <span class="asset-list-duration">${formatTimeCode(asset.duration)}</span>
-        <button class="save-vault-btn" title="Save to Creator Vault" style="width: auto; padding: 2px 6px; margin-left: 5px;"><i class="fa-solid fa-box-archive"></i></button>
       `;
       
       item.addEventListener('dragstart', (e) => {
@@ -2191,192 +2181,144 @@ function getFontFamilyName(key) {
   return 'Impact, sans-serif';
 }
 
-// ==========================================
-// CREATOR VAULT LOGIC
-// ==========================================
-let vaultAssets = [];
-let currentVaultFilter = 'all';
 
-async function loadVaultAssets() {
+// ==========================================
+// YOUTUBE IMPORT LOGIC
+// ==========================================
+
+async function checkLinkType(url) {
   try {
-    const res = await fetch('/api/library/assets');
-    if (!res.ok) throw new Error('Failed to load vault assets');
-    vaultAssets = await res.json();
-    renderVaultAssets();
+    const res = await fetch('/api/media/detect-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    return await res.json();
   } catch (err) {
-    console.error('Vault error:', err);
+    return { platform: "unsupported", is_supported: false };
   }
 }
 
-function renderVaultAssets() {
-  const grid = document.getElementById('vaultGrid');
-  if (!grid) return;
+// Media Tab Video detection
+const reelVideoUrlInput = document.getElementById('reelVideoUrl');
+const ytVideoControls = document.getElementById('youtubeVideoControls');
+const btnImportReelVideo = document.getElementById('btnImportReelVideo');
 
-  const searchQ = (document.getElementById('vaultSearchInput')?.value || '').toLowerCase();
-
-  let filtered = vaultAssets.filter(a => {
-    if (currentVaultFilter === 'video' && a.type !== 'video') return false;
-    if (currentVaultFilter === 'audio' && a.type !== 'audio') return false;
-    if (currentVaultFilter === 'image' && a.type !== 'image') return false;
-    if (currentVaultFilter === 'favorites' && !a.favorite) return false;
-    if (searchQ && !a.name.toLowerCase().includes(searchQ)) return false;
-    return true;
-  });
-
-  grid.innerHTML = '';
-  if (filtered.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <i class="fa-solid fa-boxes-packing empty-icon"></i>
-        <p>Vault is empty.</p>
-      </div>`;
+reelVideoUrlInput.addEventListener('input', async (e) => {
+  const url = e.target.value.trim();
+  if (!url) {
+    ytVideoControls.style.display = 'none';
+    btnImportReelVideo.style.display = 'inline-flex';
     return;
   }
 
-  filtered.forEach(asset => {
-    const card = document.createElement('div');
-    card.className = 'vault-asset-card';
-
-    let thumbHtml = '';
-    if (asset.thumbnail_url) {
-      thumbHtml = `<img src="${asset.thumbnail_url}" class="vault-asset-thumb" alt="${asset.name}">`;
-    } else if (asset.type === 'video') {
-      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-video"></i></div>`;
-    } else if (asset.type === 'audio') {
-      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-music"></i></div>`;
-    } else if (asset.type === 'image') {
-      thumbHtml = `<img src="${asset.url}" class="vault-asset-thumb" alt="${asset.name}">`;
-    } else {
-      thumbHtml = `<div class="vault-asset-thumb"><i class="fa-solid fa-file"></i></div>`;
-    }
-
-    card.innerHTML = `
-      ${thumbHtml}
-      <div class="vault-asset-name" title="${asset.name}">${asset.name}</div>
-      <div class="vault-asset-meta">
-        <span>${asset.type.toUpperCase()}</span>
-        <span>${asset.duration > 0 ? asset.duration + 's' : ''}</span>
-      </div>
-      <div class="vault-asset-actions">
-        <button class="vault-action-btn add-btn" title="Add to Timeline"><i class="fa-solid fa-plus"></i></button>
-        <button class="vault-action-btn fav-btn ${asset.favorite ? 'active' : ''}" title="Favorite"><i class="fa-solid fa-heart"></i></button>
-        <button class="vault-action-btn rename-btn" title="Rename"><i class="fa-solid fa-pen"></i></button>
-      </div>
-    `;
-
-    card.querySelector('.add-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      addAssetToTimeline(asset);
-    });
-
-    card.querySelector('.fav-btn').addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await toggleVaultFavorite(asset.id, !asset.favorite);
-    });
-
-    card.querySelector('.rename-btn').addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const newName = prompt('Enter new name:', asset.name);
-      if (newName && newName.trim() !== '' && newName !== asset.name) {
-        await renameVaultAsset(asset.id, newName.trim());
-      }
-    });
-
-    grid.appendChild(card);
-  });
-}
-
-async function toggleVaultFavorite(id, isFav) {
-  try {
-    const res = await fetch(`/api/library/assets/${id}/favorite`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({favorite: isFav})
-    });
-    if (res.ok) loadVaultAssets();
-  } catch(e) { console.error(e); }
-}
-
-async function renameVaultAsset(id, newName) {
-  try {
-    const res = await fetch(`/api/library/assets/${id}/rename`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name: newName})
-    });
-    if (res.ok) loadVaultAssets();
-  } catch(e) { console.error(e); }
-}
-
-function addAssetToTimeline(asset) {
-  const timelineAsset = {
-    id: 'vault_' + Math.random().toString(36).substr(2, 9),
-    type: asset.type,
-    name: asset.name,
-    url: asset.url,
-    path: asset.path,
-    duration: asset.duration || 5.0
-  };
-
-  if (asset.type === 'video') {
-    timelineAsset.preview_url = asset.thumbnail_url || asset.url;
-    addMediaClip('video_overlay', timelineAsset);
-  } else if (asset.type === 'image') {
-    timelineAsset.preview_url = asset.url;
-    addMediaClip('image_overlay', timelineAsset);
-  } else if (asset.type === 'audio') {
-    if (asset.subtype === 'tts' || asset.name.toLowerCase().includes('tts')) {
-      addMediaClip('voice', timelineAsset);
-    } else {
-      addMediaClip('music', timelineAsset);
-    }
+  const info = await checkLinkType(url);
+  if (info.platform === 'youtube') {
+    ytVideoControls.style.display = 'block';
+    btnImportReelVideo.style.display = 'none'; // hide the default instagram fetch
+  } else {
+    ytVideoControls.style.display = 'none';
+    btnImportReelVideo.style.display = 'inline-flex';
   }
-}
+});
 
-async function saveAssetToCreatorVault(asset, subtype='upload') {
-  const name = prompt('Enter a name to save this to your Creator Vault:', asset.name);
-  if (!name) return; // User cancelled
+document.getElementById('btnImportYtFull').addEventListener('click', () => {
+  importGenericMedia('full');
+});
+document.getElementById('btnImportYtClip').addEventListener('click', () => {
+  importGenericMedia('clip');
+});
 
+async function importGenericMedia(mode) {
+  const url = document.getElementById('reelVideoUrl').value.trim();
+  const start = document.getElementById('ytVideoStart').value.trim();
+  const end = document.getElementById('ytVideoEnd').value.trim();
+
+  if (!url) return alert("Please paste a link.");
+  if (mode === 'clip' && (!start || !end)) return alert("Please provide start and end timestamps.");
+
+  const endpoint = mode === 'full' ? '/api/media/fetch' : '/api/media/clip';
+
+  showCanvasLoading(`Downloading YouTube video (${mode})...`);
   try {
-    const res = await fetch('/api/library/assets/add', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: asset.path,
-        name: name,
-        type: asset.type,
-        subtype: subtype,
-        source: { url: asset.url }
-      })
+      body: JSON.stringify({ url, start, end })
     });
-
-    if (res.ok) {
-      if (typeof loadVaultAssets === 'function') loadVaultAssets();
-      alert('Saved to Creator Vault!');
+    const data = await res.json();
+    if (data.error) {
+      alert("Import failed: " + data.error);
     } else {
-      const data = await res.json();
-      alert('Failed to save to Vault: ' + data.error);
+      addAssetToLibrary(data);
+      document.getElementById('reelVideoUrl').value = '';
+      ytVideoControls.style.display = 'none';
+      btnImportReelVideo.style.display = 'inline-flex';
     }
   } catch (err) {
-    console.error(err);
-    alert('Error saving to Vault.');
+    alert("API call failed: " + err);
+  } finally {
+    hideCanvasLoading();
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const searchInput = document.getElementById('vaultSearchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', () => renderVaultAssets());
+// Audio Tab detection
+const reelAudioUrlInput = document.getElementById('reelAudioUrl');
+const ytAudioControls = document.getElementById('youtubeAudioControls');
+const btnImportReelAudio = document.getElementById('btnImportReelAudio');
+
+reelAudioUrlInput.addEventListener('input', async (e) => {
+  const url = e.target.value.trim();
+  if (!url) {
+    ytAudioControls.style.display = 'none';
+    btnImportReelAudio.style.display = 'inline-flex';
+    return;
   }
 
-  document.querySelectorAll('.vault-filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.vault-filter-btn').forEach(b => b.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-      currentVaultFilter = e.currentTarget.getAttribute('data-filter');
-      renderVaultAssets();
-    });
-  });
-
-  loadVaultAssets();
+  const info = await checkLinkType(url);
+  if (info.platform === 'youtube') {
+    ytAudioControls.style.display = 'block';
+    btnImportReelAudio.style.display = 'none';
+  } else {
+    ytAudioControls.style.display = 'none';
+    btnImportReelAudio.style.display = 'inline-flex';
+  }
 });
+
+document.getElementById('btnImportYtAudioFull').addEventListener('click', () => {
+  importGenericAudio('full');
+});
+document.getElementById('btnImportYtAudioClip').addEventListener('click', () => {
+  importGenericAudio('clip');
+});
+
+async function importGenericAudio(mode) {
+  const url = document.getElementById('reelAudioUrl').value.trim();
+  const start = document.getElementById('ytAudioStart').value.trim();
+  const end = document.getElementById('ytAudioEnd').value.trim();
+
+  if (!url) return alert("Please paste a link.");
+  if (mode === 'clip' && (!start || !end)) return alert("Please provide start and end timestamps.");
+
+  showCanvasLoading(`Extracting YouTube audio (${mode})...`);
+  try {
+    const res = await fetch('/api/media/audio-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, mode, start, end })
+    });
+    const data = await res.json();
+    if (data.error) {
+      alert("Extraction failed: " + data.error);
+    } else {
+      addAssetToLibrary(data);
+      document.getElementById('reelAudioUrl').value = '';
+      ytAudioControls.style.display = 'none';
+      btnImportReelAudio.style.display = 'inline-flex';
+    }
+  } catch (err) {
+    alert("API call failed: " + err);
+  } finally {
+    hideCanvasLoading();
+  }
+}

@@ -1,22 +1,4 @@
 :root {
-  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  --bg: #f5f5f7;
-  --bg-dark: #050507;
-  --surface: rgba(255, 255, 255, 0.72);
-  --surface-dark: rgba(22, 22, 25, 0.72);
-  --text: #1d1d1f;
-  --text-dark: #f5f5f7;
-  --muted: #6e6e73;
-  --blue: #007aff;
-  --purple: #af52de;
-  --pink: #ff2d55;
-  --green: #34c759;
-  --orange: #ff9500;
-  --radius-xl: 28px;
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.18);
-  --blur: blur(28px);
   --bg: #0a0a0f;
   --surface: #14141f;
   --surface2: #1c1c2e;
@@ -33,11 +15,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: linear-gradient(45deg, var(--bg-dark), #111, var(--bg-dark));
-  background-size: 400% 400%;
-  animation: gradientFlow 15s ease infinite;
-  color: var(--text-dark);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -166,7 +144,7 @@ select {
   color: var(--text);
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-family: inherit;
   transition: border-color 0.2s;
 }
 
@@ -564,37 +542,4 @@ optgroup {
   min-height: 200px;
   font-size: 0.95rem;
   line-height: 1.6;
-}
-.y2k-badge {
-  display: inline-block;
-  background: linear-gradient(90deg, #ff00ff, #00ffff);
-  color: #fff;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-left: 10px;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-  animation: pulseGlow 2s infinite;
-}
-
-.neon-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(0,255,255,0.3);
-  box-shadow: 0 0 15px rgba(0,255,255,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.neon-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 25px rgba(0,255,255,0.3), inset 0 0 15px rgba(255,0,255,0.1);
-  border-color: #00ffff;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
 }
