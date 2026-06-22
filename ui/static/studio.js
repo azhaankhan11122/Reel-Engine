@@ -70,8 +70,22 @@ function initUI() {
   // Save project
   document.getElementById('btnSave').addEventListener('click', saveProject);
 
-  // Export video
-  document.getElementById('btnExport').addEventListener('click', startExport);
+  // Export video & Presets
+  document.getElementById('btnExport').addEventListener('click', () => {
+    document.getElementById('exportSettingsModal').classList.add('active');
+  });
+  document.getElementById('closeExportSettings').addEventListener('click', () => {
+    document.getElementById('exportSettingsModal').classList.remove('active');
+  });
+  document.getElementById('confirmExport').addEventListener('click', () => {
+    const res = document.getElementById('exportResolution').value.split('x');
+    project.width = parseInt(res[0]);
+    project.height = parseInt(res[1]);
+    project.fps = parseInt(document.getElementById('exportFps').value);
+
+    document.getElementById('exportSettingsModal').classList.remove('active');
+    startExport();
+  });
   document.getElementById('btnExportModalClose').addEventListener('click', () => {
     document.getElementById('exportModal').classList.remove('active');
   });
@@ -110,6 +124,9 @@ function initUI() {
   document.getElementById('btnGenerateAutoCaptions').addEventListener('click', generateAutoCaptions);
   // Add manual caption
   document.getElementById('btnAddManualCaption').addEventListener('click', addManualCaptionSegment);
+
+  // Export SRT
+  document.getElementById('btnExportSrt').addEventListener('click', exportSrt);
 
   // Player controls
   document.getElementById('btnPlayPause').addEventListener('click', togglePlayPause);
@@ -799,8 +816,95 @@ document.querySelectorAll('.preset-text-btn').forEach(btn => {
   });
 });
 
+function calculateViralScore() {
+  let score = 0;
+
+  // 1. Duration (10 to 60 seconds is ideal for shorts)
+  let projectDuration = 0;
+  for (const track of project.tracks) {
+    for (const clip of track.clips) {
+      if (clip.start + clip.duration > projectDuration) {
+        projectDuration = clip.start + clip.duration;
+      }
+    }
+  }
+
+  if (projectDuration > 0) {
+    if (projectDuration <= 60 && projectDuration >= 10) {
+      score += 30;
+    } else if (projectDuration < 10) {
+      score += 15; // too short
+    } else if (projectDuration <= 90) {
+      score += 20; // okay, but slightly long
+    } else {
+      score += 10; // too long
+    }
+  }
+
+  // 2. Pace (Number of cuts/clips per minute)
+  let numClips = 0;
+  let hasHook = false;
+  let wordCount = 0;
+
+  for (const track of project.tracks) {
+    if (track.type !== 'captions') {
+      numClips += track.clips.length;
+    } else {
+      // Analyze captions
+      for (const clip of track.clips) {
+        let textLength = clip.content ? clip.content.split(/\s+/).length : 0;
+        wordCount += textLength;
+        // Hook check in first 5 seconds
+        if (clip.start < 5.0 && clip.content) {
+          const contentLower = clip.content.toLowerCase();
+          const hookWords = ['you', 'how', 'why', 'secret', 'stop', 'hack', 'truth'];
+          for (let word of hookWords) {
+            if (contentLower.includes(word)) {
+              hasHook = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  let cutsPerMinute = projectDuration > 0 ? (numClips / projectDuration) * 60 : 0;
+  if (cutsPerMinute >= 15 && cutsPerMinute <= 40) {
+    score += 30; // fast-paced
+  } else if (cutsPerMinute > 40) {
+    score += 20; // too frantic
+  } else if (cutsPerMinute > 5) {
+    score += 10; // a bit slow
+  }
+
+  // 3. Captions density (Words Per Minute)
+  let wpm = projectDuration > 0 ? (wordCount / projectDuration) * 60 : 0;
+  if (wpm >= 130 && wpm <= 180) {
+    score += 25;
+  } else if (wpm > 0) {
+    score += 15;
+  }
+
+  // 4. Hook presence
+  if (hasHook) {
+    score += 15;
+  }
+
+  if (projectDuration === 0) {
+    score = 0;
+  }
+
+  // Update UI
+  const badgeElement = document.getElementById('viralScoreValue');
+  if (badgeElement) {
+    badgeElement.textContent = `${Math.min(100, Math.floor(score))} / 100`;
+  }
+}
+
 // TIMELINE RENDERER AND DRAG ACTIONS
 function renderTimeline() {
+  calculateViralScore();
   const container = document.getElementById('tracksContainer');
   
   // Clear existing clip elements in the DOM
@@ -1933,6 +2037,44 @@ function deleteSelectedClip() {
 }
 
 // CAPTIONS SEGMENTS MANUAL ACTIONS
+function formatSrtTime(seconds) {
+  const date = new Date(seconds * 1000);
+  const hh = String(Math.floor(seconds / 3600)).padStart(2, '0');
+  const mm = String(date.getUTCMinutes()).padStart(2, '0');
+  const ss = String(date.getUTCSeconds()).padStart(2, '0');
+  const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+  return `${hh}:${mm}:${ss},${ms}`;
+}
+
+function exportSrt() {
+  const captionsTrack = project.tracks.find(t => t.type === 'captions');
+  if (!captionsTrack || captionsTrack.clips.length === 0) {
+    alert("No captions available to export.");
+    return;
+  }
+
+  // Sort clips by start time
+  const sortedClips = [...captionsTrack.clips].sort((a, b) => a.start - b.start);
+
+  let srtContent = '';
+  sortedClips.forEach((clip, index) => {
+    const startTime = formatSrtTime(clip.start);
+    const endTime = formatSrtTime(clip.start + clip.duration);
+    srtContent += `${index + 1}\n`;
+    srtContent += `${startTime} --> ${endTime}\n`;
+    srtContent += `${clip.content || ''}\n\n`;
+  });
+
+  const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'captions.srt');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 function addManualCaptionSegment() {
   const captionsTrack = project.tracks.find(t => t.id === 'captions');
   

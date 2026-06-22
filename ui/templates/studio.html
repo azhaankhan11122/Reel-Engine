@@ -24,6 +24,9 @@
         <input type="text" id="projectName" value="Untitled Studio Project" placeholder="Project Name">
         <i class="fa-solid fa-pen name-edit-icon"></i>
       </div>
+      <div class="viral-score-badge" title="Viral Score: Evaluates duration, cuts, captions, and hook words">
+        <i class="fa-solid fa-fire"></i> <span id="viralScoreValue">0 / 100</span>
+      </div>
     </div>
     <div class="header-center">
       <button id="btnUndo" class="ctrl-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
@@ -153,8 +156,13 @@
           </div>
 
           <div class="manual-captions-section">
-            <h4>Manual Captions / Subtitles</h4>
-            <button id="btnAddManualCaption" class="studio-btn secondary-btn"><i class="fa-solid fa-plus"></i> Add Caption Segment</button>
+            <h4 style="display:flex; justify-content:space-between; align-items:center;">
+              Manual Captions
+            </h4>
+            <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+              <button id="btnAddManualCaption" class="studio-btn secondary-btn" style="flex:1; white-space: nowrap; font-size: 0.85rem;"><i class="fa-solid fa-plus"></i> Add Caption</button>
+              <button id="btnExportSrt" class="studio-btn secondary-btn" style="flex:1; white-space: nowrap; font-size: 0.85rem;"><i class="fa-solid fa-download"></i> Export SRT</button>
+            </div>
           </div>
 
           <div class="captions-list-editor" id="captionsListEditor">
@@ -543,6 +551,36 @@
         <button id="btnCreateNewProject" class="studio-btn primary-btn" style="width: 100%; margin-bottom: 1.5rem;"><i class="fa-solid fa-plus"></i> Create New Project</button>
         <div class="projects-list-wrapper" id="projectsModalList">
           <p class="modal-loading-hint">Loading saved sessions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Settings Modal -->
+  <div class="studio-modal" id="exportSettingsModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-sliders"></i> Export Settings</h3>
+        <button class="modal-close" id="closeExportSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom: 0.5rem; color: #a1a1aa; font-size: 0.9rem;">Resolution</label>
+          <select id="exportResolution" class="form-input" style="width: 100%;">
+            <option value="1080x1920">1080p (1080x1920)</option>
+            <option value="720x1280">720p (720x1280)</option>
+            <option value="2160x3840">4K (2160x3840)</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display:block; margin-bottom: 0.5rem; color: #a1a1aa; font-size: 0.9rem;">Framerate</label>
+          <select id="exportFps" class="form-input" style="width: 100%;">
+            <option value="30">30 FPS</option>
+            <option value="60">60 FPS</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button id="confirmExport" class="studio-btn primary-btn"><i class="fa-solid fa-play"></i> Start Export</button>
         </div>
       </div>
     </div>
