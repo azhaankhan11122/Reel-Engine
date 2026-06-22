@@ -1356,3 +1356,21 @@ body.studio-body {
   text-align: center;
   padding: 2rem 0;
 }
+
+/* Viral Score Badge */
+.viral-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 1rem;
+}
+.viral-score-badge i {
+  color: #ff9900; /* flame color */
+}
