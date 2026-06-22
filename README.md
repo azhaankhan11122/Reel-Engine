@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:0a0a0a,45:141414,75:111827,100:00d4ff&amp;height=300&amp;section=header&amp;text=MAKE%20SHORTS&amp;fontSize=82&amp;fontColor=00d4ff&amp;fontAlignY=52&amp;desc=Ship%20Viral%20Shorts%2C%20Reels%20and%20TikToks%20Locally&amp;descSize=20&amp;descAlignY=74&amp;animation=twinkling" alt="Reel Engine Header" />
+<img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:0a0a0a,45:141414,75:111827,100:00d4ff&amp;height=300&amp;section=header&amp;text=REEL%20ENGINE&amp;fontSize=82&amp;fontColor=00d4ff&amp;fontAlignY=52&amp;desc=Ship%20Viral%20Shorts%2C%20Reels%20and%20TikToks%20Locally&amp;descSize=20&amp;descAlignY=74&amp;animation=twinkling" alt="Reel Engine Header" />
 
 <br/>
 
