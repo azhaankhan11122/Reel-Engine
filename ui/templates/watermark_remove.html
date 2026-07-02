@@ -128,7 +128,7 @@ btnProcess.addEventListener('click', async () => {
     });
     const data = await res.json();
     if (res.ok) {
-      statusEl.innerHTML = `Success! <a href="\${data.url}" target="_blank">Download Cleaned Video</a>`;
+      statusEl.innerHTML = `Success! <a href="${data.url}" target="_blank">Download Cleaned Video</a>`;
     } else {
       statusEl.textContent = 'Error: ' + data.error;
     }
