@@ -4,11 +4,11 @@
 */
 
 :root {
-  --bg-studio: #07070b;
+  --bg-studio: #000000;
   --surface-studio: #0f0f18;
   --surface-panel: #141424;
   --surface-track: #1b1b2f;
-  --border-studio: #232338;
+  --border-studio: rgba(255, 255, 255, 0.08);
   --border-focus: #7c5cff;
   --accent-neon: #7c5cff;
   --accent-green: #00ffaa;
@@ -197,8 +197,8 @@ body.studio-body {
 
 /* Left Sidebar Layout */
 .studio-left-sidebar {
-  width: 380px;
-  min-width: 380px;
+  width: 420px;
+  min-width: 420px;
   border-right: 1px solid var(--border-studio);
   background: var(--surface-studio);
   display: flex;
@@ -254,7 +254,7 @@ body.studio-body {
 
 .tab-contents {
   flex: 1;
-  padding: 1.25rem;
+  padding: 2rem;
   overflow-y: auto;
   height: 100%;
 }
@@ -1373,4 +1373,54 @@ body.studio-body {
 }
 .viral-score-badge i {
   color: #ff9900; /* flame color */
+}
+
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.extended-media-card {
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface2);
+  border: 1px solid var(--border-studio);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.extended-media-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-neon);
+  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.3);
+}
+
+.bg-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+#magnetic-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, transform 0.05s linear;
+}
+
+#magnetic-cursor.cursor-hover {
+  width: 40px;
+  height: 40px;
 }

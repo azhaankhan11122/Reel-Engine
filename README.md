@@ -266,9 +266,28 @@ Open the URL printed by the server, typically `http://127.0.0.1:5000` or `http:/
 </details>
 
 <details>
-<summary><b>🎨 Styling controls</b></summary>
+<summary><b>🎬 Studio Mode Editor</b></summary>
 
-- Choose from 11 caption fonts.
+- Dynamically resizable multi-track timeline UI for advanced arrangement.
+- High-end Trionn-inspired motion-rich aesthetic: deep blacks, extreme whitespace, CSS grain overlay, thin borders, and a magnetic mouse cursor.
+- Standalone Extended Media Library that opens in a new monitor window, featuring cross-window drag-and-drop to timeline tracks via `application/json` data payloads.
+- Comprehensive Transition Library with 60+ effects (Cinematic, Wipes, Glitch, 3D, Particle, Vintage, etc.).
+
+</details>
+
+<details>
+<summary><b>🧽 Watermark Removal</b></summary>
+
+- **Standalone Tool:** Clean videos straight from the Home Page using an HTML5 canvas drawing bounding box.
+- **Integrated Studio Tool:** Select any clip in your Studio timeline, trace a bounding box directly on the video preview, and process it prior to rendering using `ffmpeg`'s `delogo` filter mapped seamlessly to the source video resolution.
+
+</details>
+
+<details>
+<summary><b>🎨 Styling controls &amp; Typography</b></summary>
+
+- Expansive typography support featuring 70+ Google Fonts.
+- A curated **"Font Combos"** tab loaded with 40+ professional pairings (e.g. Playfair Display &amp; Source Sans Pro) that instantiate synchronized Heading and Body text tracks.
 - Customize text color, highlight color, accent color, pill color, and opacity.
 - Toggle automatic power-word highlighting.
 - Optional background music upload with volume control.

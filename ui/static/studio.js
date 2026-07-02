@@ -26,8 +26,81 @@ const fontMapping = {
   'press_start': '"Press Start 2P", monospace'
 };
 
+const extraFonts = {
+  'arsen': '"Arsen", sans-serif',
+  'avelline': '"Avelline", sans-serif',
+  'avenir': '"Avenir", sans-serif',
+  'bebas_neue': '"Bebas Neue", sans-serif',
+  'bodoni': '"Bodoni", sans-serif',
+  'canela': '"Canela", sans-serif',
+  'caslon': '"Caslon", sans-serif',
+  'chivo': '"Chivo", sans-serif',
+  'cinzel': '"Cinzel", sans-serif',
+  'cormorant_garamond': '"Cormorant Garamond", sans-serif',
+  'deloiré': '"Deloiré", sans-serif',
+  'deluce': '"Deluce", sans-serif',
+  'didot': '"Didot", sans-serif',
+  'ethos_nova': '"Ethos Nova", sans-serif',
+  'futura': '"Futura", sans-serif',
+  'gt_walsheim': '"GT Walsheim", sans-serif',
+  'gamgote': '"Gamgote", sans-serif',
+  'garamond': '"Garamond", sans-serif',
+  'gatling': '"Gatling", sans-serif',
+  'giften_cray': '"Giften Cray", sans-serif',
+  'gilda_script': '"Gilda Script", sans-serif',
+  'glamour': '"Glamour", sans-serif',
+  'grandiose': '"Grandiose", sans-serif',
+  'helvetica_neue': '"Helvetica Neue", sans-serif',
+  'inter': '"Inter", sans-serif',
+  'italic': '"Italic", sans-serif',
+  'jost': '"Jost", sans-serif',
+  'kento': '"Kento", sans-serif',
+  'lora': '"Lora", sans-serif',
+  'luxury_modish': '"Luxury Modish", sans-serif',
+  'maison_neue': '"Maison Neue", sans-serif',
+  'marlin': '"Marlin", sans-serif',
+  'merriweather': '"Merriweather", sans-serif',
+  'mikea': '"Mikea", sans-serif',
+  'mindset': '"Mindset", sans-serif',
+  'monreal': '"Monreal", sans-serif',
+  'montelia': '"Montelia", sans-serif',
+  'montserrat': '"Montserrat", sans-serif',
+  'neue_haas_unica': '"Neue Haas Unica", sans-serif',
+  'noto_serif_display': '"Noto Serif Display", sans-serif',
+  'open_sans': '"Open Sans", sans-serif',
+  'pacifico': '"Pacifico", sans-serif',
+  'parisienne': '"Parisienne", sans-serif',
+  'playfair_display': '"Playfair Display", sans-serif',
+  'priscyla': '"Priscyla", sans-serif',
+  'proximity_sans': '"Proximity Sans", sans-serif',
+  'quattrocento': '"Quattrocento", sans-serif',
+  'quirtty': '"Quirtty", sans-serif',
+  'raleway': '"Raleway", sans-serif',
+  'recoleta': '"Recoleta", sans-serif',
+  'roboto': '"Roboto", sans-serif',
+  'sacramento': '"Sacramento", sans-serif',
+  'saudah': '"Saudah", sans-serif',
+  'senja_mentor': '"Senja Mentor", sans-serif',
+  'sifonn': '"Sifonn", sans-serif',
+  'source_sans_pro': '"Source Sans Pro", sans-serif',
+  'spectral': '"Spectral", sans-serif',
+  'syne': '"Syne", sans-serif',
+  'tundra': '"Tundra", sans-serif',
+  'valencia': '"Valencia", sans-serif',
+  'variable_sans': '"Variable Sans", sans-serif',
+  'walkester': '"Walkester", sans-serif',
+  'wyattruly': '"Wyattruly", sans-serif',
+};
+
+Object.assign(fontMapping, extraFonts);
 document.addEventListener('DOMContentLoaded', () => {
   initUI();
+
+
+
+
+
+
   loadProjectList();
   
   // Create a new project on start if none exists
@@ -36,6 +109,129 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize UI layout and register events
 function initUI() {
+
+  // Watermark removal in Studio Mode
+  const btnRemoveWatermark = document.getElementById('btnRemoveWatermark');
+  let isDrawingWatermark = false;
+  let isDrawingWatermarkActive = false;
+  let wmStartX = 0, wmStartY = 0;
+
+  if (btnRemoveWatermark && previewCanvas) {
+    btnRemoveWatermark.addEventListener('click', () => {
+      if (!activeClip || (activeClip.type !== 'video' && activeClip.type !== 'overlay')) return;
+      isDrawingWatermarkActive = !isDrawingWatermarkActive;
+      if (isDrawingWatermarkActive) {
+        btnRemoveWatermark.classList.add('active');
+        btnRemoveWatermark.style.backgroundColor = 'var(--danger-color)';
+        btnRemoveWatermark.textContent = 'Cancel Watermark Selection';
+        previewCanvas.style.cursor = 'crosshair';
+      } else {
+        btnRemoveWatermark.classList.remove('active');
+        btnRemoveWatermark.style.backgroundColor = '';
+        btnRemoveWatermark.innerHTML = '<i class="fa-solid fa-eraser"></i> Remove Watermark';
+        previewCanvas.style.cursor = 'default';
+        renderCanvas();
+      }
+    });
+
+    previewCanvas.addEventListener('mousedown', (e) => {
+      if (!isDrawingWatermarkActive) return;
+      isDrawingWatermark = true;
+      const rect = previewCanvas.getBoundingClientRect();
+      const scaleX = previewCanvas.width / rect.width;
+      const scaleY = previewCanvas.height / rect.height;
+      wmStartX = (e.clientX - rect.left) * scaleX;
+      wmStartY = (e.clientY - rect.top) * scaleY;
+    });
+
+    previewCanvas.addEventListener('mousemove', (e) => {
+      if (!isDrawingWatermarkActive || !isDrawingWatermark) return;
+      const rect = previewCanvas.getBoundingClientRect();
+      const scaleX = previewCanvas.width / rect.width;
+      const scaleY = previewCanvas.height / rect.height;
+      const currentX = (e.clientX - rect.left) * scaleX;
+      const currentY = (e.clientY - rect.top) * scaleY;
+
+      renderCanvas(); // clear and redraw base
+
+      const ctx = previewCanvas.getContext('2d');
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+      const w = currentX - wmStartX;
+      const h = currentY - wmStartY;
+      ctx.fillRect(wmStartX, wmStartY, w, h);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(wmStartX, wmStartY, w, h);
+    });
+
+    previewCanvas.addEventListener('mouseup', (e) => {
+      if (!isDrawingWatermarkActive || !isDrawingWatermark) return;
+      isDrawingWatermark = false;
+      const rect = previewCanvas.getBoundingClientRect();
+      const scaleX = previewCanvas.width / rect.width;
+      const scaleY = previewCanvas.height / rect.height;
+      const pos = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+
+      const x = Math.min(wmStartX, pos.x);
+      const y = Math.min(wmStartY, pos.y);
+      const w = Math.abs(pos.x - wmStartX);
+      const h = Math.abs(pos.y - wmStartY);
+
+      if (w > 10 && h > 10) {
+        const scale = activeClip.scale || 1.0;
+        const clipX = activeClip.x || 540;
+        const clipY = activeClip.y || 960;
+        const clipW = activeClip.width || 1080;
+        const clipH = activeClip.height || 1920;
+
+        const left = clipX - (clipW * scale) / 2;
+        const top = clipY - (clipH * scale) / 2;
+
+        const relX = x - left;
+        const relY = y - top;
+
+        const sourceX = relX / scale;
+        const sourceY = relY / scale;
+        const sourceW = w / scale;
+        const sourceH = h / scale;
+
+        activeClip.watermark_delogo = {
+          x: Math.max(0, Math.round(sourceX)),
+          y: Math.max(0, Math.round(sourceY)),
+          w: Math.round(sourceW),
+          h: Math.round(sourceH)
+        };
+
+        saveState();
+        alert('Watermark region selected and saved to clip.');
+
+        isDrawingWatermarkActive = false;
+        btnRemoveWatermark.classList.remove('active');
+        btnRemoveWatermark.style.backgroundColor = '';
+        btnRemoveWatermark.innerHTML = '<i class="fa-solid fa-eraser"></i> Remove Watermark';
+        previewCanvas.style.cursor = 'default';
+        renderCanvas();
+      }
+    });
+  }
+
+  // Magnetic Cursor
+  const cursor = document.getElementById('magnetic-cursor');
+  if (cursor) {
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    });
+
+    const interactables = document.querySelectorAll('button, a, input, select, .timeline-track, .preset-text-btn, .font-combo-btn');
+    interactables.forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
+    });
+  }
+
   // Tabs switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -53,9 +249,133 @@ function initUI() {
     document.getElementById('projectsModal').classList.remove('active');
   });
 
+
+  // Timeline Resizer Logic
+  const timelineResizer = document.getElementById('timelineResizer');
+  const timelinePanel = document.getElementById('timelinePanel');
+  let isResizingTimeline = false;
+
+  if (timelineResizer && timelinePanel) {
+    timelineResizer.addEventListener('mousedown', (e) => {
+      isResizingTimeline = true;
+      timelineResizer.classList.add('resizing');
+      document.body.style.cursor = 'row-resize';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizingTimeline) return;
+      const newHeight = window.innerHeight - e.clientY;
+      const minHeight = 100;
+      const maxHeight = window.innerHeight * 0.8;
+
+      if (newHeight >= minHeight && newHeight <= maxHeight) {
+        timelinePanel.style.height = newHeight + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizingTimeline) {
+        isResizingTimeline = false;
+        timelineResizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+      }
+    });
+  }
+
+    // Extended Media Library Logic - Opens in New Window
+  const btnExtendedMediaLibrary = document.getElementById('btnExtendedMediaLibrary');
+  if (btnExtendedMediaLibrary) {
+    btnExtendedMediaLibrary.addEventListener('click', () => {
+      window.open('/studio/extended-library', '_blank', 'width=1200,height=800');
+    });
+  }
+
+
+
   document.getElementById('btnLoadProject').addEventListener('click', () => {
     document.getElementById('projectsModal').classList.add('active');
-    loadProjectList();
+
+
+
+
+
+
+  loadProjectList();
+  });
+
+  const btnTextPresets = document.getElementById('btnTextPresets');
+  const btnTextCombos = document.getElementById('btnTextCombos');
+  const textPresetsGrid = document.getElementById('textPresetsGrid');
+  const fontCombosGrid = document.getElementById('fontCombosGrid');
+
+  if (btnTextPresets && btnTextCombos) {
+    btnTextPresets.addEventListener('click', () => {
+      btnTextPresets.classList.replace('secondary-btn', 'primary-btn');
+      btnTextCombos.classList.replace('primary-btn', 'secondary-btn');
+      textPresetsGrid.style.display = 'grid';
+      fontCombosGrid.style.display = 'none';
+    });
+    btnTextCombos.addEventListener('click', () => {
+      btnTextCombos.classList.replace('secondary-btn', 'primary-btn');
+      btnTextPresets.classList.replace('primary-btn', 'secondary-btn');
+      fontCombosGrid.style.display = 'grid';
+      textPresetsGrid.style.display = 'none';
+    });
+  }
+
+  document.querySelectorAll('.font-combo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const heading = btn.getAttribute('data-heading');
+      const body = btn.getAttribute('data-body');
+
+      const headingKey = heading.toLowerCase().replace(/ /g, '_');
+      const bodyKey = body.toLowerCase().replace(/ /g, '_');
+
+      const textTrack = project.tracks.find(t => t.id === 'text');
+
+      const headingClip = {
+        id: `clip_txt_${uuid()}`,
+        text: "HEADING TEXT",
+        start: playheadTime,
+        duration: 5.0,
+        fontFamily: headingKey,
+        fontSize: 100,
+        color: '#ffffff',
+        backgroundColor: '#000000',
+        backgroundOpacity: 0,
+        alignment: 'center',
+        x: 540,
+        y: 600,
+        opacity: 1.0,
+        rotation: 0
+      };
+
+      const bodyClip = {
+        id: `clip_txt_${uuid()}`,
+        text: "This is the body text for your combo.",
+        start: playheadTime,
+        duration: 5.0,
+        fontFamily: bodyKey,
+        fontSize: 40,
+        color: '#ffffff',
+        backgroundColor: '#000000',
+        backgroundOpacity: 0,
+        alignment: 'center',
+        x: 540,
+        y: 800,
+        opacity: 1.0,
+        rotation: 0
+      };
+
+      textTrack.clips.push(headingClip);
+      textTrack.clips.push(bodyClip);
+
+      saveState();
+      renderTimeline();
+      selectClip(headingClip.id);
+      drawFrame();
+    });
   });
 
   document.getElementById('btnCreateNewProject').addEventListener('click', () => {
@@ -1004,7 +1324,36 @@ function setupTrackDropZones() {
     
     trackEl.addEventListener('drop', (e) => {
       e.preventDefault();
-      const assetId = e.dataTransfer.getData('text/plain');
+
+      let assetId = e.dataTransfer.getData('text/plain');
+
+      // External drag from Extended Library
+      const jsonData = e.dataTransfer.getData('application/json');
+      if (jsonData && !assetId) {
+        try {
+          const data = JSON.parse(jsonData);
+          let existingAsset = project.assets.find(a => a.path === data.path);
+          if (!existingAsset) {
+            existingAsset = {
+              id: 'asset_' + uuid(),
+              type: data.type,
+              name: data.name,
+              url: data.url,
+              preview_url: data.preview_url,
+              path: data.path,
+              duration: 5.0,
+              width: 1080,
+              height: 1920
+            };
+            project.assets.push(existingAsset);
+            renderMediaLibrary();
+          }
+          assetId = existingAsset.id;
+        } catch(err) {
+          console.error(err);
+          return;
+        }
+      }
       const trackId = trackEl.getAttribute('data-track-id');
       const trackType = trackEl.getAttribute('data-track-type');
       

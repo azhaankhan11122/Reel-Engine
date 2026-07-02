@@ -357,6 +357,33 @@ def render_studio_project(project_data, output_path, progress_callback=None):
                     print(f"[WARN] Video file not found: {asset.get('path')}")
                     continue
 
+                delogo_data = clip_data.get("watermark_delogo")
+                if delogo_data:
+                    # Pre-process clip with FFmpeg delogo
+
+                    x = delogo_data.get("x", 0)
+                    y = delogo_data.get("y", 0)
+                    w = delogo_data.get("w", 0)
+                    h = delogo_data.get("h", 0)
+
+                    # Ensure coordinates are within valid bounds and w/h > 0
+                    if w > 0 and h > 0:
+                        temp_clean_path = path.parent / f"{path.stem}_clean_{uuid.uuid4().hex[:8]}.mp4"
+                        filter_str = f"delogo=x={x}:y={y}:w={w}:h={h}"
+
+                        try:
+                            # Basic ffmpeg delogo pass
+                            subprocess.run([
+                                "ffmpeg", "-y", "-i", str(path), "-vf", filter_str, "-c:a", "copy", str(temp_clean_path)
+                            ], check=True, capture_output=True)
+
+                            # Replace path with the new cleaned temporary path
+                            if temp_clean_path.exists():
+                                path = temp_clean_path
+                        except subprocess.CalledProcessError as exc:
+                            print(f"[WARN] FFmpeg delogo failed: {exc.stderr.decode('utf-8', errors='ignore')}")
+                            # Fallback to original path
+
                 try:
                     v_clip = VideoFileClip(str(path))
                 except Exception as e:

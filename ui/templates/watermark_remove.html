@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Watermark Remover{% endblock %}
+
+{% block content %}
+<h1>Watermark Remover</h1>
+<p>Upload a video, draw a box over the watermark, and remove it.</p>
+
+<form id="wmForm" style="margin-bottom: 1rem;">
+  <input type="file" id="videoInput" accept="video/*" required>
+</form>
+
+<div style="position: relative; display: inline-block;">
+  <video id="videoElement" style="display: none;" muted></video>
+  <canvas id="wmCanvas" style="border: 1px solid var(--border); max-width: 100%; display: none; cursor: crosshair;"></canvas>
+</div>
+
+<div id="controls" style="display: none; margin-top: 1rem;">
+  <button id="btnProcess" class="studio-btn primary-btn">Remove Watermark</button>
+  <p id="status" style="margin-top: 1rem; color: var(--accent2);"></p>
+</div>
+
+<script>
+const videoInput = document.getElementById('videoInput');
+const videoElement = document.getElementById('videoElement');
+const canvas = document.getElementById('wmCanvas');
+const ctx = canvas.getContext('2d');
+const btnProcess = document.getElementById('btnProcess');
+const statusEl = document.getElementById('status');
+
+let isDrawing = false;
+let startX = 0, startY = 0;
+let box = null;
+let scaleX = 1, scaleY = 1;
+
+videoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  videoElement.src = url;
+  videoElement.onloadeddata = () => {
+    // Set canvas internal resolution to video's intrinsic resolution
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    canvas.style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
+    // Draw first frame
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+  };
+});
+
+function drawFrameAndBox(currentX, currentY) {
+  // Clear and redraw video frame
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+  // Draw semi-transparent rectangle
+  if (currentX !== undefined && currentY !== undefined) {
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+    const w = currentX - startX;
+    const h = currentY - startY;
+    ctx.fillRect(startX, startY, w, h);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(startX, startY, w, h);
+  } else if (box) {
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+    ctx.fillRect(box.x, box.y, box.w, box.h);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(box.x, box.y, box.w, box.h);
+  }
+}
+
+function getMousePos(evt) {
+  const rect = canvas.getBoundingClientRect();
+  // Scale mouse coordinates to match canvas internal resolution
+  scaleX = canvas.width / rect.width;
+  scaleY = canvas.height / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY
+  };
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  isDrawing = true;
+  const pos = getMousePos(e);
+  startX = pos.x;
+  startY = pos.y;
+  box = null;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!isDrawing) return;
+  const pos = getMousePos(e);
+  drawFrameAndBox(pos.x, pos.y);
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  const pos = getMousePos(e);
+  const x = Math.min(startX, pos.x);
+  const y = Math.min(startY, pos.y);
+  const w = Math.abs(pos.x - startX);
+  const h = Math.abs(pos.y - startY);
+  box = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+  drawFrameAndBox();
+});
+
+btnProcess.addEventListener('click', async () => {
+  if (!box) return alert('Please draw a box over the watermark first.');
+  const file = videoInput.files[0];
+  if (!file) return;
+
+  statusEl.textContent = 'Uploading and processing...';
+  const formData = new FormData();
+  formData.append('video', file);
+  formData.append('x', box.x);
+  formData.append('y', box.y);
+  formData.append('w', box.w);
+  formData.append('h', box.h);
+
+  try {
+    const res = await fetch('/api/watermark/remove/standalone', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok) {
+      statusEl.innerHTML = `Success! <a href="${data.url}" target="_blank">Download Cleaned Video</a>`;
+    } else {
+      statusEl.textContent = 'Error: ' + data.error;
+    }
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+  }
+});
+</script>
+{% endblock %}

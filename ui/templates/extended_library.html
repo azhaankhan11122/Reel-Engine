@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extended Media Library</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='studio.css') }}">
+  <style>
+    body {
+      background: var(--bg-studio);
+      color: var(--text-normal);
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h2><i class="fa-solid fa-photo-film"></i> Extended Media Library</h2>
+  <div class="masonry-grid" id="extendedMediaGrid">
+    <p class="modal-loading-hint">Loading media library...</p>
+  </div>
+
+  <script>
+    async function loadMedia() {
+      const grid = document.getElementById('extendedMediaGrid');
+      try {
+        const res = await fetch('/api/studio/media/extended');
+        const data = await res.json();
+
+        if (data.media && data.media.length > 0) {
+          grid.innerHTML = '';
+          data.media.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'extended-media-card asset-card';
+            card.draggable = true;
+            card.style.position = 'relative';
+            card.style.cursor = 'grab';
+
+            card.dataset.asset = JSON.stringify({
+              url: item.url,
+              path: item.path,
+              name: item.name,
+              type: item.type || (item.name.endsWith('.mp4') ? 'video' : 'image'),
+              preview_url: item.preview_url || item.url
+            });
+
+            if (item.name.endsWith('.mp4') || item.name.endsWith('.webm')) {
+              card.innerHTML = `<video src="${item.url}" muted loop onmouseover="this.play()" onmouseout="this.pause()" style="width:100%; border-radius:8px; object-fit: cover; aspect-ratio: 9/16;"></video>`;
+            } else {
+              card.innerHTML = `<img src="${item.url}" style="width:100%; border-radius:8px; object-fit: cover; aspect-ratio: 9/16;">`;
+            }
+
+            const label = document.createElement('div');
+            label.className = 'asset-name';
+            label.textContent = item.name;
+            label.style.position = 'absolute';
+            label.style.bottom = '4px';
+            label.style.left = '4px';
+            label.style.right = '4px';
+            label.style.background = 'rgba(0,0,0,0.7)';
+            label.style.padding = '2px 4px';
+            label.style.fontSize = '10px';
+            label.style.borderRadius = '4px';
+            label.style.overflow = 'hidden';
+            label.style.textOverflow = 'ellipsis';
+            label.style.whiteSpace = 'nowrap';
+
+            card.appendChild(label);
+
+            card.addEventListener('dragstart', (e) => {
+              e.dataTransfer.setData('application/json', card.dataset.asset);
+              e.dataTransfer.effectAllowed = 'copy';
+            });
+
+            grid.appendChild(card);
+          });
+        } else {
+          grid.innerHTML = '<p class="modal-loading-hint">No media found.</p>';
+        }
+      } catch (err) {
+        console.error("Failed to load extended media", err);
+        grid.innerHTML = '<p class="modal-loading-hint danger">Error loading media library.</p>';
+      }
+    }
+
+    loadMedia();
+  </script>
+</body>
+</html>
