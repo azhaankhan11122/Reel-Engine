@@ -375,14 +375,212 @@
         <div id="tab-transitions" class="tab-content">
           <h3>Clips Transitions</h3>
           <p class="tab-helper-text">Add transition overlays between main video segments</p>
-          <div class="transitions-list">
-            <button class="transition-card" data-transition="none">
-              <i class="fa-solid fa-circle-notch"></i><span>None</span>
-            </button>
-            <button class="transition-card" data-transition="fade">
-              <i class="fa-solid fa-circle-half-stroke"></i><span>Fade Dissolve</span>
-            </button>
-          </div>
+<div class="transitions-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; max-height: 400px; overflow-y: auto;">
+  <button class="transition-card" data-transition="none">
+    <i class="fa-solid fa-circle-notch"></i><span>None</span>
+  </button>
+  <button class="transition-card" data-transition="cut" title="Cut (Hard Cut)">
+    <i class="fa-solid fa-scissors"></i><span>Cut (Hard Cut)</span>
+  </button>
+  <button class="transition-card" data-transition="cross_dissolve" title="Cross Dissolve">
+    <i class="fa-solid fa-circle-half-stroke"></i><span>Cross Dissolve</span>
+  </button>
+  <button class="transition-card" data-transition="fade_to_black_white" title="Fade to Black/White">
+    <i class="fa-solid fa-circle-half-stroke"></i><span>Fade to Black/White</span>
+  </button>
+  <button class="transition-card" data-transition="j-cut" title="J-Cut">
+    <i class="fa-solid fa-scissors"></i><span>J-Cut</span>
+  </button>
+  <button class="transition-card" data-transition="l-cut" title="L-Cut">
+    <i class="fa-solid fa-scissors"></i><span>L-Cut</span>
+  </button>
+  <button class="transition-card" data-transition="match_cut" title="Match Cut">
+    <i class="fa-solid fa-scissors"></i><span>Match Cut</span>
+  </button>
+  <button class="transition-card" data-transition="whip_pan" title="Whip Pan">
+    <i class="fa-solid fa-film"></i><span>Whip Pan</span>
+  </button>
+  <button class="transition-card" data-transition="zoom_transition" title="Zoom Transition">
+    <i class="fa-solid fa-magnifying-glass-plus"></i><span>Zoom Transition</span>
+  </button>
+  <button class="transition-card" data-transition="spin_dutch_angle" title="Spin/Dutch Angle">
+    <i class="fa-solid fa-film"></i><span>Spin/Dutch Angle</span>
+  </button>
+  <button class="transition-card" data-transition="morph_cut" title="Morph Cut">
+    <i class="fa-solid fa-scissors"></i><span>Morph Cut</span>
+  </button>
+  <button class="transition-card" data-transition="cross_fade" title="Cross Fade">
+    <i class="fa-solid fa-circle-half-stroke"></i><span>Cross Fade</span>
+  </button>
+  <button class="transition-card" data-transition="dip_to_black_white" title="Dip to Black/White">
+    <i class="fa-solid fa-film"></i><span>Dip to Black/White</span>
+  </button>
+  <button class="transition-card" data-transition="film_burn" title="Film Burn">
+    <i class="fa-solid fa-film"></i><span>Film Burn</span>
+  </button>
+  <button class="transition-card" data-transition="film_leak" title="Film Leak">
+    <i class="fa-solid fa-film"></i><span>Film Leak</span>
+  </button>
+  <button class="transition-card" data-transition="vhs_glitch" title="VHS Glitch">
+    <i class="fa-solid fa-bolt"></i><span>VHS Glitch</span>
+  </button>
+  <button class="transition-card" data-transition="crt_scanline" title="CRT/Scanline">
+    <i class="fa-solid fa-film"></i><span>CRT/Scanline</span>
+  </button>
+  <button class="transition-card" data-transition="vhs_rewind" title="VHS Rewind">
+    <i class="fa-solid fa-film"></i><span>VHS Rewind</span>
+  </button>
+  <button class="transition-card" data-transition="chromatic_aberration" title="Chromatic Aberration">
+    <i class="fa-solid fa-bolt"></i><span>Chromatic Aberration</span>
+  </button>
+  <button class="transition-card" data-transition="rgb_split" title="RGB Split">
+    <i class="fa-solid fa-bolt"></i><span>RGB Split</span>
+  </button>
+  <button class="transition-card" data-transition="pixel_sort" title="Pixel Sort">
+    <i class="fa-solid fa-film"></i><span>Pixel Sort</span>
+  </button>
+  <button class="transition-card" data-transition="static_noise" title="Static/Noise">
+    <i class="fa-solid fa-bolt"></i><span>Static/Noise</span>
+  </button>
+  <button class="transition-card" data-transition="clock_wipe" title="Clock Wipe">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Clock Wipe</span>
+  </button>
+  <button class="transition-card" data-transition="linear_wipe" title="Linear Wipe">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Linear Wipe</span>
+  </button>
+  <button class="transition-card" data-transition="radial_wipe" title="Radial Wipe">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Radial Wipe</span>
+  </button>
+  <button class="transition-card" data-transition="star_wipe" title="Star Wipe">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Star Wipe</span>
+  </button>
+  <button class="transition-card" data-transition="buffering_effect" title="Buffering Effect">
+    <i class="fa-solid fa-film"></i><span>Buffering Effect</span>
+  </button>
+  <button class="transition-card" data-transition="camera_flash" title="Camera Flash">
+    <i class="fa-solid fa-lightbulb"></i><span>Camera Flash</span>
+  </button>
+  <button class="transition-card" data-transition="lens_flare" title="Lens Flare">
+    <i class="fa-solid fa-film"></i><span>Lens Flare</span>
+  </button>
+  <button class="transition-card" data-transition="pan_&_zoom" title="Pan & Zoom">
+    <i class="fa-solid fa-magnifying-glass-plus"></i><span>Pan & Zoom</span>
+  </button>
+  <button class="transition-card" data-transition="smooth_zoom" title="Smooth Zoom">
+    <i class="fa-solid fa-magnifying-glass-plus"></i><span>Smooth Zoom</span>
+  </button>
+  <button class="transition-card" data-transition="swipe_left_right" title="Swipe Left/Right">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Swipe Left/Right</span>
+  </button>
+  <button class="transition-card" data-transition="swipe_up_down" title="Swipe Up/Down">
+    <i class="fa-solid fa-arrows-left-right"></i><span>Swipe Up/Down</span>
+  </button>
+  <button class="transition-card" data-transition="bounce" title="Bounce">
+    <i class="fa-solid fa-film"></i><span>Bounce</span>
+  </button>
+  <button class="transition-card" data-transition="shake" title="Shake">
+    <i class="fa-solid fa-film"></i><span>Shake</span>
+  </button>
+  <button class="transition-card" data-transition="pulse" title="Pulse">
+    <i class="fa-solid fa-film"></i><span>Pulse</span>
+  </button>
+  <button class="transition-card" data-transition="elastic_stretch" title="Elastic Stretch">
+    <i class="fa-solid fa-film"></i><span>Elastic Stretch</span>
+  </button>
+  <button class="transition-card" data-transition="motion_blur" title="Motion Blur">
+    <i class="fa-solid fa-film"></i><span>Motion Blur</span>
+  </button>
+  <button class="transition-card" data-transition="blackout_jump" title="Blackout Jump">
+    <i class="fa-solid fa-film"></i><span>Blackout Jump</span>
+  </button>
+  <button class="transition-card" data-transition="white_flash" title="White Flash">
+    <i class="fa-solid fa-lightbulb"></i><span>White Flash</span>
+  </button>
+  <button class="transition-card" data-transition="smash_cut" title="Smash Cut">
+    <i class="fa-solid fa-scissors"></i><span>Smash Cut</span>
+  </button>
+  <button class="transition-card" data-transition="invisible_cut" title="Invisible Cut">
+    <i class="fa-solid fa-scissors"></i><span>Invisible Cut</span>
+  </button>
+  <button class="transition-card" data-transition="morph" title="Morph">
+    <i class="fa-solid fa-film"></i><span>Morph</span>
+  </button>
+  <button class="transition-card" data-transition="particle_dissolve" title="Particle Dissolve">
+    <i class="fa-solid fa-circle-half-stroke"></i><span>Particle Dissolve</span>
+  </button>
+  <button class="transition-card" data-transition="light_streaks" title="Light Streaks">
+    <i class="fa-solid fa-lightbulb"></i><span>Light Streaks</span>
+  </button>
+  <button class="transition-card" data-transition="ray_of_light" title="Ray of Light">
+    <i class="fa-solid fa-lightbulb"></i><span>Ray of Light</span>
+  </button>
+  <button class="transition-card" data-transition="bokeh" title="Bokeh">
+    <i class="fa-solid fa-lightbulb"></i><span>Bokeh</span>
+  </button>
+  <button class="transition-card" data-transition="neon_glow" title="Neon Glow">
+    <i class="fa-solid fa-lightbulb"></i><span>Neon Glow</span>
+  </button>
+  <button class="transition-card" data-transition="color_wash" title="Color Wash">
+    <i class="fa-solid fa-palette"></i><span>Color Wash</span>
+  </button>
+  <button class="transition-card" data-transition="desaturation" title="desaturation">
+    <i class="fa-solid fa-film"></i><span>desaturation</span>
+  </button>
+  <button class="transition-card" data-transition="double_exposure" title="Double Exposure">
+    <i class="fa-solid fa-film"></i><span>Double Exposure</span>
+  </button>
+  <button class="transition-card" data-transition="stop_motion" title="Stop Motion">
+    <i class="fa-solid fa-film"></i><span>Stop Motion</span>
+  </button>
+  <button class="transition-card" data-transition="hand-drawn" title="Hand-Drawn">
+    <i class="fa-solid fa-film"></i><span>Hand-Drawn</span>
+  </button>
+  <button class="transition-card" data-transition="slide_split" title="Slide Split">
+    <i class="fa-solid fa-film"></i><span>Slide Split</span>
+  </button>
+  <button class="transition-card" data-transition="picture-in-picture" title="Picture-in-Picture">
+    <i class="fa-solid fa-film"></i><span>Picture-in-Picture</span>
+  </button>
+  <button class="transition-card" data-transition="parallax" title="Parallax">
+    <i class="fa-solid fa-film"></i><span>Parallax</span>
+  </button>
+  <button class="transition-card" data-transition="3d_flip" title="3D Flip">
+    <i class="fa-solid fa-cube"></i><span>3D Flip</span>
+  </button>
+  <button class="transition-card" data-transition="fly_through" title="Fly Through">
+    <i class="fa-solid fa-film"></i><span>Fly Through</span>
+  </button>
+  <button class="transition-card" data-transition="glitch_dissolve" title="Glitch Dissolve">
+    <i class="fa-solid fa-circle-half-stroke"></i><span>Glitch Dissolve</span>
+  </button>
+  <button class="transition-card" data-transition="velocity_edit" title="Velocity Edit">
+    <i class="fa-solid fa-film"></i><span>Velocity Edit</span>
+  </button>
+  <button class="transition-card" data-transition="speed_ramp" title="Speed Ramp">
+    <i class="fa-solid fa-film"></i><span>Speed Ramp</span>
+  </button>
+  <button class="transition-card" data-transition="freeze_frame" title="Freeze Frame">
+    <i class="fa-solid fa-film"></i><span>Freeze Frame</span>
+  </button>
+  <button class="transition-card" data-transition="time_reverse" title="Time Reverse">
+    <i class="fa-solid fa-film"></i><span>Time Reverse</span>
+  </button>
+  <button class="transition-card" data-transition="slip_edit" title="Slip Edit">
+    <i class="fa-solid fa-film"></i><span>Slip Edit</span>
+  </button>
+  <button class="transition-card" data-transition="rolling_shutter" title="Rolling Shutter">
+    <i class="fa-solid fa-film"></i><span>Rolling Shutter</span>
+  </button>
+  <button class="transition-card" data-transition="film_grain" title="Film Grain">
+    <i class="fa-solid fa-film"></i><span>Film Grain</span>
+  </button>
+  <button class="transition-card" data-transition="letterbox" title="Letterbox">
+    <i class="fa-solid fa-film"></i><span>Letterbox</span>
+  </button>
+  <button class="transition-card" data-transition="split_screen" title="Split Screen">
+    <i class="fa-solid fa-film"></i><span>Split Screen</span>
+  </button>
+</div>
         </div>
       </div>
     </div>
