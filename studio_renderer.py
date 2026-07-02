@@ -360,10 +360,6 @@ def render_studio_project(project_data, output_path, progress_callback=None):
                 delogo_data = clip_data.get("watermark_delogo")
                 if delogo_data:
                     # Pre-process clip with FFmpeg delogo
-                    import subprocess
-                    import uuid
-                    import shutil
-                    from pathlib import Path
 
                     x = delogo_data.get("x", 0)
                     y = delogo_data.get("y", 0)

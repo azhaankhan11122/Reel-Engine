@@ -913,6 +913,11 @@ def serve_gameplay(filename):
 def serve_studio_upload(filename):
     return send_from_directory(STUDIO_UPLOAD_DIR, filename)
 
+
+@app.route("/studio/extended-library")
+def studio_extended_library():
+    return render_template("extended_library.html")
+
 @app.route("/studio")
 def studio_editor():
     return render_template("studio.html")

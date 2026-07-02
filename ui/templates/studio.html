@@ -6,12 +6,14 @@
   <title>Reel Studio — Editor</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='studio.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Arsen&family=Avelline&family=Avenir&family=Bebas+Neue&family=Bodoni&family=Canela&family=Caslon&family=Chivo&family=Cinzel&family=Cormorant+Garamond&family=Deloiré&family=Deluce&family=Didot&family=Ethos+Nova&family=Futura&family=Gt+Walsheim&family=Gamgote&family=Garamond&family=Gatling&family=Giften+Cray&family=Gilda+Script&family=Glamour&family=Grandiose&family=Helvetica+Neue&family=Inter&family=Italic&family=Jost&family=Kento&family=Lora&family=Luxury+Modish&family=Maison+Neue&family=Marlin&family=Merriweather&family=Mikea&family=Mindset&family=Monreal&family=Montelia&family=Montserrat&family=Neue+Haas+Unica&family=Noto+Serif+Display&family=Open+Sans&family=Pacifico&family=Parisienne&family=Playfair+Display&family=Priscyla&family=Proximity+Sans&family=Quattrocento&family=Quirtty&family=Raleway&family=Recoleta&family=Roboto&family=Sacramento&family=Saudah&family=Senja+Mentor&family=Sifonn&family=Source+Sans+Pro&family=Spectral&family=Syne&family=Tundra&family=Valencia&family=Variable+Sans&family=Walkester&family=Wyattruly&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="studio-body">
   <div class="bg-glow"></div>
+  <div class="bg-grain"></div>
 
   <!-- Top Bar -->
   <header class="studio-header">
@@ -137,13 +139,194 @@
 
         <!-- Text Tab -->
         <div id="tab-text" class="tab-content">
-          <h3>Text Overlays</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Text Overlays</h3>
+            <div>
+              <button id="btnTextPresets" class="studio-btn primary-btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Presets</button>
+              <button id="btnTextCombos" class="studio-btn secondary-btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Combos</button>
+            </div>
+          </div>
           <p class="tab-helper-text">Add custom text to your video timeline</p>
-          <div class="text-presets">
+          <div class="text-presets" id="textPresetsGrid">
             <button class="preset-text-btn add-heading" data-preset="heading">Add Heading Text</button>
             <button class="preset-text-btn add-subheading" data-preset="subheading">Add Subheading</button>
             <button class="preset-text-btn add-paragraph" data-preset="paragraph">Add Body Text</button>
           </div>
+<div class="font-combos-grid" id="fontCombosGrid" style="display: none; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+  <button class="font-combo-btn" data-heading="Playfair Display" data-body="Source Sans Pro" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Playfair Display', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Playfair Display</div>
+    <div style="font-family: 'Source Sans Pro', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Source Sans Pro</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Futura" data-body="Garamond" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Futura', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Futura</div>
+    <div style="font-family: 'Garamond', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Garamond</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Neue Haas Unica" data-body="Caslon" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Neue Haas Unica', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Neue Haas Unica</div>
+    <div style="font-family: 'Caslon', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Caslon</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Montserrat" data-body="Merriweather" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Montserrat', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Montserrat</div>
+    <div style="font-family: 'Merriweather', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Merriweather</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Didot" data-body="Avenir" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Didot', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Didot</div>
+    <div style="font-family: 'Avenir', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Avenir</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Cormorant Garamond" data-body="Montserrat" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Cormorant Garamond', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Cormorant Garamond</div>
+    <div style="font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Montserrat</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Bodoni" data-body="Raleway" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Bodoni', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Bodoni</div>
+    <div style="font-family: 'Raleway', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Raleway</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Gilda Script" data-body="Open Sans" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Gilda Script', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Gilda Script</div>
+    <div style="font-family: 'Open Sans', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Open Sans</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Lora" data-body="Futura" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Lora', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Lora</div>
+    <div style="font-family: 'Futura', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Futura</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Spectral" data-body="Inter" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Spectral', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Spectral</div>
+    <div style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Inter</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Canela" data-body="Maison Neue" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Canela', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Canela</div>
+    <div style="font-family: 'Maison Neue', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Maison Neue</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Recoleta" data-body="GT Walsheim" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Recoleta', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Recoleta</div>
+    <div style="font-family: 'GT Walsheim', sans-serif; font-size: 0.8rem; color: var(--text-muted);">GT Walsheim</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Caslon" data-body="Neue Haas Unica" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Caslon', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Caslon</div>
+    <div style="font-family: 'Neue Haas Unica', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Neue Haas Unica</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Didot" data-body="Roboto" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Didot', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Didot</div>
+    <div style="font-family: 'Roboto', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Roboto</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Playfair Display" data-body="Pacifico" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Playfair Display', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Playfair Display</div>
+    <div style="font-family: 'Pacifico', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Pacifico</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Bodoni" data-body="Futura" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Bodoni', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Bodoni</div>
+    <div style="font-family: 'Futura', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Futura</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Cinzel" data-body="Quattrocento" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Cinzel', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Cinzel</div>
+    <div style="font-family: 'Quattrocento', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Quattrocento</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Parisienne" data-body="Lora" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Parisienne', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Parisienne</div>
+    <div style="font-family: 'Lora', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Lora</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Sacramento" data-body="Playfair Display" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Sacramento', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Sacramento</div>
+    <div style="font-family: 'Playfair Display', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Playfair Display</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Playfair Display" data-body="Merriweather" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Playfair Display', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Playfair Display</div>
+    <div style="font-family: 'Merriweather', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Merriweather</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Cormorant Garamond" data-body="Montserrat" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Cormorant Garamond', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Cormorant Garamond</div>
+    <div style="font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Montserrat</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Playfair Display" data-body="Inter" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Playfair Display', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Playfair Display</div>
+    <div style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Inter</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Sifonn" data-body="Bebas Neue" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Sifonn', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Sifonn</div>
+    <div style="font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Bebas Neue</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Arsen" data-body="Arsen" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Arsen', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Arsen (Modern)</div>
+    <div style="font-family: 'Arsen', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Arsen (Script)</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Walkester" data-body="Walkester" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Walkester', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Walkester (Serif)</div>
+    <div style="font-family: 'Walkester', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Walkester (Script)</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Mindset" data-body="Mindset" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Mindset', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Mindset (Bold)</div>
+    <div style="font-family: 'Mindset', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Mindset (Script)</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Neue Haas Unica" data-body="Caslon" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Neue Haas Unica', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Neue Haas Unica</div>
+    <div style="font-family: 'Caslon', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Caslon</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Didot" data-body="Helvetica Neue" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Didot', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Didot</div>
+    <div style="font-family: 'Helvetica Neue', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Helvetica Neue</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Monreal" data-body="Ethos Nova" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Monreal', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Monreal</div>
+    <div style="font-family: 'Ethos Nova', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Ethos Nova</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Mikea" data-body="Montelia" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Mikea', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Mikea</div>
+    <div style="font-family: 'Montelia', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Montelia</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Wyattruly" data-body="Proximity Sans" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Wyattruly', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Wyattruly</div>
+    <div style="font-family: 'Proximity Sans', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Proximity Sans</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Priscyla" data-body="Glamour" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Priscyla', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Priscyla</div>
+    <div style="font-family: 'Glamour', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Glamour</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Saudah" data-body="Luxury Modish" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Saudah', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Saudah</div>
+    <div style="font-family: 'Luxury Modish', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Luxury Modish</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Avelline" data-body="Marlin" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Avelline', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Avelline</div>
+    <div style="font-family: 'Marlin', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Marlin</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Deloiré" data-body="Senja Mentor" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Deloiré', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Deloiré</div>
+    <div style="font-family: 'Senja Mentor', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Senja Mentor</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Valencia" data-body="Quirtty" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Valencia', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Valencia</div>
+    <div style="font-family: 'Quirtty', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Quirtty</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Gamgote" data-body="Kento" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Gamgote', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Gamgote Luxurious</div>
+    <div style="font-family: 'Kento', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Kento</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Giften Cray" data-body="Tundra" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Giften Cray', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Giften Cray</div>
+    <div style="font-family: 'Tundra', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Tundra</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Deluce" data-body="Grandiose" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Deluce', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Deluce</div>
+    <div style="font-family: 'Grandiose', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Grandiose</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Gatling" data-body="Variable Sans" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Gatling', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Gatling</div>
+    <div style="font-family: 'Variable Sans', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Variable Sans</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Jost" data-body="Italic" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Jost', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Jost 200</div>
+    <div style="font-family: 'Italic', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Italic</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Syne" data-body="Chivo" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Syne Extra Bold</div>
+    <div style="font-family: 'Chivo', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Chivo Light</div>
+  </button>
+  <button class="font-combo-btn" data-heading="Noto Serif Display" data-body="Jost" style="padding: 0.5rem; background: var(--surface2); border: 1px solid var(--border-studio); border-radius: 6px; text-align: left; cursor: pointer;">
+    <div style="font-family: 'Noto Serif Display', sans-serif; font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-normal);">Noto Serif Display</div>
+    <div style="font-family: 'Jost', sans-serif; font-size: 0.8rem; color: var(--text-muted);">Jost</div>
+  </button>
+</div>
+
         </div>
 
         <!-- Captions Tab -->
@@ -392,14 +575,69 @@
           <div class="field">
             <label>Font Family</label>
             <select id="propTextFontFamily">
-              <option value="impact">Impact</option>
-              <option value="arial_black">Arial Black</option>
-              <option value="montserrat">Montserrat Black</option>
-              <option value="bold">Bold Sans</option>
-              <option value="orbitron">Orbitron</option>
-              <option value="audiowide">Audiowide</option>
-              <option value="share_tech">Share Tech</option>
-              <option value="press_start">Press Start</option>
+              <option value="arsen">Arsen</option>
+              <option value="avelline">Avelline</option>
+              <option value="avenir">Avenir</option>
+              <option value="bebas_neue">Bebas Neue</option>
+              <option value="bodoni">Bodoni</option>
+              <option value="canela">Canela</option>
+              <option value="caslon">Caslon</option>
+              <option value="chivo">Chivo</option>
+              <option value="cinzel">Cinzel</option>
+              <option value="cormorant_garamond">Cormorant Garamond</option>
+              <option value="deloiré">Deloiré</option>
+              <option value="deluce">Deluce</option>
+              <option value="didot">Didot</option>
+              <option value="ethos_nova">Ethos Nova</option>
+              <option value="futura">Futura</option>
+              <option value="gt_walsheim">Gt Walsheim</option>
+              <option value="gamgote">Gamgote</option>
+              <option value="garamond">Garamond</option>
+              <option value="gatling">Gatling</option>
+              <option value="giften_cray">Giften Cray</option>
+              <option value="gilda_script">Gilda Script</option>
+              <option value="glamour">Glamour</option>
+              <option value="grandiose">Grandiose</option>
+              <option value="helvetica_neue">Helvetica Neue</option>
+              <option value="inter">Inter</option>
+              <option value="italic">Italic</option>
+              <option value="jost">Jost</option>
+              <option value="kento">Kento</option>
+              <option value="lora">Lora</option>
+              <option value="luxury_modish">Luxury Modish</option>
+              <option value="maison_neue">Maison Neue</option>
+              <option value="marlin">Marlin</option>
+              <option value="merriweather">Merriweather</option>
+              <option value="mikea">Mikea</option>
+              <option value="mindset">Mindset</option>
+              <option value="monreal">Monreal</option>
+              <option value="montelia">Montelia</option>
+              <option value="montserrat">Montserrat</option>
+              <option value="neue_haas_unica">Neue Haas Unica</option>
+              <option value="noto_serif_display">Noto Serif Display</option>
+              <option value="open_sans">Open Sans</option>
+              <option value="pacifico">Pacifico</option>
+              <option value="parisienne">Parisienne</option>
+              <option value="playfair_display">Playfair Display</option>
+              <option value="priscyla">Priscyla</option>
+              <option value="proximity_sans">Proximity Sans</option>
+              <option value="quattrocento">Quattrocento</option>
+              <option value="quirtty">Quirtty</option>
+              <option value="raleway">Raleway</option>
+              <option value="recoleta">Recoleta</option>
+              <option value="roboto">Roboto</option>
+              <option value="sacramento">Sacramento</option>
+              <option value="saudah">Saudah</option>
+              <option value="senja_mentor">Senja Mentor</option>
+              <option value="sifonn">Sifonn</option>
+              <option value="source_sans_pro">Source Sans Pro</option>
+              <option value="spectral">Spectral</option>
+              <option value="syne">Syne</option>
+              <option value="tundra">Tundra</option>
+              <option value="valencia">Valencia</option>
+              <option value="variable_sans">Variable Sans</option>
+              <option value="walkester">Walkester</option>
+              <option value="wyattruly">Wyattruly</option>
             </select>
           </div>
         </div>
@@ -547,21 +785,6 @@
     </div>
   </div>
 
-  <!-- Extended Media Library Modal -->
-  <div class="studio-modal" id="extendedMediaModal">
-    <div class="modal-dialog" style="max-width: 90vw; width: 90vw; height: 90vh; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-photo-film"></i> Extended Media Library</h3>
-        <button class="modal-close" id="btnExtendedMediaClose">&times;</button>
-      </div>
-      <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 1rem;">
-        <div class="masonry-grid" id="extendedMediaGrid">
-          <!-- Dynamically populated from backend -->
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Load Projects Modal dialog -->
   <div class="studio-modal" id="projectsModal">
     <div class="modal-dialog">
@@ -638,5 +861,6 @@
 
   <!-- Client-side logic scripts -->
   <script src="{{ url_for('static', filename='studio.js') }}"></script>
+  <div id="magnetic-cursor"></div>
 </body>
 </html>
