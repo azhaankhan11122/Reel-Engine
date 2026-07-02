@@ -53,6 +53,116 @@ function initUI() {
     document.getElementById('projectsModal').classList.remove('active');
   });
 
+
+  // Timeline Resizer Logic
+  const timelineResizer = document.getElementById('timelineResizer');
+  const timelinePanel = document.getElementById('timelinePanel');
+  let isResizingTimeline = false;
+
+  if (timelineResizer && timelinePanel) {
+    timelineResizer.addEventListener('mousedown', (e) => {
+      isResizingTimeline = true;
+      timelineResizer.classList.add('resizing');
+      document.body.style.cursor = 'row-resize';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizingTimeline) return;
+      const newHeight = window.innerHeight - e.clientY;
+      const minHeight = 100;
+      const maxHeight = window.innerHeight * 0.8;
+
+      if (newHeight >= minHeight && newHeight <= maxHeight) {
+        timelinePanel.style.height = newHeight + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizingTimeline) {
+        isResizingTimeline = false;
+        timelineResizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+      }
+    });
+  }
+
+  // Extended Media Library Logic
+  const extendedMediaModal = document.getElementById('extendedMediaModal');
+  const btnExtendedMediaLibrary = document.getElementById('btnExtendedMediaLibrary');
+  const btnExtendedMediaClose = document.getElementById('btnExtendedMediaClose');
+  const extendedMediaGrid = document.getElementById('extendedMediaGrid');
+
+  if (btnExtendedMediaLibrary && extendedMediaModal) {
+    btnExtendedMediaLibrary.addEventListener('click', async () => {
+      extendedMediaModal.classList.add('active');
+      extendedMediaGrid.innerHTML = '<p class="modal-loading-hint">Loading media library...</p>';
+
+      try {
+        const res = await fetch('/api/studio/media/extended');
+        const data = await res.json();
+
+        if (data.media && data.media.length > 0) {
+          extendedMediaGrid.innerHTML = '';
+          data.media.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'extended-media-card asset-card';
+            card.draggable = true;
+            card.style.position = 'relative';
+            card.style.cursor = 'grab';
+
+            card.dataset.asset = JSON.stringify({
+              url: item.url,
+              path: item.path,
+              name: item.name,
+              type: item.type || (item.name.endsWith('.mp4') ? 'video' : 'image'),
+              preview_url: item.preview_url || item.url
+            });
+
+            if (item.name.endsWith('.mp4') || item.name.endsWith('.webm')) {
+              card.innerHTML = `<video src="${item.url}" muted loop onmouseover="this.play()" onmouseout="this.pause()" style="width:100%; border-radius:8px; object-fit: cover; aspect-ratio: 9/16;"></video>`;
+            } else {
+              card.innerHTML = `<img src="${item.url}" style="width:100%; border-radius:8px; object-fit: cover; aspect-ratio: 9/16;">`;
+            }
+
+            const label = document.createElement('div');
+            label.className = 'asset-name';
+            label.textContent = item.name;
+            label.style.position = 'absolute';
+            label.style.bottom = '4px';
+            label.style.left = '4px';
+            label.style.right = '4px';
+            label.style.background = 'rgba(0,0,0,0.7)';
+            label.style.padding = '2px 4px';
+            label.style.fontSize = '10px';
+            label.style.borderRadius = '4px';
+            label.style.overflow = 'hidden';
+            label.style.textOverflow = 'ellipsis';
+            label.style.whiteSpace = 'nowrap';
+
+            card.appendChild(label);
+
+            card.addEventListener('dragstart', (e) => {
+              e.dataTransfer.setData('application/json', card.dataset.asset);
+              e.dataTransfer.effectAllowed = 'copy';
+            });
+
+            extendedMediaGrid.appendChild(card);
+          });
+        } else {
+          extendedMediaGrid.innerHTML = '<p class="modal-loading-hint">No media found.</p>';
+        }
+      } catch (err) {
+        console.error("Failed to load extended media", err);
+        extendedMediaGrid.innerHTML = '<p class="modal-loading-hint danger">Error loading media library.</p>';
+      }
+    });
+
+    btnExtendedMediaClose.addEventListener('click', () => {
+      extendedMediaModal.classList.remove('active');
+    });
+  }
+
   document.getElementById('btnLoadProject').addEventListener('click', () => {
     document.getElementById('projectsModal').classList.add('active');
     loadProjectList();
@@ -1003,6 +1113,12 @@ function setupTrackDropZones() {
     });
     
     trackEl.addEventListener('drop', (e) => {
+      // Extended media modal close logic
+      const extendedMediaModal = document.getElementById('extendedMediaModal');
+      if (extendedMediaModal && extendedMediaModal.classList.contains('active')) {
+          extendedMediaModal.classList.remove('active');
+      }
+
       e.preventDefault();
       const assetId = e.dataTransfer.getData('text/plain');
       const trackId = trackEl.getAttribute('data-track-id');

@@ -332,6 +332,46 @@ def instagram_custom_edit():
     return render_template("instagram_custom_edit.html")
 
 
+
+@app.route("/watermark-remove")
+def watermark_remove():
+    return render_template("watermark_remove.html")
+
+@app.route("/api/watermark/remove/standalone", methods=["POST"])
+def api_watermark_remove_standalone():
+    video = request.files.get("video")
+    if not video:
+        return jsonify({"error": "No video uploaded"}), 400
+
+    try:
+        x = int(float(request.form.get("x", 0)))
+        y = int(float(request.form.get("y", 0)))
+        w = int(float(request.form.get("w", 0)))
+        h = int(float(request.form.get("h", 0)))
+    except ValueError:
+        return jsonify({"error": "Invalid coordinates"}), 400
+
+    job_id = str(uuid.uuid4())[:8]
+    ext = Path(secure_filename(video.filename)).suffix or ".mp4"
+    src_name = f"wm_remove_src_{job_id}{ext}"
+    src_path = UPLOAD_DIR / src_name
+    video.save(str(src_path))
+
+    out_name = f"wm_remove_out_{job_id}.mp4"
+    out_path = OUTPUT_DIR / out_name
+
+    filter_str = f"delogo=x={x}:y={y}:w={w}:h={h}"
+
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", str(src_path), "-vf", filter_str, "-c:a", "copy", str(out_path)
+        ], check=True, capture_output=True)
+    except subprocess.CalledProcessError as exc:
+        err_msg = exc.stderr.decode("utf-8", errors="ignore")
+        return jsonify({"error": f"FFmpeg error: {err_msg}"}), 500
+
+    return jsonify({"url": f"/output/{out_name}"})
+
 @app.route('/watermark')
 def watermark_mode():
     return render_template('watermark.html')
@@ -837,6 +877,37 @@ STUDIO_UPLOAD_DIR = PROJECT_DIR / "studio_uploads"
 STUDIO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 STUDIO_SESSIONS_DIR = SESSIONS_DIR / "studio"
 STUDIO_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@app.route("/api/studio/media/extended", methods=["GET"])
+def api_studio_media_extended():
+    media = []
+    # Fetch from UPLOAD_DIR
+    if UPLOAD_DIR.exists():
+        for p in UPLOAD_DIR.iterdir():
+            if p.is_file() and p.suffix.lower() in [".mp4", ".jpg", ".jpeg", ".png", ".webp", ".webm"]:
+                media.append({
+                    "name": p.name,
+                    "url": f"/uploads/{p.name}",
+                    "path": str(p),
+                    "type": "video" if p.suffix.lower() in [".mp4", ".webm"] else "image"
+                })
+    # Fetch from GAMEPLAY_DIR
+    if GAMEPLAY_DIR.exists():
+        for p in GAMEPLAY_DIR.iterdir():
+            if p.is_file() and p.suffix.lower() in [".mp4", ".webm"]:
+                media.append({
+                    "name": p.name,
+                    "url": f"/gameplay/{p.name}",
+                    "path": str(p),
+                    "type": "video"
+                })
+    return jsonify({"media": media})
+
+@app.route("/gameplay/<path:filename>")
+def serve_gameplay(filename):
+    return send_from_directory(GAMEPLAY_DIR, filename)
+
 
 @app.route("/studio_uploads/<path:filename>")
 def serve_studio_upload(filename):
