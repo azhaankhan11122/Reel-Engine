@@ -2579,40 +2579,38 @@ function startExport() {
 }
 
 function pollExportStatus(jobId) {
-  const interval = setInterval(() => {
-    fetch(`/api/status/${jobId}`)
-    .then(res => res.json())
-    .then(job => {
-      if (job.error) {
-        clearInterval(interval);
-        document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Error: ${job.error}</span>`;
-        return;
-      }
+  const source = new EventSource(`/api/status/stream/${jobId}`);
+  source.onmessage = function(event) {
+    const job = JSON.parse(event.data);
+    if (job.error) {
+      source.close();
+      document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Error: ${job.error}</span>`;
+      return;
+    }
+
+    const pct = job.percent || 0;
+    document.getElementById('exportProgressFill').style.width = `${pct}%`;
+    document.getElementById('exportProgressPct').textContent = `${pct}%`;
+    document.getElementById('exportStatusMsg').textContent = job.message || "Rendering...";
+
+    if (job.status === 'done') {
+      source.close();
+      document.getElementById('exportStatusMsg').textContent = "Video rendered successfully!";
       
-      const pct = job.percent || 0;
-      document.getElementById('exportProgressFill').style.width = `${pct}%`;
-      document.getElementById('exportProgressPct').textContent = `${pct}%`;
-      document.getElementById('exportStatusMsg').textContent = job.message || "Rendering...";
+      const resBox = document.getElementById('exportResultBox');
+      resBox.style.display = "flex";
       
-      if (job.status === 'done') {
-        clearInterval(interval);
-        document.getElementById('exportStatusMsg').textContent = "Video rendered successfully!";
-        
-        const resBox = document.getElementById('exportResultBox');
-        resBox.style.display = "flex";
-        
-        const dlBtn = document.getElementById('btnDownloadRenderedVideo');
-        dlBtn.href = job.result.video_url;
-      } else if (job.status === 'error') {
-        clearInterval(interval);
-        document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Render Error: ${job.message}</span>`;
-      }
-    })
-    .catch(err => {
-      clearInterval(interval);
-      document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Polling Fail: ${err}</span>`;
-    });
-  }, 1000);
+      const dlBtn = document.getElementById('btnDownloadRenderedVideo');
+      dlBtn.href = job.result.video_url;
+    } else if (job.status === 'error') {
+      source.close();
+      document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Render Error: ${job.message}</span>`;
+    }
+  };
+  source.onerror = function(err) {
+    source.close();
+    document.getElementById('exportStatusMsg').innerHTML = `<span style="color:var(--danger-color)">Polling Fail: SSE Error</span>`;
+  };
 }
 
 // UTILITIES AND HELPERS
