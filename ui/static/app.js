@@ -1,11 +1,20 @@
-async function pollJob(jobId, onUpdate) {
-  while (true) {
-    const res = await fetch(`/api/status/${jobId}`);
-    const data = await res.json();
-    onUpdate(data);
-    if (data.status === "done" || data.status === "error") break;
-    await new Promise((r) => setTimeout(r, 2000));
-  }
+function pollJob(jobId, onUpdate) {
+  return new Promise((resolve) => {
+    const source = new EventSource(`/api/status/stream/${jobId}`);
+    source.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      onUpdate(data);
+      if (data.status === "done" || data.status === "error") {
+        source.close();
+        resolve();
+      }
+    };
+    source.onerror = function() {
+      source.close();
+      onUpdate({status: "error", message: "SSE Connection lost."});
+      resolve();
+    };
+  });
 }
 
 function showStatus(panelId, message) {

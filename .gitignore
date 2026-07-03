@@ -18,3 +18,5 @@ output/
 sessions/
 temp/
 uploads/
+node_modules/
+ui/jobs.db

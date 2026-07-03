@@ -1,3 +1,4 @@
+from flask import Response
 #!/usr/bin/env python3
 """Web UI for Reel Engine — AI Mode (wizard) & Manual Mode."""
 
@@ -11,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, Response, jsonify, render_template, request, send_from_directory
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -42,6 +43,8 @@ from make_shorts import (
     make_caption_chunks,
 )
 from studio_renderer import render_studio_project
+import queue_manager as qm
+qm.engine_queue.start()
 
 
 UPLOAD_DIR = PROJECT_DIR / "uploads"
@@ -84,26 +87,8 @@ def _run_async(coro):
         loop.close()
 
 
-def _start_job(job_id: str, target):
-    def worker():
-        jobs[job_id]["status"] = "running"
-        jobs[job_id]["message"] = "Processing..."
-        jobs[job_id].setdefault("percent", 0)
-        try:
-            result = target()
-            jobs[job_id].update({
-                "status": "done",
-                "message": "Video ready!",
-                "result": result,
-            })
-        except Exception as e:
-            jobs[job_id].update({
-                "status": "error",
-                "message": str(e),
-                "trace": traceback.format_exc(),
-            })
-
-    threading.Thread(target=worker, daemon=True).start()
+def _start_job(job_id: str, target, *args, **kwargs):
+    qm.engine_queue.submit(job_id, target, *args, **kwargs)
 
 
 def _parse_music_volume(raw, default=0.15):
@@ -490,35 +475,8 @@ def api_instagram_assemble():
         "created": datetime.now().isoformat(),
     }
 
-    def task():
-        def progress_cb(pct, msg=None):
-            jobs[job_id]["percent"] = int(pct)
-            if msg:
-                jobs[job_id]["message"] = msg
-
-        # mark rendering started
-        jobs[job_id]["percent"] = 5
-        out_path = _run_async(
-            run_manual_pipeline(
-                background_path,
-                text,
-                OUTPUT_DIR,
-                TEMP_DIR,
-                style,
-                music_path=music_path,
-                music_volume=music_volume if music_path else 0,
-                voice=voice,
-                progress_callback=progress_cb,
-            )
-        )
-        # Optionally apply watermark post-process
-        final_path = out_path
-        if watermark_text:
-            final_path = _apply_watermark(final_path, watermark_text, watermark_position, watermark_opacity)
-        jobs[job_id]["percent"] = 100
-        return {"video_url": f"/output/{final_path.name}"}
-
-    _start_job(job_id, task)
+    qm.create_job(job_id, status="queued", message="Assembling Instagram Short...", mode="instagram")
+    _start_job(job_id, _task_instagram_assemble, job_id, background_path, text, style, music_path, music_volume, voice, watermark_text, watermark_position, watermark_opacity)
     return jsonify({"job_id": job_id})
 
 
@@ -652,29 +610,8 @@ def api_ai_assemble():
 
     out_name = f"shorts_ai_{job_id}.mp4"
 
-    def task():
-        out_path = _run_async(
-            run_ai_assemble(
-                script,
-                media_paths,
-                OUTPUT_DIR,
-                TEMP_DIR,
-                caption_style=style,
-                voice=voice,
-                music_path=music_path,
-                music_volume=music_volume if music_path else 0,
-                out_name=out_name,
-            )
-        )
-        final = out_path
-        if watermark_text:
-            final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
-        return {
-            "video_url": f"/output/{final.name}",
-            "script": script,
-        }
-
-    _start_job(job_id, task)
+    qm.create_job(job_id, status="queued", message="Assembling your Short...", mode="ai")
+    _start_job(job_id, _task_ai_assemble, script, media_paths, style, voice, music_path, music_volume, out_name, watermark_text, watermark_position, watermark_opacity)
     return jsonify({"job_id": job_id})
 
 
@@ -719,40 +656,61 @@ def api_manual_generate():
         "created": datetime.now().isoformat(),
     }
 
-    def task():
-        out_path = _run_async(
-            run_manual_pipeline(
-                video_path, text, OUTPUT_DIR, TEMP_DIR, style,
-                music_path=music_path,
-                music_volume=music_volume if music_path else 0,
-            )
-        )
-        final = out_path
-        if watermark_text:
-            final = _apply_watermark(final, watermark_text, watermark_position, watermark_opacity)
-            return {"video_url": f"/output/{final.name}"}
-        return {"video_url": f"/output/{out_path.name}"}
-
-    _start_job(job_id, task)
+    qm.create_job(job_id, status="queued", message="Starting manual pipeline...", mode="manual")
+    _start_job(job_id, _task_manual_generate, video_path, text, style, music_path, music_volume, watermark_text, watermark_position, watermark_opacity)
     return jsonify({"job_id": job_id})
 
 
 @app.route("/api/status/<job_id>")
 def api_status(job_id):
-    job = jobs.get(job_id)
+    job = qm.get_job(job_id) or jobs.get(job_id)
     if not job:
         return jsonify({"error": "Job not found."}), 404
     payload = {
         "status": job["status"],
         "message": job["message"],
         "mode": job.get("mode"),
-        "percent": int(job.get("percent", 0)),
+        "percent": int(job.get("percent") or 0),
     }
     if job["status"] == "done":
         payload["result"] = job.get("result", {})
     if job["status"] == "error" and app.debug:
         payload["trace"] = job.get("trace")
     return jsonify(payload)
+
+@app.route("/api/status/stream/<job_id>")
+def api_status_stream(job_id):
+    import json
+    import time
+    def generate():
+        last_status = None
+        while True:
+            job = qm.get_job(job_id) or jobs.get(job_id)
+            if not job:
+                yield f"data: {json.dumps({'error': 'Job not found'})}\n\n"
+                break
+
+            payload = {
+                "status": job["status"],
+                "message": job["message"],
+                "mode": job.get("mode"),
+                "percent": int(job.get("percent") or 0),
+            }
+            if job["status"] == "done":
+                payload["result"] = job.get("result", {})
+            if job["status"] == "error" and app.debug:
+                payload["trace"] = job.get("trace")
+
+            current_status = json.dumps(payload)
+            if current_status != last_status:
+                yield f"data: {current_status}\n\n"
+                last_status = current_status
+
+            if job["status"] in ["done", "error"]:
+                break
+            time.sleep(0.5)
+
+    return Response(generate(), mimetype="text/event-stream")
 
 
 @app.route("/ai-session/<session_id>/<path:filename>")
@@ -853,21 +811,8 @@ def api_watermark():
         'created': datetime.now().isoformat(),
     }
 
-    def task():
-        try:
-            jobs[job_id]['status'] = 'running'
-            jobs[job_id]['percent'] = 5
-            jobs[job_id]['message'] = 'Applying watermark...'
-            # Use MoviePy based watermark implementation
-            final_path = _apply_watermark(src_path, watermark_text, 'bottom-right', opacity_pct)
-            jobs[job_id]['percent'] = 100
-            jobs[job_id]['message'] = 'Watermark complete.'
-            return {'video_url': f'/output/{final_path.name}'}
-        except Exception as exc:
-            jobs[job_id].update({'status': 'error', 'message': str(exc)})
-            raise
-
-    _start_job(job_id, task)
+    qm.create_job(job_id, status="queued", message="Preparing watermark job...", mode="watermark")
+    _start_job(job_id, _task_watermark, job_id, src_path, watermark_text, opacity_pct)
     return jsonify({'job_id': job_id})
 
 
@@ -1444,16 +1389,8 @@ def api_studio_render():
         "created": datetime.now().isoformat(),
     }
     
-    def task():
-        def progress_cb(pct, msg=None):
-            jobs[job_id]["percent"] = int(pct)
-            if msg:
-                jobs[job_id]["message"] = msg
-                
-        render_studio_project(project_data, out_path, progress_callback=progress_cb)
-        return {"video_url": f"/output/{out_name}"}
-        
-    _start_job(job_id, task)
+    qm.create_job(job_id, status="queued", message="Initializing render...", mode="studio")
+    _start_job(job_id, _task_studio_render, job_id, project_data, out_path, out_name)
     return jsonify({"job_id": job_id})
 
 
