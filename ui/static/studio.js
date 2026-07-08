@@ -1370,11 +1370,19 @@ function setupTrackDropZones() {
 
       let assetId = e.dataTransfer.getData('text/plain');
 
-      // External drag from Extended Library
+      // External drag from Extended Library or Overlay Panel
       const jsonData = e.dataTransfer.getData('application/json');
-      if (jsonData && !assetId) {
+      if (jsonData) {
         try {
           const data = JSON.parse(jsonData);
+          if (data.type === 'overlay') {
+             // Treat overlay template as a new asset immediately
+             if (!project.assets.find(a => a.id === data.id)) {
+                 project.assets.push(data);
+             }
+             assetId = data.id;
+          } else if (!assetId) {
+
           let existingAsset = project.assets.find(a => a.path === data.path);
           if (!existingAsset) {
             existingAsset = {
@@ -1392,6 +1400,7 @@ function setupTrackDropZones() {
             renderMediaLibrary();
           }
           assetId = existingAsset.id;
+          }
         } catch(err) {
           console.error(err);
           return;
@@ -1976,7 +1985,9 @@ function selectClip(clipId) {
   // Activate section inspector UI
   document.querySelectorAll('.properties-section').forEach(s => s.classList.remove('active'));
   
-  if (foundTrackId === 'video_main' || foundTrackId === 'video_overlay') {
+  if (foundClip.type === 'overlay') {
+    document.getElementById('properties-overlay').classList.add('active');
+  } else if (foundTrackId === 'video_main' || foundTrackId === 'video_overlay') {
     document.getElementById('properties-video').classList.add('active');
   } else if (foundTrackId === 'image_overlay') {
     document.getElementById('properties-image').classList.add('active');
@@ -1993,8 +2004,56 @@ function updatePropertiesInspector() {
   if (!activeClip) return;
   
   // Fill values dynamically
+  // Overlay Clip
+  if (document.getElementById('properties-overlay').classList.contains('active')) {
+    const container = document.getElementById('dynamic-overlay-fields');
+    container.innerHTML = '';
+
+    // Duration
+    container.innerHTML += `
+      <div class="prop-group">
+        <label>Duration (s)</label>
+        <input type="number" step="0.1" value="${activeClip.duration}" onchange="updateActiveClipProperty('duration', parseFloat(this.value)); renderTimeline();">
+      </div>
+    `;
+
+    if (activeClip.template === 'social_follow') {
+      container.innerHTML += `
+        <div class="prop-group">
+          <label>Avatar Image</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="file" id="overlayAvatarUpload" accept="image/png, image/jpeg" style="display:none;" onchange="uploadOverlayAvatar(event, '${activeClip.id}')">
+            <button class="btn" style="padding: 4px 8px; font-size: 0.8rem;" onclick="document.getElementById('overlayAvatarUpload').click()">Upload Image</button>
+            <span id="overlayAvatarLabel" style="font-size: 0.8rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 120px;">
+               ${activeClip.properties.avatar_path ? 'Custom Avatar' : 'Default Circle'}
+            </span>
+          </div>
+        </div>
+        <div class="prop-group">
+          <label>Username</label>
+          <input type="text" value="${activeClip.properties.username || '@username'}" onchange="updateActiveClipProperty('properties', { ...activeClip.properties, username: this.value })">
+        </div>
+        <div class="prop-group">
+          <label>Accent Color</label>
+          <input type="color" value="${activeClip.properties.accent_color || '#A855F7'}" onchange="updateActiveClipProperty('properties', { ...activeClip.properties, accent_color: this.value })">
+        </div>
+      `;
+    } else if (activeClip.template === 'call_to_action') {
+      container.innerHTML += `
+        <div class="prop-group">
+          <label>Text</label>
+          <input type="text" value="${activeClip.properties.text || 'LINK IN BIO'}" onchange="updateActiveClipProperty('properties', { ...activeClip.properties, text: this.value })">
+        </div>
+        <div class="prop-group">
+          <label>Accent Color</label>
+          <input type="color" value="${activeClip.properties.accent_color || '#3B82F6'}" onchange="updateActiveClipProperty('properties', { ...activeClip.properties, accent_color: this.value })">
+        </div>
+      `;
+    }
+  }
+
   // Video Clip
-  if (document.getElementById('properties-video').classList.contains('active')) {
+  else if (document.getElementById('properties-video').classList.contains('active')) {
     document.getElementById('propVideoCropMode').value = activeClip.cropMode || 'cover';
     document.getElementById('propVideoScale').value = activeClip.scale !== undefined ? activeClip.scale : 1.0;
     document.getElementById('propVideoRotation').value = activeClip.rotation !== undefined ? activeClip.rotation : 0;
@@ -2852,5 +2911,47 @@ async function importGenericAudio(mode) {
     alert("API call failed: " + err);
   } finally {
     hideCanvasLoading();
+  }
+}
+
+
+// Handle Overlay Avatar Image Upload
+async function uploadOverlayAvatar(event, clipId) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  document.getElementById('overlayAvatarLabel').innerText = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/studio/media/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('overlayAvatarLabel').innerText = 'Custom Avatar';
+
+      // Find clip and set property
+      let targetClip = null;
+      project.tracks.forEach(track => {
+        const c = track.clips.find(x => x.id === clipId);
+        if (c) targetClip = c;
+      });
+
+      if (targetClip) {
+         targetClip.properties = { ...targetClip.properties, avatar_path: data.filepath };
+         saveState();
+         renderTimeline();
+      }
+    } else {
+      alert('Upload failed: ' + data.message);
+      document.getElementById('overlayAvatarLabel').innerText = 'Failed';
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error uploading avatar.');
   }
 }

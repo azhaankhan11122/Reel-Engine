@@ -76,3 +76,24 @@ function setupMusicToggle(checkboxId, optionsId) {
   cb.addEventListener("change", toggle);
   toggle();
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const transitionLinks = document.querySelectorAll(".transition-link");
+  transitionLinks.forEach(link => {
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      const href = link.getAttribute("href");
+      document.body.classList.add("page-transitioning");
+      setTimeout(() => {
+        window.location.href = href;
+      }, 400); // matches CSS transition time
+    });
+  });
+
+  // Handle back button caching issue with opacity
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      document.body.classList.remove("page-transitioning");
+    }
+  });
+});
