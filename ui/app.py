@@ -44,7 +44,6 @@ from make_shorts import (
 )
 from studio_renderer import render_studio_project
 import queue_manager as qm
-qm.engine_queue.start()
 
 
 UPLOAD_DIR = PROJECT_DIR / "uploads"
@@ -1400,6 +1399,10 @@ def api_studio_render():
 
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    qm.engine_queue.start()
+
     import socket
     def is_port_in_use(port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
