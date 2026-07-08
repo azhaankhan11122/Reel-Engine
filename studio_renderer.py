@@ -7,13 +7,18 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
+
 from moviepy import (
     VideoFileClip,
-    ImageClip,
     AudioFileClip,
+    ImageClip,
+    TextClip,
     CompositeVideoClip,
     CompositeAudioClip,
+    ColorClip,
+    vfx
 )
+
 
 # Import shared utilities from the core pipeline
 from make_shorts import (
@@ -293,6 +298,95 @@ def render_text_to_image(text, font_family, font_size, text_color, bg_color=None
 
     return np.array(img)
 
+
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip('#')
+    if len(hex_color) == 6:
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return (255, 255, 255)
+
+def build_overlay_clip(clip_data, target_w, target_h):
+    # Returns a MoviePy clip acting as the animated overlay
+    props = clip_data.get('properties', {})
+    template = clip_data.get('template', 'social_follow')
+    duration = float(clip_data.get('duration', 3.0))
+
+    if template == 'social_follow':
+        username = props.get('username', '@username')
+        accent_color = props.get('accent_color', '#A855F7')
+        avatar_path = props.get('avatar_path', '')
+        rgb_color = hex_to_rgb(accent_color)
+
+        # Render the whole component with PIL
+        w, h = int(target_w * 0.8), 100
+        base_img = Image.new('RGBA', (w, h), (30, 30, 30, 215)) # 85% opacity
+
+        # Custom Avatar
+        if avatar_path and Path(avatar_path).exists():
+            try:
+                avatar_img = Image.open(avatar_path).convert("RGBA")
+                avatar_img = avatar_img.resize((60, 60), Image.Resampling.LANCZOS)
+                mask = Image.new('L', (60, 60), 0)
+                draw = ImageDraw.Draw(mask)
+                draw.ellipse((0, 0, 60, 60), fill=255)
+                avatar_img.putalpha(mask)
+                base_img.paste(avatar_img, (20, 20), avatar_img)
+            except Exception as e:
+                print(f"Failed to load custom avatar {avatar_path}: {e}")
+                draw = ImageDraw.Draw(base_img)
+                draw.ellipse((20, 20, 80, 80), fill=rgb_color)
+        else:
+            draw = ImageDraw.Draw(base_img)
+            draw.ellipse((20, 20, 80, 80), fill=rgb_color)
+
+        # Draw Text
+        try:
+            draw = ImageDraw.Draw(base_img)
+            font = ImageFont.truetype('fonts/Exo2-Bold.ttf', 36)
+            draw.text((100, 30), username, font=font, fill=(255,255,255,255))
+        except:
+            draw.text((100, 30), username, fill=(255,255,255,255))
+
+        rgb_arr = np.array(base_img.convert('RGB'))
+        mask_arr = np.array(base_img.split()[-1]) / 255.0
+
+        comp = ImageClip(rgb_arr).with_duration(duration)
+        mask_clip = ImageClip(mask_arr, is_mask=True).with_duration(duration)
+        comp = comp.with_mask(mask_clip)
+        comp = comp.with_position(('center', int(target_h * 0.75)))
+        return comp
+
+    elif template == 'call_to_action':
+        text = props.get('text', 'LINK IN BIO')
+        accent_color = props.get('accent_color', '#3B82F6')
+        rgb_color = hex_to_rgb(accent_color)
+
+        w, h = int(target_w * 0.9), 120
+        base_img = Image.new('RGBA', (w, h), (*rgb_color, 230))
+        try:
+            draw = ImageDraw.Draw(base_img)
+            font = ImageFont.truetype('fonts/Exo2-Bold.ttf', 50)
+
+            # center text
+            bbox = font.getbbox(text)
+            tw = bbox[2] - bbox[0]
+            th = bbox[3] - bbox[1]
+            draw.text(((w-tw)/2, (h-th)/2 - 10), text, font=font, fill=(255,255,255,255))
+        except:
+            draw.text((20, 30), text, fill=(255,255,255,255))
+
+        rgb_arr = np.array(base_img.convert('RGB'))
+        mask_arr = np.array(base_img.split()[-1]) / 255.0
+
+        comp = ImageClip(rgb_arr).with_duration(duration)
+        mask_clip = ImageClip(mask_arr, is_mask=True).with_duration(duration)
+        comp = comp.with_mask(mask_clip)
+        comp = comp.with_position(('center', 'center'))
+        comp = comp.with_effects([vfx.CrossFadeIn(0.5), vfx.CrossFadeOut(0.5)])
+        return comp
+
+    return ColorClip(size=(100,100), color=(255,0,0)).with_duration(duration)
+
 def render_studio_project(project_data, output_path, progress_callback=None):
     """
     Renders a Studio project JSON representation to an MP4 video.
@@ -334,6 +428,24 @@ def render_studio_project(project_data, output_path, progress_callback=None):
             if progress_callback:
                 pct = 10 + int(70 * (processed_steps / max(1, total_steps)))
                 progress_callback(pct, f"Processing {track_type} clip {processed_steps}/{total_steps}...")
+
+            asset_id = clip_data.get("assetId")
+            asset = assets_map.get(asset_id) if asset_id else None
+            c_type = asset.get("type") if asset else clip_data.get("type")
+
+            if c_type == "overlay":
+                start_time = float(clip_data.get("start", 0))
+                duration = float(clip_data.get("duration", 3.0))
+                overlay_data = asset if asset else clip_data
+                # properties are passed in via overlay_data
+                try:
+                    overlay_clip = build_overlay_clip(overlay_data, width, height)
+                    overlay_clip = overlay_clip.with_start(start_time).with_duration(duration)
+                    video_clips.append(overlay_clip)
+                except Exception as e:
+                    print(f"Error building overlay: {e}")
+                continue
+
 
             start = float(clip_data.get("start", 0))
             duration = float(clip_data.get("duration", 0))
