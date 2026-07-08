@@ -1,3 +1,4 @@
+let currentMediaFilter = 'all';
 /**
  * Reel Studio Client Editor
  * Core timelines, preview canvas rendering, assets uploads, and clip properties inspectors.
@@ -487,6 +488,44 @@ function initUI() {
   bindPropertiesInspector();
 
   // Load voices dropdown
+
+  // Custom Slider track fill logic
+  document.querySelectorAll('input[type="range"]').forEach(slider => {
+    const updateSlider = (el) => {
+      const min = el.min || 0;
+      const max = el.max || 100;
+      const percent = ((el.value - min) / (max - min)) * 100;
+      el.style.background = `linear-gradient(to right, #A855F7 0%, #3B82F6 ${percent}%, var(--surface-studio) ${percent}%, var(--surface-studio) 100%)`;
+    };
+    slider.addEventListener('input', (e) => updateSlider(e.target));
+    // initial set
+    updateSlider(slider);
+  });
+
+  // Accordion mutual exclusivity
+  document.querySelectorAll('details.prop-details').forEach((details) => {
+    details.addEventListener('toggle', (e) => {
+      if (details.open) {
+        document.querySelectorAll('details.prop-details').forEach((other) => {
+          if (other !== details && other.parentElement === details.parentElement && other.open) {
+            other.open = false;
+          }
+        });
+      }
+    });
+  });
+
+
+  // Media Filter Tabs logic
+  document.querySelectorAll('.media-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.media-tab-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentMediaFilter = e.target.getAttribute('data-filter');
+      rebuildAssetsLibrary();
+    });
+  });
+
   loadTTSVoices();
 }
 
@@ -954,9 +993,12 @@ function rebuildAssetsLibrary() {
   audioList.innerHTML = '';
   
   project.assets.forEach(asset => {
+    if (currentMediaFilter !== 'all' && asset.type !== currentMediaFilter) return;
+
     if (asset.type === 'video' || asset.type === 'image') {
       const card = document.createElement('div');
       card.className = 'asset-card';
+      card.setAttribute('data-type', asset.type);
       card.draggable = true;
       card.setAttribute('data-asset-id', asset.id);
       
@@ -988,6 +1030,7 @@ function rebuildAssetsLibrary() {
     } else if (asset.type === 'audio') {
       const item = document.createElement('div');
       item.className = 'asset-list-item';
+      item.setAttribute('data-type', asset.type);
       item.draggable = true;
       item.setAttribute('data-asset-id', asset.id);
       item.innerHTML = `

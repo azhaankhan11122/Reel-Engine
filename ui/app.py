@@ -827,26 +827,31 @@ STUDIO_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 @app.route("/api/studio/media/extended", methods=["GET"])
 def api_studio_media_extended():
     media = []
+    requested_type = request.args.get('type')
+
     # Fetch from UPLOAD_DIR
     if UPLOAD_DIR.exists():
         for p in UPLOAD_DIR.iterdir():
             if p.is_file() and p.suffix.lower() in [".mp4", ".jpg", ".jpeg", ".png", ".webp", ".webm"]:
-                media.append({
-                    "name": p.name,
-                    "url": f"/uploads/{p.name}",
-                    "path": str(p),
-                    "type": "video" if p.suffix.lower() in [".mp4", ".webm"] else "image"
-                })
+                asset_type = "video" if p.suffix.lower() in [".mp4", ".webm"] else "image"
+                if not requested_type or requested_type == 'all' or asset_type == requested_type:
+                    media.append({
+                        "name": p.name,
+                        "url": f"/uploads/{p.name}",
+                        "path": str(p),
+                        "type": asset_type
+                    })
     # Fetch from GAMEPLAY_DIR
     if GAMEPLAY_DIR.exists():
         for p in GAMEPLAY_DIR.iterdir():
             if p.is_file() and p.suffix.lower() in [".mp4", ".webm"]:
-                media.append({
-                    "name": p.name,
-                    "url": f"/gameplay/{p.name}",
-                    "path": str(p),
-                    "type": "video"
-                })
+                if not requested_type or requested_type == 'all' or requested_type == 'video':
+                    media.append({
+                        "name": p.name,
+                        "url": f"/gameplay/{p.name}",
+                        "path": str(p),
+                        "type": "video"
+                    })
     return jsonify({"media": media})
 
 @app.route("/gameplay/<path:filename>")

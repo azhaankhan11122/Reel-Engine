@@ -33,8 +33,13 @@
     <div class="header-center">
       <button id="btnUndo" class="ctrl-btn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
       <button id="btnRedo" class="ctrl-btn" title="Redo (Ctrl+Shift+Z)"><i class="fa-solid fa-rotate-right"></i></button>
-      <button id="btnSave" class="studio-btn secondary-btn" title="Save Project (Ctrl+S)"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-      <button id="btnLoadProject" class="studio-btn secondary-btn"><i class="fa-solid fa-folder-open"></i> Projects</button>
+      <div class="dropdown" style="position: relative; display: inline-block;">
+        <button class="studio-btn secondary-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"><i class="fa-solid fa-folder"></i> File <i class="fa-solid fa-chevron-down" style="font-size:0.7em;"></i></button>
+        <div class="dropdown-content" style="display: none; position: absolute; background-color: var(--surface-panel); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 8px; border: 1px solid var(--border-studio); top: 110%; left: 0;">
+          <button id="btnSave" class="studio-btn" style="width:100%; text-align:left; background:transparent; border-radius:0; border-bottom: 1px solid var(--border-studio);" title="Save Project (Ctrl+S)"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+          <button id="btnLoadProject" class="studio-btn" style="width:100%; text-align:left; background:transparent; border-radius:0;"><i class="fa-solid fa-folder-open"></i> Projects</button>
+        </div>
+      </div>
     </div>
     <div class="header-right">
       <button id="btnExport" class="studio-btn primary-btn"><i class="fa-solid fa-paper-plane"></i> Export Video</button>
@@ -59,6 +64,12 @@
         <!-- Media Tab -->
         <div id="tab-media" class="tab-content active">
           <h3>Media Library</h3>
+          <div class="media-filter-tabs">
+            <button class="media-tab-btn active" data-filter="all">All</button>
+            <button class="media-tab-btn" data-filter="video">Video</button>
+            <button class="media-tab-btn" data-filter="image">Image</button>
+            <button class="media-tab-btn" data-filter="audio">Audio</button>
+          </div>
           <div class="upload-area" id="mediaUploadZone">
             <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
             <p>Drag & Drop videos/images or click to upload</p>
@@ -641,80 +652,86 @@
         <div style="margin-bottom: 1rem;">
           <button id="btnRemoveWatermark" class="studio-btn secondary-btn" style="width: 100%;"><i class="fa-solid fa-eraser"></i> Remove Watermark</button>
         </div>
-        <label class="section-title">Video Element Properties</label>
-        
-        <div class="field">
-          <label>Crop / Scaling Mode</label>
-          <select id="propVideoCropMode">
-            <option value="cover">Cover (Fill & Crop Center)</option>
-            <option value="contain">Contain (Fit Aspect Ratio)</option>
-            <option value="fill">Fill (Stretch to Borders)</option>
-          </select>
-        </div>
-
-        <div class="field-grid">
+        <details class="prop-details" open>
+          <summary class="section-title">Transform</summary>
           <div class="field">
-            <label>Scale X/Y</label>
-            <input type="number" id="propVideoScale" value="1" step="0.05" min="0.1" max="10">
-          </div>
-          <div class="field">
-            <label>Rotate (deg)</label>
-            <input type="number" id="propVideoRotation" value="0" step="5" min="-360" max="360">
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label>Position X</label>
-            <input type="number" id="propVideoX" value="540">
-          </div>
-          <div class="field">
-            <label>Position Y</label>
-            <input type="number" id="propVideoY" value="960">
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Opacity: <span id="valVideoOpacity">100</span>%</label>
-          <input type="range" id="propVideoOpacity" min="0" max="100" value="100">
-        </div>
-
-        <label class="section-title">Timing & Trimming</label>
-        <div class="field-grid">
-          <div class="field">
-            <label>Start (s)</label>
-            <input type="number" id="propVideoStart" step="0.1" min="0">
-          </div>
-          <div class="field">
-            <label>Duration (s)</label>
-            <input type="number" id="propVideoDuration" step="0.1" min="0.1">
-          </div>
-        </div>
-        <div class="field-grid">
-          <div class="field">
-            <label>Src Offset Start (s)</label>
-            <input type="number" id="propVideoTrimStart" step="0.1" min="0">
-          </div>
-          <div class="field">
-            <label>Playback Speed</label>
-            <select id="propVideoSpeed">
-              <option value="0.5">0.5x Slow</option>
-              <option value="1.0" selected>1.0x Normal</option>
-              <option value="1.5">1.5x Fast</option>
-              <option value="2.0">2.0x Double</option>
+            <label>Crop / Scaling Mode</label>
+            <select id="propVideoCropMode">
+              <option value="cover">Cover (Fill & Crop Center)</option>
+              <option value="contain">Contain (Fit Aspect Ratio)</option>
+              <option value="fill">Fill (Stretch to Borders)</option>
             </select>
           </div>
-        </div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Scale X/Y</label>
+              <input type="number" id="propVideoScale" value="1" step="0.05" min="0.1" max="10">
+            </div>
+            <div class="field">
+              <label>Rotate (deg)</label>
+              <input type="number" id="propVideoRotation" value="0" step="5" min="-360" max="360">
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Position X</label>
+              <input type="number" id="propVideoX" value="540">
+            </div>
+            <div class="field">
+              <label>Position Y</label>
+              <input type="number" id="propVideoY" value="960">
+            </div>
+          </div>
+        </details>
 
-        <label class="section-title">Audio Volume</label>
-        <div class="field">
-          <label>Clip Volume: <span id="valVideoVolume">100</span>%</label>
-          <input type="range" id="propVideoVolume" min="0" max="100" value="100">
-        </div>
-        <div class="checkbox-row">
-          <input type="checkbox" id="propVideoMuted">
-          <label for="propVideoMuted" style="display:inline; text-transform:none;">Muted (Disable audio completely)</label>
-        </div>
+        <details class="prop-details">
+          <summary class="section-title">Blend</summary>
+          <div class="field">
+            <label>Opacity: <span id="valVideoOpacity">100</span>%</label>
+            <input type="range" id="propVideoOpacity" min="0" max="100" value="100">
+          </div>
+        </details>
+
+        <details class="prop-details">
+          <summary class="section-title">Timing & Speed</summary>
+          <div class="field-grid">
+            <div class="field">
+              <label>Start (s)</label>
+              <input type="number" id="propVideoStart" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label>Duration (s)</label>
+              <input type="number" id="propVideoDuration" step="0.1" min="0.1">
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Src Offset (s)</label>
+              <input type="number" id="propVideoTrimStart" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label>Playback Speed</label>
+              <select id="propVideoSpeed">
+                <option value="0.5">0.5x Slow</option>
+                <option value="1.0" selected>1.0x Normal</option>
+                <option value="1.5">1.5x Fast</option>
+                <option value="2.0">2.0x Double</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details class="prop-details">
+          <summary class="section-title">Audio</summary>
+          <div class="field">
+            <label>Clip Volume: <span id="valVideoVolume">100</span>%</label>
+            <input type="range" id="propVideoVolume" min="0" max="100" value="100">
+          </div>
+          <div class="checkbox-row">
+            <label class="toggle-switch"><input type="checkbox" id="propVideoMuted"><span class="toggle-slider"></span></label>
+            <label for="propVideoMuted" style="display:inline; text-transform:none;">Muted (Disable audio completely)</label>
+          </div>
+        </details>
       </div>
 
       <!-- Image Clip Properties -->
@@ -895,41 +912,45 @@
 
       <!-- Audio Clip Properties -->
       <div id="properties-audio" class="properties-section">
-        <label class="section-title">Audio Clip Properties</label>
-        <div class="field">
-          <label>Volume: <span id="valAudioVolume">100</span>%</label>
-          <input type="range" id="propAudioVolume" min="0" max="100" value="100">
-        </div>
-        <div class="checkbox-row">
-          <input type="checkbox" id="propAudioMuted">
-          <label for="propAudioMuted" style="display:inline; text-transform:none;">Muted</label>
-        </div>
+        <details class="prop-details" open>
+          <summary class="section-title">Audio Volume</summary>
+          <div class="field">
+            <label>Volume: <span id="valAudioVolume">100</span>%</label>
+            <input type="range" id="propAudioVolume" min="0" max="100" value="100">
+          </div>
+          <div class="checkbox-row">
+            <label class="toggle-switch"><input type="checkbox" id="propAudioMuted"><span class="toggle-slider"></span></label>
+            <label for="propAudioMuted" style="display:inline; text-transform:none;">Muted</label>
+          </div>
+        </details>
 
-        <label class="section-title">Fades & Trims</label>
-        <div class="field-grid">
-          <div class="field">
-            <label>Fade In (s)</label>
-            <input type="number" id="propAudioFadeIn" min="0" max="10" step="0.1" value="0">
+        <details class="prop-details">
+          <summary class="section-title">Fades & Trims</summary>
+          <div class="field-grid">
+            <div class="field">
+              <label>Fade In (s)</label>
+              <input type="number" id="propAudioFadeIn" min="0" max="10" step="0.1" value="0">
+            </div>
+            <div class="field">
+              <label>Fade Out (s)</label>
+              <input type="number" id="propAudioFadeOut" min="0" max="10" step="0.1" value="0">
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Start Time (s)</label>
+              <input type="number" id="propAudioStart" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label>Timeline Length</label>
+              <input type="number" id="propAudioDuration" step="0.1" min="0.1">
+            </div>
           </div>
           <div class="field">
-            <label>Fade Out (s)</label>
-            <input type="number" id="propAudioFadeOut" min="0" max="10" step="0.1" value="0">
+            <label>Src Offset (s)</label>
+            <input type="number" id="propAudioTrimStart" step="0.1" min="0">
           </div>
-        </div>
-        <div class="field-grid">
-          <div class="field">
-            <label>Start Time (s)</label>
-            <input type="number" id="propAudioStart" step="0.1" min="0">
-          </div>
-          <div class="field">
-            <label>Timeline Length</label>
-            <input type="number" id="propAudioDuration" step="0.1" min="0.1">
-          </div>
-        </div>
-        <div class="field">
-          <label>Source Audio Offset Start (s)</label>
-          <input type="number" id="propAudioTrimStart" step="0.1" min="0">
-        </div>
+        </details>
       </div>
     </div>
   </div>
@@ -955,18 +976,18 @@
     <!-- Timeline Scroll Container -->
     <div class="timeline-editor-wrapper" id="timelineWrapper">
       <!-- Tracks Info Column -->
-      <div class="timeline-labels-column">
-        <div class="track-label"><i class="fa-solid fa-video"></i> Video Main</div>
-        <div class="track-label"><i class="fa-solid fa-layer-group"></i> Video PIP</div>
-        <div class="track-label"><i class="fa-solid fa-image"></i> Images</div>
-        <div class="track-label"><i class="fa-solid fa-font"></i> Texts</div>
-        <div class="track-label"><i class="fa-solid fa-closed-captioning"></i> Captions</div>
-        <div class="track-label"><i class="fa-solid fa-microphone"></i> Voiceover</div>
-        <div class="track-label"><i class="fa-solid fa-music"></i> Music</div>
+      <div class="timeline-labels-column" style="width: 70px; min-width: 70px;">
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-video" title="Video Main"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-layer-group" title="Video PIP"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-image" title="Images"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-font" title="Texts"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-closed-captioning" title="Captions"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-microphone" title="Voiceover"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
+        <div class="track-label" style="justify-content: space-between;"><i class="fa-solid fa-music" title="Music"></i> <div><i class="fa-solid fa-eye"></i> <i class="fa-solid fa-lock"></i></div></div>
       </div>
 
       <!-- Tracks Content Area -->
-      <div class="timeline-tracks-container" id="tracksContainer">
+      <div class="timeline-tracks-container" id="tracksContainer" style="background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px); background-size: 15px 15px;">
         <!-- Vertical Red Playhead line -->
         <div class="timeline-playhead" id="timelinePlayhead"></div>
         <div class="timeline-time-ruler" id="timeRuler"></div>
