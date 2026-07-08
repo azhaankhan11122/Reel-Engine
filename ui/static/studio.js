@@ -742,12 +742,17 @@ async function generateAutoCaptions() {
         const captionsTrack = project.tracks.find(t => t.id === 'captions');
         captionsTrack.clips = []; // Clear existing captions
         
+        // Attach word timestamps to their respective chunks
+        const words = data.words || [];
         chunks.forEach((chunk, index) => {
+          // Find all words that fall within this chunk's time window
+          const chunkWords = words.filter(w => w.start >= chunk.start - 0.1 && w.end <= chunk.end + 0.1);
           const capClip = {
             id: `clip_cap_${uuid()}`,
             text: chunk.text,
             start: chunk.start,
             duration: chunk.end - chunk.start,
+            words: chunkWords, // Inject word-level data for kinetic rendering
             style: {
               fontFamily: 'impact',
               fontSize: 76,
@@ -972,6 +977,18 @@ function updateUndoRedoButtons() {
   document.getElementById('btnUndo').disabled = (historyIndex <= 0);
   document.getElementById('btnRedo').disabled = (historyIndex >= historyStack.length - 1);
 }
+
+// DYNAMIC PROPERTIES UPDATE
+window.updateActiveClipProperty = function(key, value) {
+  if (!activeClip) return;
+  if (key === 'properties') {
+    activeClip.properties = { ...activeClip.properties, ...value };
+  } else {
+    activeClip[key] = value;
+  }
+  saveState();
+  drawFrame();
+};
 
 // ASSETS MANAGEMENT
 function addAssetToLibrary(asset) {
@@ -1332,8 +1349,65 @@ function renderTimeline() {
       // Fetch clip title
       let title = clip.name || clip.text || "Clip Element";
       if (title.length > 25) title = title.substring(0, 22) + "...";
-      clipEl.innerHTML = `<span>${title}</span>`;
+      clipEl.innerHTML = '';
+      const span = document.createElement('span');
+      span.textContent = title;
+      clipEl.appendChild(span);
       
+      // Render Waveform Canvas if clip has audio_peaks
+      const asset = clip.assetId ? project.assets.find(a => a.id === clip.assetId) : null;
+      if (asset && asset.audio_peaks && asset.audio_peaks.length > 0 && (track.type === 'video' || track.type === 'audio')) {
+        const waveCanvas = document.createElement('canvas');
+        waveCanvas.className = 'timeline-waveform-canvas';
+        // Give canvas some absolute style to fit inside clipEl without interfering with drag
+        waveCanvas.style.position = 'absolute';
+        waveCanvas.style.left = '0';
+        waveCanvas.style.bottom = '0';
+        waveCanvas.style.width = '100%';
+        waveCanvas.style.height = '100%';
+        waveCanvas.style.pointerEvents = 'none'; // so we can still click clip handles
+        clipEl.appendChild(waveCanvas);
+
+        // Render waveform logic
+        setTimeout(() => { // slight delay to allow layout
+          // use the exact pixel width of the clip container
+          const w = clipEl.clientWidth;
+          const h = clipEl.clientHeight;
+          waveCanvas.width = w;
+          waveCanvas.height = h;
+          const wCtx = waveCanvas.getContext('2d');
+
+          wCtx.clearRect(0, 0, w, h);
+          wCtx.fillStyle = track.type === 'audio' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.15)';
+
+          const peaks = asset.audio_peaks;
+          const numPeaks = peaks.length;
+
+          // Depending on clip trim, we might want to slice the peaks array, but for simplicity
+          // let's map the whole asset audio peaks and draw just the trimmed portion,
+          // or scale based on the visible duration vs total duration.
+
+          const clipStartRatio = (clip.trimStart || 0) / asset.duration;
+          const clipEndRatio = ((clip.trimStart || 0) + clip.duration) / asset.duration;
+
+          const startIdx = Math.floor(clipStartRatio * numPeaks);
+          const endIdx = Math.floor(clipEndRatio * numPeaks);
+
+          const visiblePeaks = peaks.slice(startIdx, Math.max(endIdx, startIdx + 1));
+
+          if (visiblePeaks.length > 0) {
+              const step = w / visiblePeaks.length;
+              for (let i = 0; i < visiblePeaks.length; i++) {
+                  const peakHeight = visiblePeaks[i] * (h * 0.8); // max height 80% of track height
+                  const y = (h - peakHeight) / 2; // vertically centered symmetrical style
+                  const x = i * step;
+                  // draw symmetric bar
+                  wCtx.fillRect(x, y, step > 1 ? step - 1 : 1, peakHeight);
+              }
+          }
+        }, 10);
+      }
+
       // Trim handles
       const lHandle = document.createElement('div');
       lHandle.className = 'clip-handle clip-handle-left';
@@ -1739,6 +1813,227 @@ const ctx = canvas.getContext('2d');
 const W = 1080;
 const H = 1920;
 
+// Direct Canvas Manipulation State
+let isDraggingCanvasLayer = false;
+let isScalingCanvasLayer = false;
+let isRotatingCanvasLayer = false;
+let canvasActiveHandle = null;
+let canvasInteractionStartX = 0;
+let canvasInteractionStartY = 0;
+let canvasOriginalClipState = null;
+
+if (canvas) {
+  canvas.addEventListener('mousedown', handleCanvasMousedown);
+  window.addEventListener('mousemove', handleCanvasMousemove);
+  window.addEventListener('mouseup', handleCanvasMouseup);
+}
+
+// Map handles for bounding box (8 corners/midpoints + 1 rotation)
+const transformHandles = [
+  { id: 'tl', cursor: 'nwse-resize' },
+  { id: 't', cursor: 'ns-resize' },
+  { id: 'tr', cursor: 'nesw-resize' },
+  { id: 'r', cursor: 'ew-resize' },
+  { id: 'br', cursor: 'nwse-resize' },
+  { id: 'b', cursor: 'ns-resize' },
+  { id: 'bl', cursor: 'nesw-resize' },
+  { id: 'l', cursor: 'ew-resize' },
+  { id: 'rot', cursor: 'grab' }
+];
+
+function getEventCanvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+function handleCanvasMousedown(e) {
+  if (window.isDrawingWatermarkActive) return; // don't interfere with watermark tool
+  const coords = getEventCanvasCoords(e);
+
+  if (activeClip && (activeClip.type === 'video' || activeClip.type === 'overlay' || activeClip.type === 'image' || activeClip.type === 'text')) {
+    // Check if clicked on a handle
+    const handle = getHandleAtPos(coords.x, coords.y, activeClip);
+    if (handle) {
+      e.preventDefault();
+      canvasActiveHandle = handle;
+      if (handle.id === 'rot') isRotatingCanvasLayer = true;
+      else isScalingCanvasLayer = true;
+
+      canvasInteractionStartX = coords.x;
+      canvasInteractionStartY = coords.y;
+      canvasOriginalClipState = { x: activeClip.x || W/2, y: activeClip.y || H/2, scale: activeClip.scale || 1.0, rotation: activeClip.rotation || 0 };
+      return;
+    }
+
+    // Check if clicked inside active clip bounds
+    if (isPosInsideClip(coords.x, coords.y, activeClip)) {
+      e.preventDefault();
+      isDraggingCanvasLayer = true;
+      canvasInteractionStartX = coords.x;
+      canvasInteractionStartY = coords.y;
+      canvasOriginalClipState = { x: activeClip.x || W/2, y: activeClip.y || H/2 };
+      return;
+    }
+  }
+
+  // If we clicked outside, try to select a clip
+  const clickedClip = findClipAtPos(coords.x, coords.y);
+  if (clickedClip) {
+    selectClip(clickedClip.id);
+  } else {
+    // Deselect if clicking empty space
+    document.querySelectorAll('.timeline-clip').forEach(el => el.classList.remove('selected'));
+    activeClip = null;
+    hidePropertyInspector();
+  }
+  renderCanvas();
+}
+
+function handleCanvasMousemove(e) {
+  if (!isDraggingCanvasLayer && !isScalingCanvasLayer && !isRotatingCanvasLayer) {
+    // Just hover effects for cursor
+    if (canvas && activeClip && !window.isDrawingWatermarkActive) {
+      const coords = getEventCanvasCoords(e);
+      const handle = getHandleAtPos(coords.x, coords.y, activeClip);
+      if (handle) {
+        canvas.style.cursor = handle.cursor;
+      } else if (isPosInsideClip(coords.x, coords.y, activeClip)) {
+        canvas.style.cursor = 'move';
+      } else {
+        canvas.style.cursor = 'default';
+      }
+    }
+    return;
+  }
+
+  const coords = getEventCanvasCoords(e);
+  const dx = coords.x - canvasInteractionStartX;
+  const dy = coords.y - canvasInteractionStartY;
+
+  // Physics-based easing applied to dragging
+  const easeFactor = 0.85;
+
+  if (isDraggingCanvasLayer && activeClip) {
+    activeClip.x = canvasOriginalClipState.x + (dx * easeFactor);
+    activeClip.y = canvasOriginalClipState.y + (dy * easeFactor);
+    updateInspectorFields();
+    renderCanvas();
+  } else if (isScalingCanvasLayer && activeClip) {
+    // Basic scaling based on Y drag (pull down to enlarge)
+    const scaleDelta = dy * 0.005 * easeFactor;
+    activeClip.scale = Math.max(0.1, canvasOriginalClipState.scale - scaleDelta);
+    updateInspectorFields();
+    renderCanvas();
+  } else if (isRotatingCanvasLayer && activeClip) {
+    // Rotate based on X drag
+    const rotDelta = dx * 0.5 * easeFactor;
+    activeClip.rotation = canvasOriginalClipState.rotation + rotDelta;
+    updateInspectorFields();
+    renderCanvas();
+  }
+}
+
+function handleCanvasMouseup(e) {
+  if (isDraggingCanvasLayer || isScalingCanvasLayer || isRotatingCanvasLayer) {
+    isDraggingCanvasLayer = false;
+    isScalingCanvasLayer = false;
+    isRotatingCanvasLayer = false;
+    canvasActiveHandle = null;
+    saveState(); // Save to undo stack when interaction finishes
+    // Slight "snap" finish
+    renderCanvas();
+  }
+}
+
+function getClipRect(clip) {
+  // Rough bounding box approximation for click detection
+  const x = clip.x || W/2;
+  const y = clip.y || H/2;
+  const scale = clip.scale || 1.0;
+
+  // Default bounds
+  let cw = 800 * scale;
+  let ch = 800 * scale;
+
+  if (clip.trackId === 'text' || clip.type === 'text') {
+    cw = 600 * scale;
+    ch = 200 * scale;
+  }
+
+  return { left: x - cw/2, right: x + cw/2, top: y - ch/2, bottom: y + ch/2, w: cw, h: ch, cx: x, cy: y };
+}
+
+function isPosInsideClip(x, y, clip) {
+  if (!clip) return false;
+  // Simplistic rect check, ignores rotation for now for click-selection ease
+  const rect = getClipRect(clip);
+  return (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+}
+
+function getHandleAtPos(x, y, clip) {
+  if (!clip) return null;
+  const rect = getClipRect(clip);
+  const hs = 40; // handle hit size in canvas pixels
+
+  const handles = [
+    { id: 'tl', x: rect.left, y: rect.top, cursor: 'nwse-resize' },
+    { id: 'tr', x: rect.right, y: rect.top, cursor: 'nesw-resize' },
+    { id: 'bl', x: rect.left, y: rect.bottom, cursor: 'nesw-resize' },
+    { id: 'br', x: rect.right, y: rect.bottom, cursor: 'nwse-resize' },
+    { id: 't', x: rect.cx, y: rect.top, cursor: 'ns-resize' },
+    { id: 'b', x: rect.cx, y: rect.bottom, cursor: 'ns-resize' },
+    { id: 'l', x: rect.left, y: rect.cy, cursor: 'ew-resize' },
+    { id: 'r', x: rect.right, y: rect.cy, cursor: 'ew-resize' },
+    { id: 'rot', x: rect.cx, y: rect.top - 80, cursor: 'grab' } // rotation handle above top middle
+  ];
+
+  for (let h of handles) {
+    if (Math.abs(x - h.x) < hs && Math.abs(y - h.y) < hs) return h;
+  }
+  return null;
+}
+
+function findClipAtPos(x, y) {
+  if (!project) return null;
+  const currentTime = playheadTime;
+
+  // Search in reverse draw order (top layers first)
+  const drawOrder = ['captions', 'text', 'image_overlay', 'video_overlay', 'video_main'];
+
+  for (let trackId of drawOrder) {
+    const track = project.tracks.find(t => t.id === trackId);
+    if (!track) continue;
+
+    // Find active clip on this track at current time
+    for (let clip of track.clips) {
+      if (currentTime >= clip.start && currentTime < (clip.start + clip.duration)) {
+        if (isPosInsideClip(x, y, clip)) {
+          return clip;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function updateInspectorFields() {
+  if (!activeClip) return;
+  const elX = document.getElementById('prop-x');
+  const elY = document.getElementById('prop-y');
+  const elScale = document.getElementById('prop-scale');
+  const elRot = document.getElementById('prop-rot');
+
+  if (elX) elX.value = activeClip.x || W/2;
+  if (elY) elY.value = activeClip.y || H/2;
+  if (elScale) elScale.value = activeClip.scale || 1.0;
+  if (elRot) elRot.value = activeClip.rotation || 0;
+}
+
 function drawFrame() {
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, W, H);
@@ -1817,10 +2112,64 @@ function drawClipElement(clip, trackId, currentTime) {
   } else if (trackId === 'text') {
     drawTextBlockOnCanvas(clip, scale);
   } else if (trackId === 'captions') {
-    drawCaptionBlockOnCanvas(clip, scale);
+    drawCaptionBlockOnCanvas(clip, scale, currentTime);
+  } else if (trackId === 'video_overlay' && clip.type === 'overlay') {
+    // Dynamic Template Rendering on HTML5 canvas
+    drawDynamicOverlayOnCanvas(clip, scale, currentTime);
   }
   
   ctx.restore();
+
+  // If this clip is actively selected, draw the transform handles over it
+  if (activeClip && activeClip.id === clip.id && !window.isDrawingWatermarkActive) {
+      drawTransformHandles(clip);
+  }
+}
+
+function drawTransformHandles(clip) {
+    ctx.save();
+    const rect = getClipRect(clip);
+
+    // Draw bounding box
+    ctx.strokeStyle = '#3B82F6';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(rect.left, rect.top, rect.w, rect.h);
+
+    // Draw 8 handles + rotation handle
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#3B82F6';
+    ctx.lineWidth = 3;
+    const hs = 16; // visual handle size
+
+    const handles = [
+      { x: rect.left, y: rect.top },
+      { x: rect.right, y: rect.top },
+      { x: rect.left, y: rect.bottom },
+      { x: rect.right, y: rect.bottom },
+      { x: rect.cx, y: rect.top },
+      { x: rect.cx, y: rect.bottom },
+      { x: rect.left, y: rect.cy },
+      { x: rect.right, y: rect.cy },
+      { x: rect.cx, y: rect.top - 80, isRot: true }
+    ];
+
+    for (let h of handles) {
+        if (h.isRot) {
+            ctx.beginPath();
+            ctx.arc(h.x, h.y, hs, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            // Draw connecting line to top center
+            ctx.beginPath();
+            ctx.moveTo(rect.cx, rect.top);
+            ctx.lineTo(h.x, h.y + hs);
+            ctx.stroke();
+        } else {
+            ctx.fillRect(h.x - hs/2, h.y - hs/2, hs, hs);
+            ctx.strokeRect(h.x - hs/2, h.y - hs/2, hs, hs);
+        }
+    }
+    ctx.restore();
 }
 
 function applyCanvasFilter(filter) {
@@ -1904,36 +2253,104 @@ function drawTextBlockOnCanvas(clip, scale) {
   });
 }
 
-function drawCaptionBlockOnCanvas(clip, scale) {
+function drawCaptionBlockOnCanvas(clip, scale, currentTime) {
   const text = clip.text || '';
   const style = clip.style || {};
   const fontSize = (style.fontSize || 80) * scale;
   const fontFamily = fontMapping[style.fontFamily || 'impact'] || 'sans-serif';
+  const highlightColor = style.highlightColor || '#FFCC00';
   
   ctx.font = `bold ${fontSize}px ${fontFamily}`;
   
-  const textW = ctx.measureText(text).width;
-  const padX = 42 * scale;
-  const padY = 30 * scale;
-  const boxW = textW + padX * 2;
-  const boxH = fontSize + padY * 2;
-  
-  // Render pill box centered horizontally
-  const pillColor = style.pillColor || '#000000';
-  const pillOpacity = style.pillOpacity !== undefined ? style.pillOpacity : 140;
-  ctx.fillStyle = hexToRgbaStr(pillColor, pillOpacity / 255);
-  drawRoundedRect(-boxW / 2, -boxH / 2, boxW, boxH, 32 * scale);
-  
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  
-  // Shadow outline
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 10 * scale;
-  ctx.strokeText(text, 0, 0);
-  
-  ctx.fillStyle = style.textColor || '#ffffff';
-  ctx.fillText(text, 0, 0);
+  // If words array exists, we do kinetic word-by-word rendering
+  if (clip.words && clip.words.length > 0) {
+    const padX = 42 * scale;
+    const padY = 30 * scale;
+
+    // measure total width
+    const words = clip.words;
+    let totalW = 0;
+    const wordMetrics = [];
+    words.forEach((wObj, idx) => {
+      const w = ctx.measureText(wObj.word).width;
+      const space = idx < words.length - 1 ? ctx.measureText(" ").width : 0;
+      wordMetrics.push({ width: w, space: space, ...wObj });
+      totalW += w + space;
+    });
+
+    const boxW = totalW + padX * 2;
+    const boxH = fontSize + padY * 2;
+
+    // Render pill box centered
+    const pillColor = style.pillColor || '#000000';
+    const pillOpacity = style.pillOpacity !== undefined ? style.pillOpacity : 140;
+    ctx.fillStyle = hexToRgbaStr(pillColor, pillOpacity / 255);
+    drawRoundedRect(-boxW / 2, -boxH / 2, boxW, boxH, 32 * scale);
+
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+
+    let currentX = -totalW / 2;
+
+    // Draw each word
+    wordMetrics.forEach(wObj => {
+      const isActive = currentTime >= wObj.start && currentTime <= wObj.end;
+
+      ctx.save();
+      ctx.translate(currentX + wObj.width / 2, 0);
+
+      // Kinetic effects for active word
+      if (isActive) {
+        // scale pop effect
+        const t = (currentTime - wObj.start) / Math.max(wObj.end - wObj.start, 0.01);
+        // quick pop out then settle
+        const scalePop = 1.0 + Math.sin(t * Math.PI) * 0.15;
+        ctx.scale(scalePop, scalePop);
+
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 14 * scale;
+        ctx.strokeText(wObj.word, -wObj.width / 2, 0);
+
+        ctx.fillStyle = highlightColor; // highlight neon
+        // add glow
+        ctx.shadowColor = highlightColor;
+        ctx.shadowBlur = 10 * scale;
+      } else {
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 10 * scale;
+        ctx.strokeText(wObj.word, -wObj.width / 2, 0);
+        ctx.fillStyle = style.textColor || '#ffffff';
+      }
+
+      ctx.fillText(wObj.word, -wObj.width / 2, 0);
+      ctx.restore();
+
+      currentX += wObj.width + wObj.space;
+    });
+
+  } else {
+    // Fallback static caption render
+    const textW = ctx.measureText(text).width;
+    const padX = 42 * scale;
+    const padY = 30 * scale;
+    const boxW = textW + padX * 2;
+    const boxH = fontSize + padY * 2;
+
+    const pillColor = style.pillColor || '#000000';
+    const pillOpacity = style.pillOpacity !== undefined ? style.pillOpacity : 140;
+    ctx.fillStyle = hexToRgbaStr(pillColor, pillOpacity / 255);
+    drawRoundedRect(-boxW / 2, -boxH / 2, boxW, boxH, 32 * scale);
+
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 10 * scale;
+    ctx.strokeText(text, 0, 0);
+
+    ctx.fillStyle = style.textColor || '#ffffff';
+    ctx.fillText(text, 0, 0);
+  }
 }
 
 function drawRoundedRect(x, y, w, h, r) {
@@ -2955,3 +3372,96 @@ async function uploadOverlayAvatar(event, clipId) {
     alert('Error uploading avatar.');
   }
 }
+
+// DYNAMIC OVERLAY CANVAS RENDERING
+function drawDynamicOverlayOnCanvas(clip, scale, currentTime) {
+  const props = clip.properties || {};
+  const template = clip.template;
+  const elapsed = currentTime - clip.start;
+  const progress = Math.min(1.0, elapsed / clip.duration);
+
+  // Easing function (simple ease-out cubic)
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  const animProgress = easeOutCubic(Math.min(1.0, elapsed / 0.5)); // Animate in over 0.5s
+
+  ctx.save();
+  // We use scale to allow users to resize it in the preview
+  ctx.scale(animProgress, animProgress);
+
+  if (template === 'social_follow') {
+    const username = props.username || '@username';
+    const accent = props.accent_color || '#A855F7';
+    const avatar = props.avatar_path || null;
+
+    // Draw card background
+    ctx.fillStyle = 'rgba(26, 29, 35, 0.9)';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 4 * scale;
+    drawRoundedRect(-200 * scale, -80 * scale, 400 * scale, 160 * scale, 20 * scale);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw avatar circle
+    if (avatar) {
+       // Since the image might not be loaded synchronously in the canvas loop,
+       // a basic colored circle represents the avatar if not fetched in JS yet.
+       ctx.fillStyle = '#ffffff';
+    } else {
+       ctx.fillStyle = accent;
+    }
+    ctx.beginPath();
+    ctx.arc(-130 * scale, 0, 50 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Text Username
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${40 * scale}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(username, -60 * scale, -10 * scale);
+
+    // Follow Button
+    ctx.fillStyle = accent;
+    drawRoundedRect(-60 * scale, 10 * scale, 120 * scale, 40 * scale, 20 * scale);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${20 * scale}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText("Follow", 0, 37 * scale);
+
+  } else if (template === 'call_to_action') {
+    const text = props.text || 'LINK IN BIO';
+    const accent = props.accent_color || '#3B82F6';
+
+    // Draw glowing text
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 30 * scale * (0.8 + 0.2 * Math.sin(currentTime * 5)); // Pulsing glow
+    ctx.font = `900 ${80 * scale}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(text, 0, 0);
+
+    // Draw underline
+    ctx.fillStyle = accent;
+    ctx.shadowBlur = 0;
+    ctx.fillRect(-150 * scale, 20 * scale, 300 * scale, 10 * scale);
+  }
+
+  ctx.restore();
+}
+
+// Poll for missing audio peaks
+setInterval(async () => {
+  if (!project || !project.assets) return;
+  for (const asset of project.assets) {
+    if ((asset.type === 'video' || asset.type === 'audio') && (!asset.audio_peaks || asset.audio_peaks.length === 0)) {
+      try {
+        const res = await fetch(`/api/media/peaks/${asset.id}`);
+        const data = await res.json();
+        if (data.status === 'done') {
+          asset.audio_peaks = data.peaks || [];
+          renderTimeline(); // re-render timeline once peaks arrive
+        }
+      } catch (err) {}
+    }
+  }
+}, 3000);

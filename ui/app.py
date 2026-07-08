@@ -8,6 +8,7 @@ import subprocess
 import threading
 import traceback
 import uuid
+import concurrent.futures
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -34,6 +35,7 @@ from make_shorts import (
     FONT_CHOICES,
     TTS_VOICE_CHOICES,
     CaptionStyle,
+    extract_audio_peaks,
     generate_script,
     run_ai_assemble,
     run_manual_pipeline,
@@ -41,9 +43,22 @@ from make_shorts import (
     transcribe_audio,
     generate_audio,
     make_caption_chunks,
+    extract_word_timestamps,
 )
 from studio_renderer import render_studio_project
 import queue_manager as qm
+
+# Create a global thread pool executor for non-blocking extraction
+extractor_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+
+ASYNC_PEAKS = {}
+
+def safe_extract_peaks(asset_id, path, num_peaks=200):
+    try:
+        peaks = extract_audio_peaks(path, num_peaks)
+        ASYNC_PEAKS[asset_id] = peaks
+    except Exception:
+        ASYNC_PEAKS[asset_id] = []
 
 
 UPLOAD_DIR = PROJECT_DIR / "uploads"
@@ -677,6 +692,15 @@ def api_status(job_id):
         payload["trace"] = job.get("trace")
     return jsonify(payload)
 
+@app.route('/api/media/peaks/<asset_id>', methods=['GET'])
+def get_audio_peaks(asset_id):
+    peaks = ASYNC_PEAKS.get(asset_id)
+    if peaks is not None:
+        return jsonify({"status": "done", "peaks": peaks})
+    else:
+        return jsonify({"status": "pending"})
+
+
 @app.route("/api/status/stream/<job_id>")
 def api_status_stream(job_id):
     import json
@@ -967,6 +991,7 @@ def api_studio_media_upload():
     duration = 0.0
     width = 0
     height = 0
+    audio_peaks = []
     
     ext = Path(filename).suffix.lower()
     
@@ -977,6 +1002,9 @@ def api_studio_media_upload():
                 duration = float(clip.duration or 0.0)
                 width = int(clip.w)
                 height = int(clip.h)
+            if duration > 0:
+                # Dispatch non-blocking extraction
+                extractor_pool.submit(safe_extract_peaks, asset_id, dest, 200)
         except Exception as e:
             print(f"[WARN] MoviePy fail to read uploaded video info: {e}")
     elif ext in AUDIO_EXTENSIONS:
@@ -984,6 +1012,9 @@ def api_studio_media_upload():
         try:
             with AudioFileClip(str(dest)) as clip:
                 duration = float(clip.duration or 0.0)
+            if duration > 0:
+                # Dispatch non-blocking extraction
+                extractor_pool.submit(safe_extract_peaks, asset_id, dest, 200)
         except Exception as e:
             print(f"[WARN] MoviePy fail to read uploaded audio info: {e}")
     else:
@@ -1014,7 +1045,8 @@ def api_studio_media_upload():
         "path": str(dest),
         "duration": round(duration, 2),
         "width": width,
-        "height": height
+        "height": height,
+        "audio_peaks": audio_peaks
     }
     return jsonify(asset_info)
 
@@ -1080,11 +1112,14 @@ def api_media_fetch():
 
         width = 1080
         height = 1920
+        audio_peaks = []
         try:
             with VideoFileClip(str(dest)) as clip:
                 duration = float(clip.duration or duration or 0.0)
                 width = int(clip.w)
                 height = int(clip.h)
+            if duration > 0:
+                audio_peaks = extract_audio_peaks(dest, num_peaks=200)
         except Exception as e:
             print(f"[WARN] MoviePy error on fetch load: {e}")
 
@@ -1108,7 +1143,8 @@ def api_media_fetch():
             "duration": round(duration or 0.0, 2),
             "width": width,
             "height": height,
-            "platform": platform_info["platform"]
+            "platform": platform_info["platform"],
+            "audio_peaks": audio_peaks
         }
         return jsonify(asset_info)
     except Exception as e:
@@ -1196,9 +1232,12 @@ def api_media_audio_extract():
             video_path.unlink()
 
         duration = 0.0
+        audio_peaks = []
         try:
             with AudioFileClip(str(dest)) as clip:
                 duration = float(clip.duration or 0.0)
+            if duration > 0:
+                audio_peaks = extract_audio_peaks(dest, num_peaks=200)
         except Exception:
             pass
 
@@ -1210,7 +1249,8 @@ def api_media_audio_extract():
             "preview_url": f"/studio_uploads/{audio_name}",
             "path": str(dest),
             "duration": round(duration, 2),
-            "platform": platform_info["platform"]
+            "platform": platform_info["platform"],
+            "audio_peaks": audio_peaks
         }
         return jsonify(asset_info)
     except Exception as e:
@@ -1232,11 +1272,14 @@ def api_studio_media_reel_video():
         
         width = 1080
         height = 1920
+        audio_peaks = []
         try:
             with VideoFileClip(str(dest)) as clip:
                 duration = float(clip.duration or duration or 0.0)
                 width = int(clip.w)
                 height = int(clip.h)
+            if duration > 0:
+                audio_peaks = extract_audio_peaks(dest, num_peaks=200)
         except Exception as e:
             print(f"[WARN] MoviePy error on reel load: {e}")
             
@@ -1259,7 +1302,8 @@ def api_studio_media_reel_video():
             "path": str(dest),
             "duration": round(duration or 0.0, 2),
             "width": width,
-            "height": height
+            "height": height,
+            "audio_peaks": audio_peaks
         }
         return jsonify(asset_info)
     except Exception as e:
@@ -1284,9 +1328,12 @@ def api_studio_audio_reel_extract():
             video_path.unlink()
             
         duration = 0.0
+        audio_peaks = []
         try:
             with AudioFileClip(str(dest)) as clip:
                 duration = float(clip.duration or 0.0)
+            if duration > 0:
+                audio_peaks = extract_audio_peaks(dest, num_peaks=200)
         except Exception as e:
             print(f"[WARN] Failed to get audio duration: {e}")
             
@@ -1297,7 +1344,8 @@ def api_studio_audio_reel_extract():
             "url": f"/studio_uploads/{audio_name}",
             "preview_url": f"/studio_uploads/{audio_name}",
             "path": str(dest),
-            "duration": round(duration, 2)
+            "duration": round(duration, 2),
+            "audio_peaks": audio_peaks
         }
         return jsonify(asset_info)
     except Exception as e:
@@ -1319,9 +1367,12 @@ def api_studio_audio_tts():
         _run_async(generate_audio(text, dest, voice=voice))
         
         duration = 0.0
+        audio_peaks = []
         try:
             with AudioFileClip(str(dest)) as clip:
                 duration = float(clip.duration or 0.0)
+            if duration > 0:
+                audio_peaks = extract_audio_peaks(dest, num_peaks=200)
         except Exception as e:
             print(f"[WARN] Failed to get TTS duration: {e}")
             
@@ -1331,7 +1382,8 @@ def api_studio_audio_tts():
             "name": f"TTS: {text[:20]}...",
             "url": f"/studio_uploads/{audio_name}",
             "path": str(dest),
-            "duration": round(duration, 2)
+            "duration": round(duration, 2),
+            "audio_peaks": audio_peaks
         }
         return jsonify(asset_info)
     except Exception as e:
@@ -1364,11 +1416,12 @@ def api_studio_captions_generate():
             
         segments = transcribe_audio(transcribe_path)
         chunks = make_caption_chunks(segments)
+        words = extract_word_timestamps(segments)
         
         if temp_audio and temp_audio.exists():
             temp_audio.unlink()
             
-        return jsonify({"chunks": chunks})
+        return jsonify({"chunks": chunks, "words": words})
     except Exception as e:
         if temp_audio and temp_audio.exists():
             temp_audio.unlink()
