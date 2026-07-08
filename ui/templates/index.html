@@ -15,7 +15,12 @@
 </p>
 
 
-<div class="bento-grid">
+<div class="bento-grid parallax-wrapper">
+  <!-- Motion Graphic Elements (Floating background) -->
+  <div class="floating-shape shape-1"></div>
+  <div class="floating-shape shape-2"></div>
+  <div class="floating-shape shape-3"></div>
+
   <!-- Hero Card: Studio Mode -->
   <a href="/studio" class="bento-card bento-hero studio transition-link" style="animation-delay: 0.1s;">
     <div class="bento-icon">
@@ -119,3 +124,36 @@ document.getElementById('clearStorageBtn').addEventListener('click', async () =>
 });
 </script>
 {% endblock %}
+
+<!-- Page transition overlay -->
+<div class="page-wipe" id="pageWipe"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Parallax logic for shapes
+  document.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const shape1 = document.querySelector('.shape-1');
+    const shape2 = document.querySelector('.shape-2');
+    const shape3 = document.querySelector('.shape-3');
+
+    if (shape1) shape1.style.transform = `translateY(${scrolled * 0.15}px)`;
+    if (shape2) shape2.style.transform = `translateY(${scrolled * -0.1}px)`;
+    if (shape3) shape3.style.transform = `translateY(${scrolled * 0.2}px)`;
+  });
+
+  // Page Wipe transitions
+  document.querySelectorAll('.transition-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetUrl = link.getAttribute('href');
+      const wipe = document.getElementById('pageWipe');
+      wipe.classList.add('active');
+
+      setTimeout(() => {
+        window.location.href = targetUrl;
+      }, 500); // Wait for wipe animation to almost finish
+    });
+  });
+});
+</script>

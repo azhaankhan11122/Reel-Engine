@@ -315,6 +315,7 @@ def build_overlay_clip(clip_data, target_w, target_h):
         username = props.get('username', '@username')
         accent_color = props.get('accent_color', '#A855F7')
         avatar_path = props.get('avatar_path', '')
+        easing = props.get('easing', 'linear')
         rgb_color = hex_to_rgb(accent_color)
 
         # Render the whole component with PIL
@@ -353,12 +354,49 @@ def build_overlay_clip(clip_data, target_w, target_h):
         comp = ImageClip(rgb_arr).with_duration(duration)
         mask_clip = ImageClip(mask_arr, is_mask=True).with_duration(duration)
         comp = comp.with_mask(mask_clip)
-        comp = comp.with_position(('center', int(target_h * 0.75)))
+
+        # Apply Easing for motion
+        def get_x_pos(t):
+            base_x = 'center'
+            # Slide in from left
+            if t > 0.5:
+                return base_x
+
+            p = t / 0.5
+            if easing == 'bounce':
+                n1, d1 = 7.5625, 2.75
+                if p < (1 / d1):
+                    val = n1 * p * p
+                elif p < (2 / d1):
+                    p -= (1.5 / d1)
+                    val = n1 * p * p + 0.75
+                elif p < (2.5 / d1):
+                    p -= (2.25 / d1)
+                    val = n1 * p * p + 0.9375
+                else:
+                    p -= (2.625 / d1)
+                    val = n1 * p * p + 0.984375
+            elif easing == 'backOut':
+                c1, c3 = 1.70158, 2.70158
+                p = p - 1
+                val = 1 + c3 * p * p * p + c1 * p * p
+            else:
+                val = p
+
+            # start offscreen left (-target_w) to center (target_w/2 - w/2)
+            # MoviePy pos function with string 'center' doesn't interpolate well, we must yield float
+            center_x = target_w / 2 - w / 2
+            start_x = -w
+            return start_x + (center_x - start_x) * val
+
+        comp = comp.with_position(lambda t: (get_x_pos(t) if t <= 0.5 else 'center', int(target_h * 0.75)))
+        comp = comp.with_effects([vfx.CrossFadeOut(0.5)])
         return comp
 
     elif template == 'call_to_action':
         text = props.get('text', 'LINK IN BIO')
         accent_color = props.get('accent_color', '#3B82F6')
+        easing = props.get('easing', 'linear')
         rgb_color = hex_to_rgb(accent_color)
 
         w, h = int(target_w * 0.9), 120
@@ -381,11 +419,49 @@ def build_overlay_clip(clip_data, target_w, target_h):
         comp = ImageClip(rgb_arr).with_duration(duration)
         mask_clip = ImageClip(mask_arr, is_mask=True).with_duration(duration)
         comp = comp.with_mask(mask_clip)
-        comp = comp.with_position(('center', 'center'))
-        comp = comp.with_effects([vfx.CrossFadeIn(0.5), vfx.CrossFadeOut(0.5)])
+
+        # Apply Easing for motion
+        def get_y_pos(t):
+            base_y = int(target_h * 0.85)
+            # ease in duration is 0.5s
+            if t > 0.5:
+                return base_y
+
+            # t goes 0 to 0.5
+            p = t / 0.5
+            if easing == 'bounce':
+                # simple bounce math
+                n1, d1 = 7.5625, 2.75
+                if p < (1 / d1):
+                    val = n1 * p * p
+                elif p < (2 / d1):
+                    p -= (1.5 / d1)
+                    val = n1 * p * p + 0.75
+                elif p < (2.5 / d1):
+                    p -= (2.25 / d1)
+                    val = n1 * p * p + 0.9375
+                else:
+                    p -= (2.625 / d1)
+                    val = n1 * p * p + 0.984375
+            elif easing == 'backOut':
+                c1, c3 = 1.70158, 2.70158
+                p = p - 1
+                val = 1 + c3 * p * p * p + c1 * p * p
+            else:
+                val = p # linear
+
+            # val is 0 -> 1, invert for y position coming from bottom
+            offset = 200 * (1.0 - val)
+            return base_y + offset
+
+        comp = comp.with_position(lambda t: ('center', get_y_pos(t)))
+        comp = comp.with_effects([vfx.CrossFadeOut(0.5)])
         return comp
 
-    return ColorClip(size=(100,100), color=(255,0,0)).with_duration(duration)
+    # Fallback to empty transparent clip if unknown template
+    empty_arr = np.zeros((10, 10, 3), dtype=np.uint8)
+    empty_clip = ImageClip(empty_arr).with_duration(duration).with_opacity(0.0)
+    return empty_clip
 
 def render_studio_project(project_data, output_path, progress_callback=None):
     """

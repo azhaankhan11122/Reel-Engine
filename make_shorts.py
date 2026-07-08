@@ -788,6 +788,21 @@ def build_visual_scene(cut, size=(W, H), rng=None):
     return build_image_scene(cut, size)
 
 
+def extract_word_timestamps(segments) -> list:
+    """
+    Extract exact word-level timing from Whisper segments.
+    Returns: [{"word": "Hello", "start": 0.1, "end": 0.4}, ...]
+    """
+    words = []
+    for seg in segments:
+        seg_words = getattr(seg, "words", None)
+        if seg_words:
+            for w in seg_words:
+                words.append({"word": w.word.strip(), "start": w.start, "end": w.end})
+        else:
+            words.append({"word": seg.text.strip(), "start": seg.start, "end": seg.end})
+    return words
+
 def make_caption_chunks(segments):
     """
     Whisper → viral caption chunks.
@@ -835,6 +850,55 @@ def make_caption_chunks(segments):
         })
 
     return chunks
+
+
+def extract_audio_peaks(audio_path: Path, num_peaks: int = 100) -> list:
+    """
+    Extract downsampled audio peaks (array of floats) from an audio/video file.
+    """
+    try:
+        from moviepy.editor import AudioFileClip
+        import numpy as np
+
+        clip = AudioFileClip(str(audio_path))
+        if clip.duration <= 0:
+            return []
+
+        # Read at a low framerate to save memory
+        # drastically reduce fps to 50 for large files to avoid blocking
+        fps = 50
+        sound_array = clip.to_soundarray(fps=fps)
+        clip.close()
+
+        if sound_array is None or len(sound_array) == 0:
+            return []
+
+        # Mono conversion if stereo
+        if len(sound_array.shape) > 1:
+            sound_array = np.mean(sound_array, axis=1)
+
+        chunk_size = max(1, len(sound_array) // num_peaks)
+
+        peaks = []
+        for i in range(min(num_peaks, len(sound_array) // chunk_size + 1)):
+            start = i * chunk_size
+            end = min(start + chunk_size, len(sound_array))
+            if start >= len(sound_array):
+                break
+            chunk = sound_array[start:end]
+            # peak value in this chunk
+            peak = float(np.max(np.abs(chunk)))
+            peaks.append(peak)
+
+        # normalize to 0.0 - 1.0
+        max_peak = max(peaks) if peaks else 1.0
+        if max_peak > 0:
+            peaks = [p / max_peak for p in peaks]
+
+        return peaks
+    except Exception as e:
+        print(f"[ERROR] Failed to extract audio peaks: {e}")
+        return []
 
 
 def transcribe_audio(audio_path: Path):
