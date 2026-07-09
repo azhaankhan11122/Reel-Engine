@@ -153,6 +153,7 @@ def _download_remote_video(url: str, job_id: str):
         "quiet": True,
         "no_warnings": True,
         "ignoreerrors": False,
+        "cookiesfrombrowser": ("chrome",),
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
