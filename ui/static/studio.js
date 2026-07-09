@@ -114,14 +114,17 @@ function initUI() {
   // Watermark removal in Studio Mode
   const btnRemoveWatermark = document.getElementById('btnRemoveWatermark');
   let isDrawingWatermark = false;
-  let isDrawingWatermarkActive = false;
+  window.isDrawingWatermarkActive = false;
   let wmStartX = 0, wmStartY = 0;
 
   if (btnRemoveWatermark && previewCanvas) {
     btnRemoveWatermark.addEventListener('click', () => {
-      if (!activeClip || (activeClip.type !== 'video' && activeClip.type !== 'overlay')) return;
-      isDrawingWatermarkActive = !isDrawingWatermarkActive;
-      if (isDrawingWatermarkActive) {
+      if (!activeClip || (activeClip.type !== 'video' && activeClip.type !== 'overlay')) {
+        alert('Please select a video clip in the timeline first!');
+        return;
+      }
+      window.isDrawingWatermarkActive = !window.isDrawingWatermarkActive;
+      if (window.isDrawingWatermarkActive) {
         btnRemoveWatermark.classList.add('active');
         btnRemoveWatermark.style.backgroundColor = 'var(--danger-color)';
         btnRemoveWatermark.textContent = 'Cancel Watermark Selection';
@@ -131,43 +134,36 @@ function initUI() {
         btnRemoveWatermark.style.backgroundColor = '';
         btnRemoveWatermark.innerHTML = '<i class="fa-solid fa-eraser"></i> Remove Watermark';
         previewCanvas.style.cursor = 'default';
-        renderCanvas();
+        drawFrame();
       }
     });
 
     previewCanvas.addEventListener('mousedown', (e) => {
-      if (!isDrawingWatermarkActive) return;
-      isDrawingWatermark = true;
+      if (!window.isDrawingWatermarkActive) return;
+      window.isDrawingWatermark = true;
       const rect = previewCanvas.getBoundingClientRect();
       const scaleX = previewCanvas.width / rect.width;
       const scaleY = previewCanvas.height / rect.height;
-      wmStartX = (e.clientX - rect.left) * scaleX;
-      wmStartY = (e.clientY - rect.top) * scaleY;
+      window.wmStartX = (e.clientX - rect.left) * scaleX;
+      window.wmStartY = (e.clientY - rect.top) * scaleY;
+      window.wmCurrentX = window.wmStartX;
+      window.wmCurrentY = window.wmStartY;
     });
 
     previewCanvas.addEventListener('mousemove', (e) => {
-      if (!isDrawingWatermarkActive || !isDrawingWatermark) return;
+      if (!window.isDrawingWatermarkActive || !window.isDrawingWatermark) return;
       const rect = previewCanvas.getBoundingClientRect();
       const scaleX = previewCanvas.width / rect.width;
       const scaleY = previewCanvas.height / rect.height;
-      const currentX = (e.clientX - rect.left) * scaleX;
-      const currentY = (e.clientY - rect.top) * scaleY;
+      window.wmCurrentX = (e.clientX - rect.left) * scaleX;
+      window.wmCurrentY = (e.clientY - rect.top) * scaleY;
 
-      renderCanvas(); // clear and redraw base
-
-      const ctx = previewCanvas.getContext('2d');
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
-      const w = currentX - wmStartX;
-      const h = currentY - wmStartY;
-      ctx.fillRect(wmStartX, wmStartY, w, h);
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(wmStartX, wmStartY, w, h);
+      drawFrame(); // redraws everything including red box
     });
 
     previewCanvas.addEventListener('mouseup', (e) => {
-      if (!isDrawingWatermarkActive || !isDrawingWatermark) return;
-      isDrawingWatermark = false;
+      if (!window.isDrawingWatermarkActive || !window.isDrawingWatermark) return;
+      window.isDrawingWatermark = false;
       const rect = previewCanvas.getBoundingClientRect();
       const scaleX = previewCanvas.width / rect.width;
       const scaleY = previewCanvas.height / rect.height;
@@ -176,10 +172,10 @@ function initUI() {
         y: (e.clientY - rect.top) * scaleY
       };
 
-      const x = Math.min(wmStartX, pos.x);
-      const y = Math.min(wmStartY, pos.y);
-      const w = Math.abs(pos.x - wmStartX);
-      const h = Math.abs(pos.y - wmStartY);
+      const x = Math.min(window.wmStartX, pos.x);
+      const y = Math.min(window.wmStartY, pos.y);
+      const w = Math.abs(pos.x - window.wmStartX);
+      const h = Math.abs(pos.y - window.wmStartY);
 
       if (w > 10 && h > 10) {
         const scale = activeClip.scale || 1.0;
@@ -209,12 +205,12 @@ function initUI() {
         saveState();
         alert('Watermark region selected and saved to clip.');
 
-        isDrawingWatermarkActive = false;
+        window.isDrawingWatermarkActive = false;
         btnRemoveWatermark.classList.remove('active');
         btnRemoveWatermark.style.backgroundColor = '';
         btnRemoveWatermark.innerHTML = '<i class="fa-solid fa-eraser"></i> Remove Watermark';
         previewCanvas.style.cursor = 'default';
-        renderCanvas();
+        drawFrame();
       }
     });
   }
@@ -1727,6 +1723,7 @@ function syncHiddenAudioPlayers() {
         // Sync volume
         const vol = clip.muted ? 0.0 : (clip.volume !== undefined ? clip.volume : 1.0);
         el.volume = vol;
+        el.muted = !!clip.muted;
         
         // Only set currentTime if playing or significantly desynced
         if (!isPlaying || Math.abs(el.currentTime - targetTime) > 0.15) {
@@ -1891,7 +1888,7 @@ function handleCanvasMousedown(e) {
     activeClip = null;
     hidePropertyInspector();
   }
-  renderCanvas();
+  drawFrame();
 }
 
 function handleCanvasMousemove(e) {
@@ -1922,19 +1919,19 @@ function handleCanvasMousemove(e) {
     activeClip.x = canvasOriginalClipState.x + (dx * easeFactor);
     activeClip.y = canvasOriginalClipState.y + (dy * easeFactor);
     updateInspectorFields();
-    renderCanvas();
+    drawFrame();
   } else if (isScalingCanvasLayer && activeClip) {
     // Basic scaling based on Y drag (pull down to enlarge)
     const scaleDelta = dy * 0.005 * easeFactor;
     activeClip.scale = Math.max(0.1, canvasOriginalClipState.scale - scaleDelta);
     updateInspectorFields();
-    renderCanvas();
+    drawFrame();
   } else if (isRotatingCanvasLayer && activeClip) {
     // Rotate based on X drag
     const rotDelta = dx * 0.5 * easeFactor;
     activeClip.rotation = canvasOriginalClipState.rotation + rotDelta;
     updateInspectorFields();
-    renderCanvas();
+    drawFrame();
   }
 }
 
@@ -1946,7 +1943,7 @@ function handleCanvasMouseup(e) {
     canvasActiveHandle = null;
     saveState(); // Save to undo stack when interaction finishes
     // Slight "snap" finish
-    renderCanvas();
+    drawFrame();
   }
 }
 
@@ -1961,8 +1958,23 @@ function getClipRect(clip) {
   let ch = 800 * scale;
 
   if (clip.trackId === 'text' || clip.type === 'text') {
-    cw = 600 * scale;
-    ch = 200 * scale;
+    const lines = (clip.text || '').split('\n');
+    const fontSize = (clip.fontSize || 80) * scale;
+    const fontFamily = fontMapping[clip.fontFamily || 'impact'] || 'sans-serif';
+    
+    ctx.save();
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    let maxW = 0;
+    lines.forEach(line => {
+      const w = ctx.measureText(line).width;
+      if (w > maxW) maxW = w;
+    });
+    ctx.restore();
+    
+    const padX = 24 * scale;
+    const padY = 20 * scale;
+    cw = maxW + padX * 2;
+    ch = (fontSize + 12 * scale) * lines.length - 12 * scale + padY * 2;
   }
 
   return { left: x - cw/2, right: x + cw/2, top: y - ch/2, bottom: y + ch/2, w: cw, h: ch, cx: x, cy: y };
@@ -2053,6 +2065,18 @@ function drawFrame() {
       }
     });
   });
+
+  if (window.isDrawingWatermarkActive && window.isDrawingWatermark && window.wmStartX !== undefined && window.wmCurrentX !== undefined) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+    const w = window.wmCurrentX - window.wmStartX;
+    const h = window.wmCurrentY - window.wmStartY;
+    ctx.fillRect(window.wmStartX, window.wmStartY, w, h);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(window.wmStartX, window.wmStartY, w, h);
+    ctx.restore();
+  }
 }
 
 function drawClipElement(clip, trackId, currentTime) {
