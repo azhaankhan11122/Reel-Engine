@@ -1956,6 +1956,11 @@ function getClipRect(clip) {
   // Default bounds
   let cw = 800 * scale;
   let ch = 800 * scale;
+  
+  if (clip.trackId === 'video_main') {
+    cw = W * scale;
+    ch = H * scale;
+  }
 
   if (clip.trackId === 'text' || clip.type === 'text') {
     const lines = (clip.text || '').split('\n');
