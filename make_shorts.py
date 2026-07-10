@@ -857,7 +857,7 @@ def extract_audio_peaks(audio_path: Path, num_peaks: int = 100) -> list:
     Extract downsampled audio peaks (array of floats) from an audio/video file.
     """
     try:
-        from moviepy.editor import AudioFileClip
+        from moviepy.audio.io.AudioFileClip import AudioFileClip
         import numpy as np
 
         clip = AudioFileClip(str(audio_path))

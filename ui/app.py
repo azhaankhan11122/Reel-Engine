@@ -426,7 +426,7 @@ def api_instagram_transcribe():
         text = " ".join(seg.text.strip() for seg in segments if getattr(seg, "text", None))
         # also include audio duration for client-side comparison
         try:
-            from moviepy.editor import AudioFileClip
+            from moviepy.audio.io.AudioFileClip import AudioFileClip
             audio_dur = AudioFileClip(str(audio_path)).duration
         except Exception:
             audio_dur = None
@@ -1428,7 +1428,18 @@ def api_studio_captions_generate():
             temp_audio.unlink()
         return jsonify({"error": f"Caption generation failed: {str(e)}"}), 500
 
-@app.route("/api/studio/render", methods=["POST"])
+def _task_studio_render(job_id: str, project_data: dict, out_path, out_name: str):
+    def update_progress(percent, msg):
+        qm.update_job(job_id, percent=percent, message=msg)
+
+    try:
+        render_studio_project(project_data, str(out_path), progress_callback=update_progress)
+        return {"video_url": f"/output/{out_name}"}
+    except Exception as e:
+        traceback.print_exc()
+        raise
+
+@app.route('/api/studio/render', methods=['POST'])
 def api_studio_render():
     project_data = request.get_json(silent=True) or {}
     project_id = project_data.get("id")
