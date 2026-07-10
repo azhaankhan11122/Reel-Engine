@@ -9,8 +9,12 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent / "jobs.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20)
     c = conn.cursor()
+
+    c.execute('PRAGMA journal_mode=WAL;')
+    c.execute('PRAGMA synchronous=NORMAL;')
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS jobs (
             job_id TEXT PRIMARY KEY,
@@ -27,7 +31,7 @@ def init_db():
     conn.close()
 
 def get_job(job_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('SELECT * FROM jobs WHERE job_id = ?', (job_id,))
@@ -44,7 +48,7 @@ def get_job(job_id):
     return None
 
 def update_job(job_id, **kwargs):
-    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn = sqlite3.connect(DB_PATH, timeout=20)
     c = conn.cursor()
     for key, value in kwargs.items():
         if key == 'result' and isinstance(value, dict):
@@ -54,7 +58,7 @@ def update_job(job_id, **kwargs):
     conn.close()
 
 def create_job(job_id, status="queued", message="", percent=0, mode="", result=None):
-    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn = sqlite3.connect(DB_PATH, timeout=20)
     c = conn.cursor()
     created = datetime.now().isoformat()
     result_str = json.dumps(result) if result else None

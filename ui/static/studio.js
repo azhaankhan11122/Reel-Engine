@@ -404,6 +404,13 @@ function initUI() {
     startExport();
   });
   document.getElementById('btnExportModalClose').addEventListener('click', () => {
+    if (typeof currentExportSource !== 'undefined' && currentExportSource) {
+      currentExportSource.close();
+      currentExportSource = null;
+    }
+    if (typeof audioPeaksInterval !== 'undefined') {
+      clearInterval(audioPeaksInterval);
+    }
     document.getElementById('exportModal').classList.remove('active');
   });
 
@@ -3126,8 +3133,11 @@ function startExport() {
   });
 }
 
+let currentExportSource = null;
 function pollExportStatus(jobId) {
+  if (currentExportSource) { currentExportSource.close(); }
   const source = new EventSource(`/api/status/stream/${jobId}`);
+  currentExportSource = source;
   source.onmessage = function(event) {
     const job = JSON.parse(event.data);
     if (job.error) {
@@ -3479,10 +3489,12 @@ function drawDynamicOverlayOnCanvas(clip, scale, currentTime) {
 }
 
 // Poll for missing audio peaks
-setInterval(async () => {
+let audioPeaksInterval = setInterval(async () => {
   if (!project || !project.assets) return;
+  let allDone = true;
   for (const asset of project.assets) {
     if ((asset.type === 'video' || asset.type === 'audio') && (!asset.audio_peaks || asset.audio_peaks.length === 0)) {
+      allDone = false;
       try {
         const res = await fetch(`/api/media/peaks/${asset.id}`);
         const data = await res.json();
@@ -3493,4 +3505,6 @@ setInterval(async () => {
       } catch (err) {}
     }
   }
+  // We don't clearInterval here because new assets can be added anytime.
+  // Instead, if there are no pending peaks, we do nothing to save resources.
 }, 3000);
