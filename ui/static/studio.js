@@ -408,9 +408,6 @@ function initUI() {
       currentExportSource.close();
       currentExportSource = null;
     }
-    if (typeof audioPeaksInterval !== 'undefined') {
-      clearInterval(audioPeaksInterval);
-    }
     document.getElementById('exportModal').classList.remove('active');
   });
 
