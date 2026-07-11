@@ -105,6 +105,21 @@ def _start_job(job_id: str, target, *args, **kwargs):
     qm.engine_queue.submit(job_id, target, *args, **kwargs)
 
 
+def _task_instagram_assemble(job_id, background_path, text, style, music_path, music_volume, voice, watermark_text, watermark_position, watermark_opacity):
+    # This acts like manual mode, we just ignore voice for manual mode inside Make Shorts
+    # Or actually Instagram mode just takes the video and generates it.
+    out_name = f"shorts_instagram_{job_id}.mp4"
+    _run_async(run_manual_pipeline(background_path, text, OUTPUT_DIR, TEMP_DIR, style, music_path, music_volume, watermark_text, watermark_position, watermark_opacity, out_name))
+
+def _task_ai_assemble(script, media_paths, style, voice, music_path, music_volume, out_name, watermark_text, watermark_position, watermark_opacity):
+    _run_async(run_ai_assemble(script, media_paths, OUTPUT_DIR, TEMP_DIR, style, voice, music_path, music_volume, out_name, watermark_text, watermark_position, watermark_opacity))
+
+def _task_manual_generate(video_path, text, style, music_path, music_volume, watermark_text, watermark_position, watermark_opacity):
+    _run_async(run_manual_pipeline(video_path, text, OUTPUT_DIR, TEMP_DIR, style, music_path, music_volume, watermark_text, watermark_position, watermark_opacity))
+
+
+
+
 def _parse_music_volume(raw, default=0.15):
     try:
         vol = float(raw) / 100.0
@@ -708,31 +723,34 @@ def api_status_stream(job_id):
     import time
     def generate():
         last_status = None
-        while True:
-            job = qm.get_job(job_id) or jobs.get(job_id)
-            if not job:
-                yield f"data: {json.dumps({'error': 'Job not found'})}\n\n"
-                break
+        try:
+            while True:
+                job = qm.get_job(job_id) or jobs.get(job_id)
+                if not job:
+                    yield f"data: {json.dumps({'error': 'Job not found'})}\n\n"
+                    break
 
-            payload = {
-                "status": job["status"],
-                "message": job["message"],
-                "mode": job.get("mode"),
-                "percent": int(job.get("percent") or 0),
-            }
-            if job["status"] == "done":
-                payload["result"] = job.get("result", {})
-            if job["status"] == "error" and app.debug:
-                payload["trace"] = job.get("trace")
+                payload = {
+                    "status": job["status"],
+                    "message": job["message"],
+                    "mode": job.get("mode"),
+                    "percent": int(job.get("percent") or 0),
+                }
+                if job["status"] == "done":
+                    payload["result"] = job.get("result", {})
+                if job["status"] == "error" and app.debug:
+                    payload["trace"] = job.get("trace")
 
-            current_status = json.dumps(payload)
-            if current_status != last_status:
-                yield f"data: {current_status}\n\n"
-                last_status = current_status
+                current_status = json.dumps(payload)
+                if current_status != last_status:
+                    yield f"data: {current_status}\n\n"
+                    last_status = current_status
 
-            if job["status"] in ["done", "error"]:
-                break
-            time.sleep(0.5)
+                if job["status"] in ["done", "error"]:
+                    break
+                time.sleep(0.5)
+        except GeneratorExit:
+            pass
 
     return Response(generate(), mimetype="text/event-stream")
 
@@ -1428,7 +1446,21 @@ def api_studio_captions_generate():
             temp_audio.unlink()
         return jsonify({"error": f"Caption generation failed: {str(e)}"}), 500
 
+
+def _task_watermark(job_id, src_path, watermark_text, opacity_pct):
+    def update_progress(percent, msg):
+        qm.update_job(job_id, percent=percent, message=msg)
+    try:
+        update_progress(10, "Applying watermark...")
+        res = _apply_watermark(src_path, watermark_text, "bottom-right", opacity_pct)
+        return {"video_url": f"/output/{res.name}"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
+
 def _task_studio_render(job_id: str, project_data: dict, out_path, out_name: str):
+
     def update_progress(percent, msg):
         qm.update_job(job_id, percent=percent, message=msg)
 
