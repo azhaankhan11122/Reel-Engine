@@ -2,6 +2,17 @@
 {% block title %}Reel Engine — Home{% endblock %}
 
 {% block content %}
+<!-- Loading State -->
+<div id="loader" style="position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:#0F1115; color:#fff; font-size:1.5rem; font-weight:bold; transition: opacity 0.5s;">
+  Loading... <span id="progress">0</span>%
+</div>
+
+<!-- Scroll Container -->
+<div id="scroll-container" style="height: 400vh; position: relative;">
+  <canvas id="hero-lightpass" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0; transition: opacity 0.5s;"></canvas>
+</div>
+
+<div class="content-wrapper" style="position: relative; z-index: 10; background: #0F1115; padding-top: 4rem; padding-bottom: 4rem; min-height: 100vh;">
 <header>
   <div class="logo">🎬</div>
   <div>
@@ -105,6 +116,8 @@
   </button>
 </div>
 
+</div> <!-- End content-wrapper -->
+
 <script>
 document.getElementById('clearStorageBtn').addEventListener('click', async () => {
   if (!confirm('Delete all locally stored uploads, temp files, outputs, and session data? This cannot be undone.')) return;
@@ -128,8 +141,111 @@ document.getElementById('clearStorageBtn').addEventListener('click', async () =>
 <!-- Page transition overlay -->
 <div class="page-wipe" id="pageWipe"></div>
 
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  gsap.registerPlugin(ScrollTrigger);
+
+  // --- Scroll Sequence Animation ---
+  const canvas = document.getElementById("hero-lightpass");
+  const ctx = canvas.getContext("2d");
+
+  // Try loading frames up to 150 (it will stop automatically if they don't exist)
+  const frameCount = 100; // From user config matching AirPods page style
+  const currentFrame = index => `/static/ezgif-15e359c27ada0a0c-jpg/frame-${String(index).padStart(3, '0')}.jpg`;
+
+  const images = [];
+  const obj = { frame: 0 };
+  let loadedCount = 0;
+
+  function resize() {
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+    render();
+  }
+  window.addEventListener("resize", resize);
+
+  function render() {
+    if (!images[Math.floor(obj.frame)] || !images[Math.floor(obj.frame)].complete) return;
+    const img = images[Math.floor(obj.frame)];
+    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = (canvas.width - w) / 2;
+    const y = (canvas.height - h) / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, x, y, w, h);
+  }
+
+  for (let i = 0; i < frameCount; i++) {
+    const img = new Image();
+    img.src = currentFrame(i);
+    img.onload = () => {
+      loadedCount++;
+      document.getElementById('progress').innerText = Math.round((loadedCount / frameCount) * 100);
+      if (loadedCount === frameCount) initSequence();
+    };
+    img.onerror = () => {
+      // Graceful fallback to prevent infinite loading if frames are missing
+      loadedCount++;
+      if (loadedCount === frameCount) initSequence();
+    };
+    images.push(img);
+  }
+
+  function initSequence() {
+    const loader = document.getElementById('loader');
+    if(loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 500);
+    }
+
+    if (images.length > 0 && images[0].complete) {
+      canvas.style.opacity = '1';
+      resize();
+
+      gsap.to(obj, {
+        frame: frameCount - 1,
+        snap: "frame",
+        ease: "none",
+        scrollTrigger: {
+          trigger: "#scroll-container",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.5
+        },
+        onUpdate: render
+      });
+    }
+  }
+
+  // --- Bento Grid Pop and Hover Animation ---
+  // Disable default CSS animations by resetting opacity/transform
+  document.querySelectorAll('.bento-card').forEach(card => {
+    card.style.animation = 'none';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(40px)';
+  });
+
+  ScrollTrigger.create({
+    trigger: ".content-wrapper",
+    start: "top 75%",
+    onEnter: () => {
+      gsap.to('.bento-card', {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "back.out(1.7)"
+      });
+    },
+    once: true
+  });
+
+
   // Parallax logic for shapes
   document.addEventListener('scroll', () => {
     const scrolled = window.scrollY;
@@ -157,3 +273,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+{% endblock %}
