@@ -208,17 +208,18 @@ document.addEventListener('DOMContentLoaded', () => {
       resize();
 
       gsap.to(obj, {
-        frame: frameCount - 1,
-        snap: "frame",
-        ease: "none",
-        scrollTrigger: {
-          trigger: "#scroll-container",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.5
-        },
-        onUpdate: render
-      });
+	        frame: frameCount - 1,
+	        snap: "frame",
+	        ease: "none",
+	        scrollTrigger: {
+	          trigger: "#scroll-container",
+	          start: "0px",
+	          end: "+=200vh",
+	          scrub: true,
+	          invalidateOnRefresh: true
+	        },
+	        onUpdate: render
+	      });
     } else {
       // Fallback: Collapse the scroll container if images are missing
       const scrollContainer = document.getElementById('scroll-container');
