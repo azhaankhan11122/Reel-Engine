@@ -152,9 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById("hero-lightpass");
   const ctx = canvas.getContext("2d");
 
-  // Try loading frames up to 150 (it will stop automatically if they don't exist)
-  const frameCount = 100; // From user config matching AirPods page style
-  const currentFrame = index => `/static/ezgif-15e359c27ada0a0c-jpg/frame-${String(index).padStart(3, '0')}.jpg`;
+  // Try loading frames up to 240 (it will stop automatically if they don't exist)
+  const frameCount = 240; // Updated to match user's actual frame count
+  const currentFrame = index => `/static/Motion_graphics_media/ezgif-frame-${String(index + 1).padStart(3, '0')}.jpg`;
 
   const images = [];
   const obj = { frame: 0 };
