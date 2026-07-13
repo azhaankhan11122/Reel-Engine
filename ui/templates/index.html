@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => loader.style.display = 'none', 500);
     }
 
-    if (images.length > 0 && images[0].complete) {
+    if (images.length > 0 && images[0].complete && images[0].naturalWidth > 0) {
       canvas.style.opacity = '1';
       resize();
 
@@ -219,6 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         onUpdate: render
       });
+    } else {
+      // Fallback: Collapse the scroll container if images are missing
+      const scrollContainer = document.getElementById('scroll-container');
+      if (scrollContainer) scrollContainer.style.height = '0';
     }
   }
 
