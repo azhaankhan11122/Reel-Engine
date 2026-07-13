@@ -146,33 +146,46 @@ def _download_remote_video(url: str, job_id: str):
             "yt_dlp is not installed. Install yt-dlp or provide a direct video URL."
         )
     video_base = UPLOAD_DIR / f"instagram_{job_id}"
-    ydl_opts = {
-        "outtmpl": str(video_base.with_suffix(".%(ext)s")),
-        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-        "merge_output_format": "mp4",
-        "quiet": True,
-        "no_warnings": True,
-        "ignoreerrors": False,
-        "cookiesfrombrowser": ("chrome",),
-    }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filepath = None
-            if info is None:
-                raise RuntimeError("Unable to download media from the provided URL.")
-            if info.get("requested_downloads"):
-                filepath = Path(info["requested_downloads"][0].get("filepath", ""))
-            if not filepath and info.get("filepath"):
-                filepath = Path(info["filepath"])
-            if not filepath:
-                filepath = Path(ydl.prepare_filename(info))
-            if not filepath.exists():
-                raise RuntimeError("Downloaded file was not found on disk.")
-            duration = info.get("duration")
-            return filepath, duration
-    except Exception as exc:
-        raise RuntimeError(f"Download failed: {exc}")
+    browsers_to_try = [("safari",), ("chrome",), ("firefox",), None]
+    last_exc = None
+    cookie_file = PROJECT_DIR / "cookies.txt"
+    
+    for browser in browsers_to_try:
+        ydl_opts = {
+            "outtmpl": str(video_base.with_suffix(".%(ext)s")),
+            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            "merge_output_format": "mp4",
+            "quiet": True,
+            "no_warnings": True,
+            "ignoreerrors": False,
+        }
+        if cookie_file.exists():
+            ydl_opts["cookiefile"] = str(cookie_file)
+        elif browser:
+            ydl_opts["cookiesfrombrowser"] = browser
+            
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                filepath = None
+                if info is None:
+                    raise RuntimeError("Unable to download media from the provided URL.")
+                if info.get("requested_downloads"):
+                    filepath = Path(info["requested_downloads"][0].get("filepath", ""))
+                if not filepath and info.get("filepath"):
+                    filepath = Path(info["filepath"])
+                if not filepath:
+                    filepath = Path(ydl.prepare_filename(info))
+                if not filepath.exists():
+                    raise RuntimeError("Downloaded file was not found on disk.")
+                duration = info.get("duration")
+                return filepath, duration
+        except Exception as exc:
+            print(f"[WARN] yt-dlp failed with browser {browser}: {exc}")
+            last_exc = exc
+            continue
+
+    raise RuntimeError(f"Download failed after trying multiple browsers: {last_exc}")
 
 
 def _extract_audio_from_video(video_path: Path, audio_path: Path):
