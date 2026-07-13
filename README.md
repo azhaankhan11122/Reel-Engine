@@ -610,6 +610,12 @@ Speed tips:
 
 <br/>
 
+## 🎨 GSAP Canvas Animation
+
+Includes `scroll_animation.html` — a self-contained, high-performance scroll-linked canvas image sequence template using GSAP, ScrollTrigger, and Tailwind CSS. Just drop your frames into `ezgif-15e359c27ada0a0c-jpg/` and adjust `frameCount`.
+
+<br/>
+
 <div align="center">
 
 ## 📜 License

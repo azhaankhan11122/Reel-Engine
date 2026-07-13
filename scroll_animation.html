@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GSAP Canvas Scroll Sequence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; overscroll-behavior: none; background: #000; }
+    #scroll-container { height: 400vh; }
+    canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; opacity: 0; transition: opacity 0.5s; }
+  </style>
+</head>
+<body>
+
+  <!-- Loading State -->
+  <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-black text-white text-2xl font-bold">
+    Loading... <span id="progress">0</span>%
+  </div>
+
+  <!-- Scroll Container -->
+  <div id="scroll-container">
+    <canvas id="hero-lightpass"></canvas>
+  </div>
+
+  <!-- Overlay UI -->
+  <div class="fixed bottom-8 left-0 right-0 z-10 flex flex-wrap justify-center gap-4 px-4">
+    <button class="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full text-white font-medium transition active:scale-95">Eco Mode</button>
+    <button class="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full text-white font-medium transition active:scale-95">Sport Mode</button>
+    <button class="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full text-red-400 font-medium transition active:scale-95">Insane Mode</button>
+    <button class="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-full text-white font-medium transition active:scale-95">Custom Mode</button>
+  </div>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    const canvas = document.getElementById("hero-lightpass");
+    const ctx = canvas.getContext("2d");
+    
+    // CONFIG: Adjust frameCount to match the exact number of images in the folder
+    const frameCount = 100; 
+    // CONFIG: Ensure this naming convention matches your files (e.g. frame-000.jpg, frame-001.jpg)
+    const currentFrame = index => `ezgif-15e359c27ada0a0c-jpg/frame-${String(index).padStart(3, '0')}.jpg`;
+
+    const images = [];
+    const obj = { frame: 0 };
+    let loadedCount = 0;
+
+    // Handle Resize & high-DPI
+    function resize() {
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
+      render();
+    }
+    window.addEventListener("resize", resize);
+
+    // Object-fit: cover rendering
+    function render() {
+      if (!images[obj.frame] || !images[obj.frame].complete) return;
+      const img = images[obj.frame];
+      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, x, y, w, h);
+    }
+
+    // Preloader
+    for (let i = 0; i < frameCount; i++) {
+      const img = new Image();
+      img.src = currentFrame(i);
+      img.onload = () => {
+        loadedCount++;
+        document.getElementById('progress').innerText = Math.round((loadedCount / frameCount) * 100);
+        if (loadedCount === frameCount) init();
+      };
+      // Fallback if image doesn't exist to prevent infinite loading
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === frameCount) init();
+      }
+      images.push(img);
+    }
+
+    function init() {
+      document.getElementById('loader').style.display = 'none';
+      canvas.style.opacity = 1;
+      resize();
+
+      gsap.to(obj, {
+        frame: frameCount - 1,
+        snap: "frame",
+        ease: "none",
+        scrollTrigger: {
+          trigger: "#scroll-container",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.5
+        },
+        onUpdate: render
+      });
+    }
+  </script>
+</body>
+</html>
