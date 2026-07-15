@@ -9,9 +9,9 @@
 </div>
 
 <!-- Scroll Container -->
-<div id="scroll-container" style="height: 155vh; position: relative;">
+<div id="scroll-container" style="height: 100vh; position: relative; overflow: hidden;">
   <canvas id="hero-lightpass"
-    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0; transition: opacity 0.5s;"></canvas>
+    style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; opacity: 0; transition: opacity 0.5s;"></canvas>
 </div>
 
 <div class="content-wrapper"
@@ -259,9 +259,10 @@
           ease: "none",
           scrollTrigger: {
             trigger: "#scroll-container",
-            start: "0px",
+            start: "top top",
             end: "+=150vh",
             scrub: true,
+            pin: true,
             invalidateOnRefresh: true
           },
           onUpdate: render
