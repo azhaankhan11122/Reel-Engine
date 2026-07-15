@@ -3,138 +3,184 @@
 
 {% block content %}
 <!-- Loading State -->
-<div id="loader" style="position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:#0F1115; color:#fff; font-size:1.5rem; font-weight:bold; transition: opacity 0.5s;">
+<div id="loader"
+  style="position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:#0F1115; color:#fff; font-size:1.5rem; font-weight:bold; transition: opacity 0.5s;">
   Loading... <span id="progress">0</span>%
 </div>
 
 <!-- Scroll Container -->
-<div id="scroll-container" style="height: 150vh; position: relative;">
-  <canvas id="hero-lightpass" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0; transition: opacity 0.5s;"></canvas>
+<div id="scroll-container" style="height: 155vh; position: relative;">
+  <canvas id="hero-lightpass"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0; transition: opacity 0.5s;"></canvas>
 </div>
 
-<div class="content-wrapper" style="position: relative; z-index: 10; background: transparent; padding-top: 4rem; padding-bottom: 4rem; min-height: 100vh;">
-<header>
-  <div class="logo">🎬</div>
-  <div>
-    <h1>Reel Engine</h1>
-    <p class="subtitle">Viral YouTube Shorts generator</p>
+<div class="content-wrapper"
+  style="position: relative; z-index: 10; background: transparent; padding-top: 4rem; padding-bottom: 4rem; min-height: 100vh;">
+  <header>
+    <div class="logo">🎬</div>
+    <div>
+      <h1>Reel Engine</h1>
+      <p class="subtitle">Viral YouTube Shorts generator</p>
+    </div>
+  </header>
+
+  <p class="subtitle" style="text-align:center; margin-top:1rem;">
+    Choose how you want to create your video
+  </p>
+
+
+  <div class="bento-grid parallax-wrapper">
+    <!-- Motion Graphic Elements (Floating background) -->
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+
+    <!-- Hero Card: Studio Mode -->
+    <a href="/studio" class="bento-card bento-hero studio transition-link" style="animation-delay: 0.1s;">
+      <div class="bento-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+          <line x1="7" y1="2" x2="7" y2="22"></line>
+          <line x1="17" y1="2" x2="17" y2="22"></line>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <line x1="2" y1="7" x2="7" y2="7"></line>
+          <line x1="2" y1="17" x2="7" y2="17"></line>
+          <line x1="17" y1="17" x2="22" y2="17"></line>
+          <line x1="17" y1="7" x2="22" y2="7"></line>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>Studio Mode</h2>
+        <p>Professional multi-track timeline editor: arrange audio/video/text, crop/scale layers, auto-caption, and
+          render 9:16 vertical video.</p>
+      </div>
+    </a>
+
+    <!-- AI Mode -->
+    <a href="/ai" class="bento-card transition-link" style="animation-delay: 0.2s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+          <circle cx="12" cy="5" r="2"></circle>
+          <path d="M12 7v4"></path>
+          <line x1="8" y1="16" x2="8" y2="16"></line>
+          <line x1="16" y1="16" x2="16" y2="16"></line>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>AI Mode</h2>
+        <p>Enter a topic and let AI write the script, generate voiceover, and render.</p>
+      </div>
+    </a>
+
+    <!-- Instagram Mode -->
+    <a href="/instagram" class="bento-card transition-link" style="animation-delay: 0.3s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>Instagram Mode</h2>
+        <p>Paste a Reel link, transcribe voice, and render captions.</p>
+      </div>
+    </a>
+
+    <!-- Manual Mode -->
+    <a href="/manual" class="bento-card transition-link" style="animation-delay: 0.4s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z">
+          </path>
+          <line x1="12" y1="22" x2="12" y2="12"></line>
+          <line x1="12" y1="12" x2="22.5" y2="6"></line>
+          <line x1="12" y1="12" x2="1.5" y2="6"></line>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>Manual Mode</h2>
+        <p>Upload your own background video, write custom text, pick font styles.</p>
+      </div>
+    </a>
+
+    <!-- Instagram + Custom Captions -->
+    <a href="/instagram-custom" class="bento-card transition-link" style="animation-delay: 0.5s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>IG + Custom</h2>
+        <p>Reel background with custom script for voiceover.</p>
+      </div>
+    </a>
+
+    <!-- Watermark Mode -->
+    <a href="/watermark" class="bento-card transition-link" style="animation-delay: 0.6s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>Watermark</h2>
+        <p>Add a text watermark to a video.</p>
+      </div>
+    </a>
+
+    <!-- Watermark Remover -->
+    <a href="/watermark-remove" class="bento-card transition-link" style="animation-delay: 0.7s;">
+      <div class="bento-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg>
+      </div>
+      <div class="bento-content">
+        <h2>Watermark Remover</h2>
+        <p>Select area to remove watermark via FFmpeg.</p>
+      </div>
+    </a>
   </div>
-</header>
 
-<p class="subtitle" style="text-align:center; margin-top:1rem;">
-  Choose how you want to create your video
-</p>
-
-
-<div class="bento-grid parallax-wrapper">
-  <!-- Motion Graphic Elements (Floating background) -->
-  <div class="floating-shape shape-1"></div>
-  <div class="floating-shape shape-2"></div>
-  <div class="floating-shape shape-3"></div>
-
-  <!-- Hero Card: Studio Mode -->
-  <a href="/studio" class="bento-card bento-hero studio transition-link" style="animation-delay: 0.1s;">
-    <div class="bento-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
-    </div>
-    <div class="bento-content">
-      <h2>Studio Mode</h2>
-      <p>Professional multi-track timeline editor: arrange audio/video/text, crop/scale layers, auto-caption, and render 9:16 vertical video.</p>
-    </div>
-  </a>
-
-  <!-- AI Mode -->
-  <a href="/ai" class="bento-card transition-link" style="animation-delay: 0.2s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg>
-    </div>
-    <div class="bento-content">
-      <h2>AI Mode</h2>
-      <p>Enter a topic and let AI write the script, generate voiceover, and render.</p>
-    </div>
-  </a>
-
-  <!-- Instagram Mode -->
-  <a href="/instagram" class="bento-card transition-link" style="animation-delay: 0.3s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-    </div>
-    <div class="bento-content">
-      <h2>Instagram Mode</h2>
-      <p>Paste a Reel link, transcribe voice, and render captions.</p>
-    </div>
-  </a>
-
-  <!-- Manual Mode -->
-  <a href="/manual" class="bento-card transition-link" style="animation-delay: 0.4s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><line x1="12" y1="22" x2="12" y2="12"></line><line x1="12" y1="12" x2="22.5" y2="6"></line><line x1="12" y1="12" x2="1.5" y2="6"></line></svg>
-    </div>
-    <div class="bento-content">
-      <h2>Manual Mode</h2>
-      <p>Upload your own background video, write custom text, pick font styles.</p>
-    </div>
-  </a>
-
-  <!-- Instagram + Custom Captions -->
-  <a href="/instagram-custom" class="bento-card transition-link" style="animation-delay: 0.5s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-    </div>
-    <div class="bento-content">
-      <h2>IG + Custom</h2>
-      <p>Reel background with custom script for voiceover.</p>
-    </div>
-  </a>
-
-  <!-- Watermark Mode -->
-  <a href="/watermark" class="bento-card transition-link" style="animation-delay: 0.6s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
-    </div>
-    <div class="bento-content">
-      <h2>Watermark</h2>
-      <p>Add a text watermark to a video.</p>
-    </div>
-  </a>
-
-  <!-- Watermark Remover -->
-  <a href="/watermark-remove" class="bento-card transition-link" style="animation-delay: 0.7s;">
-    <div class="bento-icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-    </div>
-    <div class="bento-content">
-      <h2>Watermark Remover</h2>
-      <p>Select area to remove watermark via FFmpeg.</p>
-    </div>
-  </a>
-</div>
-
-<div style="text-align:center; margin-top:1.25rem;">
-  <button id="clearStorageBtn" class="mode-card" style="display:inline-block; padding:0.6rem 1rem; background:#ff6b6b; color:#fff; border-radius:8px; border:none; cursor:pointer;">
-    🧹 Clear local storage (uploads, temp, output, sessions)
-  </button>
-</div>
+  <div style="text-align:center; margin-top:1.25rem;">
+    <button id="clearStorageBtn" class="mode-card"
+      style="display:inline-block; padding:0.6rem 1rem; background:#ff6b6b; color:#fff; border-radius:8px; border:none; cursor:pointer;">
+      🧹 Clear local storage (uploads, temp, output, sessions)
+    </button>
+  </div>
 
 </div> <!-- End content-wrapper -->
 
 <script>
-document.getElementById('clearStorageBtn').addEventListener('click', async () => {
-  if (!confirm('Delete all locally stored uploads, temp files, outputs, and session data? This cannot be undone.')) return;
-  const btn = document.getElementById('clearStorageBtn');
-  btn.disabled = true;
-  btn.textContent = 'Clearing...';
-  try {
-    const res = await fetch('/api/clear-storage', { method: 'POST' });
-    const data = await res.json();
-    alert(data.message || 'Storage cleared.');
-  } catch (err) {
-    alert('Failed to clear storage: ' + err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🧹 Clear local storage (uploads, temp, output, sessions)';
-  }
-});
+  document.getElementById('clearStorageBtn').addEventListener('click', async () => {
+    if (!confirm('Delete all locally stored uploads, temp files, outputs, and session data? This cannot be undone.')) return;
+    const btn = document.getElementById('clearStorageBtn');
+    btn.disabled = true;
+    btn.textContent = 'Clearing...';
+    try {
+      const res = await fetch('/api/clear-storage', { method: 'POST' });
+      const data = await res.json();
+      alert(data.message || 'Storage cleared.');
+    } catch (err) {
+      alert('Failed to clear storage: ' + err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🧹 Clear local storage (uploads, temp, output, sessions)';
+    }
+  });
 </script>
 {% endblock %}
 
@@ -145,137 +191,137 @@ document.getElementById('clearStorageBtn').addEventListener('click', async () =>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  gsap.registerPlugin(ScrollTrigger);
+  document.addEventListener('DOMContentLoaded', () => {
+    gsap.registerPlugin(ScrollTrigger);
 
-  // --- Scroll Sequence Animation ---
-  const canvas = document.getElementById("hero-lightpass");
-  const ctx = canvas.getContext("2d");
+    // --- Scroll Sequence Animation ---
+    const canvas = document.getElementById("hero-lightpass");
+    const ctx = canvas.getContext("2d");
 
-  // Try loading frames up to 240 (it will stop automatically if they don't exist)
-  const frameCount = 240; // Updated to match user's actual frame count
-  const currentFrame = index => `/static/Motion_graphics_media/ezgif-frame-${String(index + 1).padStart(3, '0')}.jpg`;
+    // Try loading frames up to 240 (it will stop automatically if they don't exist)
+    const frameCount = 240; // Updated to match user's actual frame count
+    const currentFrame = index => `/static/Motion_graphics_media/ezgif-frame-${String(index + 1).padStart(3, '0')}.jpg`;
 
-  const images = [];
-  const obj = { frame: 0 };
-  let loadedCount = 0;
+    const images = [];
+    const obj = { frame: 0 };
+    let loadedCount = 0;
 
-  function resize() {
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-    render();
-  }
-  window.addEventListener("resize", resize);
+    function resize() {
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
+      render();
+    }
+    window.addEventListener("resize", resize);
 
-  function render() {
-    if (!images[Math.floor(obj.frame)] || !images[Math.floor(obj.frame)].complete) return;
-    const img = images[Math.floor(obj.frame)];
-    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-    const w = img.width * scale;
-    const h = img.height * scale;
-    const x = (canvas.width - w) / 2;
-    const y = (canvas.height - h) / 2;
+    function render() {
+      if (!images[Math.floor(obj.frame)] || !images[Math.floor(obj.frame)].complete) return;
+      const img = images[Math.floor(obj.frame)];
+      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, x, y, w, h);
-  }
-
-  for (let i = 0; i < frameCount; i++) {
-    const img = new Image();
-    img.src = currentFrame(i);
-    img.onload = () => {
-      loadedCount++;
-      document.getElementById('progress').innerText = Math.round((loadedCount / frameCount) * 100);
-      if (loadedCount === frameCount) initSequence();
-    };
-    img.onerror = () => {
-      // Graceful fallback to prevent infinite loading if frames are missing
-      loadedCount++;
-      if (loadedCount === frameCount) initSequence();
-    };
-    images.push(img);
-  }
-
-  function initSequence() {
-    const loader = document.getElementById('loader');
-    if(loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => loader.style.display = 'none', 500);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, x, y, w, h);
     }
 
-    if (images.length > 0 && images[0].complete && images[0].naturalWidth > 0) {
-      canvas.style.opacity = '1';
-      resize();
-
-      gsap.to(obj, {
-	        frame: frameCount - 1,
-	        snap: "frame",
-	        ease: "none",
-	        scrollTrigger: {
-	          trigger: "#scroll-container",
-	          start: "0px",
-	          end: "+=150vh",
-	          scrub: true,
-	          invalidateOnRefresh: true
-	        },
-	        onUpdate: render
-	      });
-    } else {
-      // Fallback: Collapse the scroll container if images are missing
-      const scrollContainer = document.getElementById('scroll-container');
-      if (scrollContainer) scrollContainer.style.height = '0';
+    for (let i = 0; i < frameCount; i++) {
+      const img = new Image();
+      img.src = currentFrame(i);
+      img.onload = () => {
+        loadedCount++;
+        document.getElementById('progress').innerText = Math.round((loadedCount / frameCount) * 100);
+        if (loadedCount === frameCount) initSequence();
+      };
+      img.onerror = () => {
+        // Graceful fallback to prevent infinite loading if frames are missing
+        loadedCount++;
+        if (loadedCount === frameCount) initSequence();
+      };
+      images.push(img);
     }
-  }
 
-  // --- Bento Grid Pop and Hover Animation ---
-  // Disable default CSS animations by resetting opacity/transform
-  document.querySelectorAll('.bento-card').forEach(card => {
-    card.style.animation = 'none';
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(40px)';
-  });
+    function initSequence() {
+      const loader = document.getElementById('loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 500);
+      }
 
-  ScrollTrigger.create({
-    trigger: ".content-wrapper",
-    start: "top 75%",
-    onEnter: () => {
-      gsap.to('.bento-card', {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "back.out(1.7)"
+      if (images.length > 0 && images[0].complete && images[0].naturalWidth > 0) {
+        canvas.style.opacity = '1';
+        resize();
+
+        gsap.to(obj, {
+          frame: frameCount - 1,
+          snap: "frame",
+          ease: "none",
+          scrollTrigger: {
+            trigger: "#scroll-container",
+            start: "0px",
+            end: "+=150vh",
+            scrub: true,
+            invalidateOnRefresh: true
+          },
+          onUpdate: render
+        });
+      } else {
+        // Fallback: Collapse the scroll container if images are missing
+        const scrollContainer = document.getElementById('scroll-container');
+        if (scrollContainer) scrollContainer.style.height = '0';
+      }
+    }
+
+    // --- Bento Grid Pop and Hover Animation ---
+    // Disable default CSS animations by resetting opacity/transform
+    document.querySelectorAll('.bento-card').forEach(card => {
+      card.style.animation = 'none';
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(40px)';
+    });
+
+    ScrollTrigger.create({
+      trigger: ".content-wrapper",
+      start: "top 75%",
+      onEnter: () => {
+        gsap.to('.bento-card', {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "back.out(1.7)"
+        });
+      },
+      once: true
+    });
+
+
+    // Parallax logic for shapes
+    document.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      const shape1 = document.querySelector('.shape-1');
+      const shape2 = document.querySelector('.shape-2');
+      const shape3 = document.querySelector('.shape-3');
+
+      if (shape1) shape1.style.transform = `translateY(${scrolled * 0.15}px)`;
+      if (shape2) shape2.style.transform = `translateY(${scrolled * -0.1}px)`;
+      if (shape3) shape3.style.transform = `translateY(${scrolled * 0.2}px)`;
+    });
+
+    // Page Wipe transitions
+    document.querySelectorAll('.transition-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetUrl = link.getAttribute('href');
+        const wipe = document.getElementById('pageWipe');
+        wipe.classList.add('active');
+
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 500); // Wait for wipe animation to almost finish
       });
-    },
-    once: true
-  });
-
-
-  // Parallax logic for shapes
-  document.addEventListener('scroll', () => {
-    const scrolled = window.scrollY;
-    const shape1 = document.querySelector('.shape-1');
-    const shape2 = document.querySelector('.shape-2');
-    const shape3 = document.querySelector('.shape-3');
-
-    if (shape1) shape1.style.transform = `translateY(${scrolled * 0.15}px)`;
-    if (shape2) shape2.style.transform = `translateY(${scrolled * -0.1}px)`;
-    if (shape3) shape3.style.transform = `translateY(${scrolled * 0.2}px)`;
-  });
-
-  // Page Wipe transitions
-  document.querySelectorAll('.transition-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetUrl = link.getAttribute('href');
-      const wipe = document.getElementById('pageWipe');
-      wipe.classList.add('active');
-
-      setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 500); // Wait for wipe animation to almost finish
     });
   });
-});
 </script>
 {% endblock %}
